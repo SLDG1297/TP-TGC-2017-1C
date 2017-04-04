@@ -10,8 +10,11 @@ namespace TGC.Group.Model
 {
     public  class Shooter : TgcExample
     {
-        private string heightmapDir;
-        private string terrainTextureDir;
+        //CONSTANTES
+        private const float MAP_SCALE_XZ = 15;
+        private const float MAP_SCALE_Y = 3;
+
+        //VARIABLES DE INSTANCIA
         private TgcSimpleTerrain terreno;
 		private TgcSkyBox skyBox;
 
@@ -29,34 +32,13 @@ namespace TGC.Group.Model
 
         public override void Init()
         {
-			//Crear SkyBox
-			skyBox = new TgcSkyBox();
-			skyBox.Center = new Vector3(0, 500, 0);
-			skyBox.Size = new Vector3(8000, 8000, 8000);
-			var texturesPath = MediaDir + "Texturas\\Quake\\SkyBox LostAtSeaDay\\";
-		
-			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Up, texturesPath + "lostatseaday_up.jpg");
-			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Down, texturesPath + "lostatseaday_dn.jpg");
-			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Left, texturesPath + "lostatseaday_lf.jpg");
-			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Right, texturesPath + "lostatseaday_rt.jpg");
-			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Front, texturesPath + "lostatseaday_bk.jpg");
-			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Back, texturesPath + "lostatseaday_ft.jpg");
-			skyBox.Init();
-
             //Device de DirectX para crear primitivas.
             var d3dDevice = D3DDevice.Instance.Device;
 
-			Camara = new FirstPersonCamera(new Vector3(0, 1500, 0), Input);
-
-            heightmapDir = MediaDir + "Heightmaps\\" + "heightmap_v1.jpg";
-            terrainTextureDir = MediaDir + "Texturas\\" +  "map_v2.jpg";
-
-            terreno = new TgcSimpleTerrain();
-			terreno.loadHeightmap(heightmapDir, 15, 3, Camara.LookAt);
-            terreno.loadTexture(terrainTextureDir);
-
-
-		}
+            Camara = new FirstPersonCamera(new Vector3(0, 1500, 0), Input);
+            initSkyBox();
+            initTerrain();
+        }
 
         public override void Update()
         {
@@ -65,7 +47,8 @@ namespace TGC.Group.Model
 
         public override void Render()
         {
-            //Inicio el render de la escena, para ejemplos simples. Cuando tenemos postprocesado o shaders es mejor realizar las operaciones según nuestra conveniencia.
+            //Inicio el render de la escena, para ejemplos simples.
+            // Cuando tenemos postprocesado o shaders es mejor realizar las operaciones según nuestra conveniencia.
             PreRender();
 
 			skyBox.render();
@@ -80,6 +63,40 @@ namespace TGC.Group.Model
         {
             terreno.dispose();
         }
+
+#region METODOS AUXILIARES
+        private void initTerrain()
+        {
+            string heightmapDir = MediaDir + "Heightmaps\\heightmap_v2.jpg";
+            string terrainTextureDir = MediaDir + "Texturas\\map_v2.jpg";
+
+            terreno = new TgcSimpleTerrain();
+            terreno.loadHeightmap(heightmapDir, MAP_SCALE_XZ, MAP_SCALE_Y, Camara.LookAt);
+            terreno.loadTexture(terrainTextureDir);
+        }
+
+        private void initSkyBox()
+        {
+            //Crear SkyBox
+            skyBox = new TgcSkyBox();
+            skyBox.Center = new Vector3(0, 500, 0);
+            skyBox.Size = new Vector3(8000, 8000, 8000);
+            var texturesPath = MediaDir + "Texturas\\Quake\\SkyBox LostAtSeaDay\\";
+
+            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Up, texturesPath + "lostatseaday_up.jpg");
+            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Down, texturesPath + "lostatseaday_dn.jpg");
+            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Left, texturesPath + "lostatseaday_lf.jpg");
+            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Right, texturesPath + "lostatseaday_rt.jpg");
+            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Front, texturesPath + "lostatseaday_bk.jpg");
+            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Back, texturesPath + "lostatseaday_ft.jpg");
+
+            skyBox.Init();
+        }
+
+
+#endregion
+
+
 
     }
 }
