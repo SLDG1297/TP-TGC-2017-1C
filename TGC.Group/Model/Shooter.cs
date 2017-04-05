@@ -16,6 +16,7 @@ namespace TGC.Group.Model
         //CONSTANTES
         private const float MAP_SCALE_XZ = 20.0f;
         private const float MAP_SCALE_Y = 1.3f;
+        private Vector3 CENTRO = new Vector3(0, 0, 0);
 
         //VARIABLES DE INSTANCIA
         private TgcSimpleTerrain terreno;
@@ -63,9 +64,13 @@ namespace TGC.Group.Model
 
             scene.getMeshByName("Canoa1").Transform = Matrix.Translation(0, 4, 0);
 
-            //TODO POR AHORA USO ESTO, PERO SIEMPRE QUE AGREGAS UN OBJETO NUEVO, CUANDO QUEREMOS 
-            //CARGAR LA ESCENA, ESTE SE PONE EN EL MEDIO. ESTA ES LA UNICA SOLUCION QUE ENCONTRE
+            // SOLUCIÓN NUEVA A LO QUE APARECÍA EN EL CENTRO:
+            scene.Meshes.RemoveAll(mesh => mesh.Position == CENTRO);
+            
+            // SOLUCIÓN ANTERIOR A LO QUE APARECÍA EN EL CENTRO:
+            /*
             scene.Meshes.Remove(scene.getMeshByName("ArbolSelvatico"));
+            scene.Meshes.Remove(scene.getMeshByName("ArbolSelvatico2"));
             scene.Meshes.Remove(scene.getMeshByName("Hummer"));
             scene.Meshes.Remove(scene.getMeshByName("Canoa"));
             scene.Meshes.Remove(scene.getMeshByName("MetralladoraFija"));
@@ -78,6 +83,7 @@ namespace TGC.Group.Model
             scene.Meshes.Remove(scene.getMeshByName("Arbusto"));
             scene.Meshes.Remove(scene.getMeshByName("Barrera"));
             scene.Meshes.Remove(scene.getMeshByName("Carretilla"));
+            */
 
         }
 
