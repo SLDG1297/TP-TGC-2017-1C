@@ -74,7 +74,10 @@ namespace TGC.Group.Model
             scene.Meshes.Remove(scene.getMeshByName("CajaMuniciones"));
             scene.Meshes.Remove(scene.getMeshByName("Pasto"));
             scene.Meshes.Remove(scene.getMeshByName("Roca"));
-            scene.Meshes.Remove(scene.getMeshByName("ARbusto"));
+            scene.Meshes.Remove(scene.getMeshByName("CamionCarga"));
+            scene.Meshes.Remove(scene.getMeshByName("Arbusto"));
+            scene.Meshes.Remove(scene.getMeshByName("Barrera"));
+            scene.Meshes.Remove(scene.getMeshByName("Carretilla"));
 
         }
 
