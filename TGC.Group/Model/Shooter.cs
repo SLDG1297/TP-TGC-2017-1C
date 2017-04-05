@@ -21,9 +21,13 @@ namespace TGC.Group.Model
         private TgcSimpleTerrain terreno;
 		private TgcSkyBox skyBox;
         private TgcScene scene;
-
+        
         private TgcMesh rocaOriginal;
         private List<TgcMesh> rocas = new List<TgcMesh>();
+
+        private TgcMesh palmeraOriginal;
+        private List<TgcMesh> palmeras = new List<TgcMesh>();
+
 
         /// <summary>
         ///     Constructor del juego.
@@ -40,7 +44,7 @@ namespace TGC.Group.Model
         public override void Init()
         {
             //Device de DirectX para crear primitivas.
-            var d3dDevice = D3DDevice.Instance.Device;
+            //var d3dDevice = D3DDevice.Instance.Device;
 
             Camara = new FirstPersonCamera(new Vector3(0, 1500, 0), Input);
             initSkyBox();
@@ -54,6 +58,24 @@ namespace TGC.Group.Model
             foreach (var roca in rocas){
                 roca.Transform = Matrix.Scaling(6, 4, 6) * roca.Transform;
             }
+
+            Utils.disponerEnCirculoXZ(palmeraOriginal, palmeras, 8, 825, FastMath.QUARTER_PI);
+
+            scene.getMeshByName("Canoa1").Transform = Matrix.Translation(0, 4, 0);
+
+            //TODO POR AHORA USO ESTO, PERO SIEMPRE QUE AGREGAS UN OBJETO NUEVO, CUANDO QUEREMOS 
+            //CARGAR LA ESCENA, ESTE SE PONE EN EL MEDIO. ESTA ES LA UNICA SOLUCION QUE ENCONTRE
+            scene.Meshes.Remove(scene.getMeshByName("ArbolSelvatico"));
+            scene.Meshes.Remove(scene.getMeshByName("Hummer"));
+            scene.Meshes.Remove(scene.getMeshByName("Canoa"));
+            scene.Meshes.Remove(scene.getMeshByName("MetralladoraFija"));
+            scene.Meshes.Remove(scene.getMeshByName("MetralladoraFija2"));
+            scene.Meshes.Remove(scene.getMeshByName("BarrilPolvora"));
+            scene.Meshes.Remove(scene.getMeshByName("CajaMuniciones"));
+            scene.Meshes.Remove(scene.getMeshByName("Pasto"));
+            scene.Meshes.Remove(scene.getMeshByName("Roca"));
+            scene.Meshes.Remove(scene.getMeshByName("ARbusto"));
+
         }
 
         public override void Update()
@@ -68,12 +90,13 @@ namespace TGC.Group.Model
             PreRender();
 
 			skyBox.render();
+           
+                     
+            //Renderizar instancias de las rocas y palmeras del medio
+            foreach (var mesh in rocas) mesh.render();
+            foreach (var mesh in palmeras) mesh.render();
             terreno.render();
             scene.renderAll();
-
-            rocaOriginal.render();
-            //Renderizar instancias de las rocas
-            foreach (var mesh in rocas) mesh.render();
 
             //Finaliza el render y presenta en pantalla, al igual que el preRender se debe para casos puntuales es mejor utilizar a mano las operaciones de EndScene y PresentScene
             PostRender();
@@ -86,6 +109,7 @@ namespace TGC.Group.Model
             terreno.dispose();
 
             rocaOriginal.dispose();
+            palmeraOriginal.dispose();
             scene.disposeAll(); 
         }
 
@@ -101,11 +125,9 @@ namespace TGC.Group.Model
         }
 
         private void initScene(){
-
-            string sceneDir = MediaDir + "Scenes\\Arboles00\\EscenaConArboles-TgcScene.xml";
             var loader = new TgcSceneLoader();
-
-            scene = loader.loadSceneFromFile(sceneDir);
+            palmeraOriginal = loader.loadSceneFromFile(MediaDir + "Meshes\\Vegetation\\Palmera\\Palmera-TgcScene.xml").Meshes[0];
+            scene = loader.loadSceneFromFile(MediaDir + "Scenes\\Arboles00\\EscenaConArboles-TgcScene.xml");
         }
 
         private void initSkyBox(){
@@ -114,16 +136,6 @@ namespace TGC.Group.Model
             skyBox = new TgcSkyBox();
             skyBox.Center = new Vector3(0, 500, 0);
             skyBox.Size = new Vector3(8000, 8000, 8000);
-			/*
-            var texturesPath = MediaDir + "Texturas\\Quake\\SkyBox LostAtSeaDay\\";
-
-            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Up, texturesPath + "lostatseaday_up.jpg");
-            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Down, texturesPath + "lostatseaday_dn.jpg");
-            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Left, texturesPath + "lostatseaday_lf.jpg");
-            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Right, texturesPath + "lostatseaday_rt.jpg");
-            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Front, texturesPath + "lostatseaday_bk.jpg");
-            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Back, texturesPath + "lostatseaday_ft.jpg");
-			*/
 
 			var texturesPath = MediaDir + "Texturas\\Quake\\SkyBoxWhale\\Whale";
 
