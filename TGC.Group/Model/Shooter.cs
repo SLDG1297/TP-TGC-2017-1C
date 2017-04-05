@@ -4,6 +4,7 @@ using System;
 using TGC.Core.Direct3D;
 using TGC.Core.Example;
 using TGC.Core.Terrain;
+using TGC.Core.SceneLoader;
 using TGC.Group.Model.Cameras;
 
 namespace TGC.Group.Model
@@ -11,12 +12,13 @@ namespace TGC.Group.Model
     public  class Shooter : TgcExample
     {
         //CONSTANTES
-        private const float MAP_SCALE_XZ = 15;
-        private const float MAP_SCALE_Y = 3;
+        private const float MAP_SCALE_XZ = 20.0f;
+        private const float MAP_SCALE_Y = 1.3f;
 
         //VARIABLES DE INSTANCIA
         private TgcSimpleTerrain terreno;
 		private TgcSkyBox skyBox;
+        private TgcScene scene;
 
         /// <summary>
         ///     Constructor del juego.
@@ -38,6 +40,7 @@ namespace TGC.Group.Model
             Camara = new FirstPersonCamera(new Vector3(0, 1500, 0), Input);
             initSkyBox();
             initTerrain();
+            initScene();
         }
 
         public override void Update()
@@ -55,13 +58,20 @@ namespace TGC.Group.Model
 
             terreno.render();
 
+            scene.renderAll();
+            ;
+
             //Finaliza el render y presenta en pantalla, al igual que el preRender se debe para casos puntuales es mejor utilizar a mano las operaciones de EndScene y PresentScene
             PostRender();
         }
 
         public override void Dispose()
         {
+            skyBox.dispose();
+
             terreno.dispose();
+
+            scene.disposeAll();
         }
 
 #region METODOS AUXILIARES
@@ -73,6 +83,15 @@ namespace TGC.Group.Model
             terreno = new TgcSimpleTerrain();
             terreno.loadHeightmap(heightmapDir, MAP_SCALE_XZ, MAP_SCALE_Y, Camara.LookAt);
             terreno.loadTexture(terrainTextureDir);
+        }
+
+        private void initScene()
+        {
+            string sceneDir = MediaDir + "Scenes\\Arboles00\\EscenaConArboles-TgcScene.xml";
+
+            var loader = new TgcSceneLoader();
+
+            scene = loader.loadSceneFromFile(sceneDir);
         }
 
         private void initSkyBox()
