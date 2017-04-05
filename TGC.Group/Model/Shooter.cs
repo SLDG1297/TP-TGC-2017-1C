@@ -6,6 +6,8 @@ using TGC.Core.Example;
 using TGC.Core.Terrain;
 using TGC.Core.SceneLoader;
 using TGC.Group.Model.Cameras;
+using System.Collections.Generic;
+using TGC.Core.Utils;
 
 namespace TGC.Group.Model
 {
@@ -19,6 +21,9 @@ namespace TGC.Group.Model
         private TgcSimpleTerrain terreno;
 		private TgcSkyBox skyBox;
         private TgcScene scene;
+
+        private TgcMesh rocaOriginal;
+        private List<TgcMesh> rocas = new List<TgcMesh>();
 
         /// <summary>
         ///     Constructor del juego.
@@ -41,6 +46,14 @@ namespace TGC.Group.Model
             initSkyBox();
             initTerrain();
             initScene();
+
+            //Dispongo las rocas en linea circular y luego la escalo
+            rocaOriginal = scene.getMeshByName("Roca");
+            Utils.disponerEnCirculoXZ(rocaOriginal, rocas, 4, 500, FastMath.PI_HALF);
+
+            foreach (var roca in rocas){
+                roca.Transform = Matrix.Scaling(6, 4, 6) * roca.Transform;
+            }
         }
 
         public override void Update()
@@ -55,11 +68,12 @@ namespace TGC.Group.Model
             PreRender();
 
 			skyBox.render();
-
             terreno.render();
-
             scene.renderAll();
-            ;
+
+            rocaOriginal.render();
+            //Renderizar instancias de las rocas
+            foreach (var mesh in rocas) mesh.render();
 
             //Finaliza el render y presenta en pantalla, al igual que el preRender se debe para casos puntuales es mejor utilizar a mano las operaciones de EndScene y PresentScene
             PostRender();
@@ -71,12 +85,13 @@ namespace TGC.Group.Model
 
             terreno.dispose();
 
-            scene.disposeAll();
+            rocaOriginal.dispose();
+            scene.disposeAll(); 
         }
 
 #region METODOS AUXILIARES
-        private void initTerrain()
-        {
+        private void initTerrain(){
+
             string heightmapDir = MediaDir + "Heightmaps\\heightmap_v2.jpg";
             string terrainTextureDir = MediaDir + "Texturas\\map_v2.jpg";
 
@@ -85,17 +100,16 @@ namespace TGC.Group.Model
             terreno.loadTexture(terrainTextureDir);
         }
 
-        private void initScene()
-        {
-            string sceneDir = MediaDir + "Scenes\\Arboles00\\EscenaConArboles-TgcScene.xml";
+        private void initScene(){
 
+            string sceneDir = MediaDir + "Scenes\\Arboles00\\EscenaConArboles-TgcScene.xml";
             var loader = new TgcSceneLoader();
 
             scene = loader.loadSceneFromFile(sceneDir);
         }
 
-        private void initSkyBox()
-        {
+        private void initSkyBox(){
+
             //Crear SkyBox
             skyBox = new TgcSkyBox();
             skyBox.Center = new Vector3(0, 500, 0);
@@ -122,11 +136,6 @@ namespace TGC.Group.Model
 
             skyBox.Init();
         }
-
-
 #endregion
-
-
-
     }
 }
