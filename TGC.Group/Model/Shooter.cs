@@ -100,6 +100,7 @@ namespace TGC.Group.Model
             skyBox = new TgcSkyBox();
             skyBox.Center = new Vector3(0, 500, 0);
             skyBox.Size = new Vector3(8000, 8000, 8000);
+			/*
             var texturesPath = MediaDir + "Texturas\\Quake\\SkyBox LostAtSeaDay\\";
 
             skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Up, texturesPath + "lostatseaday_up.jpg");
@@ -108,6 +109,16 @@ namespace TGC.Group.Model
             skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Right, texturesPath + "lostatseaday_rt.jpg");
             skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Front, texturesPath + "lostatseaday_bk.jpg");
             skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Back, texturesPath + "lostatseaday_ft.jpg");
+			*/
+
+			var texturesPath = MediaDir + "Texturas\\Quake\\SkyBoxWhale\\Whale";
+
+			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Up, texturesPath + "up.jpg");
+			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Down, texturesPath + "dn.jpg");
+			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Left, texturesPath + "lf.jpg");
+			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Right, texturesPath + "rt.jpg");
+			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Front, texturesPath + "bk.jpg");
+			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Back, texturesPath + "ft.jpg");
 
             skyBox.Init();
         }
