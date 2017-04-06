@@ -8,6 +8,8 @@ using TGC.Core.SceneLoader;
 using TGC.Group.Model.Cameras;
 using System.Collections.Generic;
 using TGC.Core.Utils;
+using TGC.Core.Geometry;
+using TGC.Core.Textures;
 
 namespace TGC.Group.Model
 {
@@ -29,6 +31,12 @@ namespace TGC.Group.Model
 
         private TgcMesh palmeraOriginal;
         private List<TgcMesh> palmeras = new List<TgcMesh>();
+
+        private TgcBox cajita;
+        private List<TgcMesh> cajitas = new List<TgcMesh>();
+
+        private TgcMesh pastito;
+        private List<TgcMesh> pastitos = new List<TgcMesh>();
 
 
         /// <summary>
@@ -64,14 +72,21 @@ namespace TGC.Group.Model
             //Dispongo las palmeras en forma circular
             Utils.disponerEnCirculoXZ(palmeraOriginal, palmeras, 8, 820, FastMath.QUARTER_PI);
 
-            scene.getMeshByName("Canoa1").Transform = Matrix.Translation(0, 4, 0);
-
             //ubico la casa, trasladandola y luego rotandola
             foreach (var mesh in casa.Meshes)
             {
                 mesh.AutoTransformEnable = false;
                 mesh.Transform = Matrix.RotationY(FastMath.PI_HALF + FastMath.PI) * Matrix.Translation(-800, 0, 1200);
             }
+            
+            //creo cajitas de paja y las ubico
+            cajita = TgcBox.fromSize(new Vector3(30,30,30), TgcTexture.createTexture(MediaDir + "Texturas\\paja4.jpg"));
+            Utils.disponerEnRectanguloXZ(cajita.toMesh("cajita"), cajitas, 2, 2, 50);
+            foreach (var mesh in cajitas)
+            {
+                mesh.AutoTransformEnable = false;
+                mesh.Transform = Matrix.Translation(-800, 20, 1400) * mesh.Transform;
+            }            
 
             // SOLUCIÓN NUEVA A LO QUE APARECÍA EN EL CENTRO:
             scene.Meshes.RemoveAll(mesh => mesh.Position == CENTRO);
@@ -88,11 +103,13 @@ namespace TGC.Group.Model
             // Cuando tenemos postprocesado o shaders es mejor realizar las operaciones según nuestra conveniencia.
             PreRender();
 
-			skyBox.render();           
-                     
+			skyBox.render();
+
             //Renderizar instancias de las rocas y palmeras del medio
-            foreach (var mesh in rocas) mesh.render();
-            foreach (var mesh in palmeras) mesh.render();
+            Utils.renderMeshes(rocas);
+            Utils.renderMeshes(palmeras);
+            Utils.renderMeshes(pastitos);
+            Utils.renderMeshes(cajitas);
 
             terreno.render();
             scene.renderAll();
@@ -109,6 +126,8 @@ namespace TGC.Group.Model
 
             rocaOriginal.dispose();
             palmeraOriginal.dispose();
+            pastito.dispose();
+            cajita.dispose();
 
             scene.disposeAll();
             casa.disposeAll();
@@ -131,6 +150,7 @@ namespace TGC.Group.Model
 
             scene = loader.loadSceneFromFile(MediaDir + "Scenes\\Arboles00\\EscenaConArboles-TgcScene.xml");
             casa = loader.loadSceneFromFile(MediaDir + "Meshes\\Edificios\\Casa\\Casa-TgcScene.xml");
+            pastito = scene.getMeshByName("Arbusto");
         }
 
         private void initSkyBox(){

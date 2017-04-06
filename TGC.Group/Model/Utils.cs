@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TGC.Core.Geometry;
 using TGC.Core.SceneLoader;
 using TGC.Core.Utils;
 
@@ -44,7 +45,43 @@ namespace TGC.Group.Model
                 lista.Add(instance);
             }
         }
+        
+        public static void disponerEnRectanguloXZ(TgcMesh originalMesh, List<TgcMesh> meshes, int rows, int cols, float offset)
+        {
+            //Crear varias instancias del modelo original, pero sin volver a cargar el modelo entero cada vez
+            for (var i = 0; i < rows; i++)
+            {
+                for (var j = 0; j < cols; j++)
+                {
+                    //Crear instancia de modelo
+                    var instance = originalMesh.createMeshInstance(originalMesh.Name + i + "_" + j);
+                    //No recomendamos utilizar AutoTransform, en juegos complejos se pierde el control. mejor utilizar Transformaciones con matrices.
+                    instance.AutoTransformEnable = false;
+                    //Desplazarlo
+                    instance.Transform = Matrix.Translation(i * offset, 0, j * offset) * instance.Transform;
+                    //instance.Scale = new Vector3(0.25f, 0.25f, 0.25f);
 
+                    meshes.Add(instance);
+                }
+            }
 
+        }
+
+        /// <summary>
+        ///     Renderiza todos los elementos de una lista de meshes.
+        /// </summary>
+        public static void renderMeshes(List<TgcMesh> meshes)
+        {
+            foreach(var mesh in meshes) mesh.render();
+        }
+
+        public static void applyTransform(List<TgcMesh> meshes, Matrix matriz)
+        {
+            foreach (var mesh in meshes)
+            {
+                mesh.AutoTransformEnable = false;
+                mesh.Transform = matriz * mesh.Transform;
+            }
+        }
     }
 }
