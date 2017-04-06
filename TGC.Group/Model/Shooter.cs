@@ -22,6 +22,7 @@ namespace TGC.Group.Model
         private TgcSimpleTerrain terreno;
 		private TgcSkyBox skyBox;
         private TgcScene scene;
+        private TgcScene casa;
         
         private TgcMesh rocaOriginal;
         private List<TgcMesh> rocas = new List<TgcMesh>();
@@ -60,31 +61,20 @@ namespace TGC.Group.Model
                 roca.Transform = Matrix.Scaling(6, 4, 6) * roca.Transform;
             }
 
-            Utils.disponerEnCirculoXZ(palmeraOriginal, palmeras, 8, 825, FastMath.QUARTER_PI);
+            //Dispongo las palmeras en forma circular
+            Utils.disponerEnCirculoXZ(palmeraOriginal, palmeras, 8, 820, FastMath.QUARTER_PI);
 
             scene.getMeshByName("Canoa1").Transform = Matrix.Translation(0, 4, 0);
 
+            //ubico la casa, trasladandola y luego rotandola
+            foreach (var mesh in casa.Meshes)
+            {
+                mesh.AutoTransformEnable = false;
+                mesh.Transform = Matrix.RotationY(FastMath.PI_HALF + FastMath.PI) * Matrix.Translation(-800, 0, 1200);
+            }
+
             // SOLUCIÓN NUEVA A LO QUE APARECÍA EN EL CENTRO:
             scene.Meshes.RemoveAll(mesh => mesh.Position == CENTRO);
-            
-            // SOLUCIÓN ANTERIOR A LO QUE APARECÍA EN EL CENTRO:
-            /*
-            scene.Meshes.Remove(scene.getMeshByName("ArbolSelvatico"));
-            scene.Meshes.Remove(scene.getMeshByName("ArbolSelvatico2"));
-            scene.Meshes.Remove(scene.getMeshByName("Hummer"));
-            scene.Meshes.Remove(scene.getMeshByName("Canoa"));
-            scene.Meshes.Remove(scene.getMeshByName("MetralladoraFija"));
-            scene.Meshes.Remove(scene.getMeshByName("MetralladoraFija2"));
-            scene.Meshes.Remove(scene.getMeshByName("BarrilPolvora"));
-            scene.Meshes.Remove(scene.getMeshByName("CajaMuniciones"));
-            scene.Meshes.Remove(scene.getMeshByName("Pasto"));
-            scene.Meshes.Remove(scene.getMeshByName("Roca"));
-            scene.Meshes.Remove(scene.getMeshByName("CamionCarga"));
-            scene.Meshes.Remove(scene.getMeshByName("Arbusto"));
-            scene.Meshes.Remove(scene.getMeshByName("Barrera"));
-            scene.Meshes.Remove(scene.getMeshByName("Carretilla"));
-            */
-
         }
 
         public override void Update()
@@ -98,14 +88,15 @@ namespace TGC.Group.Model
             // Cuando tenemos postprocesado o shaders es mejor realizar las operaciones según nuestra conveniencia.
             PreRender();
 
-			skyBox.render();
-           
+			skyBox.render();           
                      
             //Renderizar instancias de las rocas y palmeras del medio
             foreach (var mesh in rocas) mesh.render();
             foreach (var mesh in palmeras) mesh.render();
+
             terreno.render();
             scene.renderAll();
+            casa.renderAll();
 
             //Finaliza el render y presenta en pantalla, al igual que el preRender se debe para casos puntuales es mejor utilizar a mano las operaciones de EndScene y PresentScene
             PostRender();
@@ -114,12 +105,13 @@ namespace TGC.Group.Model
         public override void Dispose()
         {
             skyBox.dispose();
-
             terreno.dispose();
 
             rocaOriginal.dispose();
             palmeraOriginal.dispose();
-            scene.disposeAll(); 
+
+            scene.disposeAll();
+            casa.disposeAll();
         }
 
 #region METODOS AUXILIARES
@@ -136,7 +128,9 @@ namespace TGC.Group.Model
         private void initScene(){
             var loader = new TgcSceneLoader();
             palmeraOriginal = loader.loadSceneFromFile(MediaDir + "Meshes\\Vegetation\\Palmera\\Palmera-TgcScene.xml").Meshes[0];
+
             scene = loader.loadSceneFromFile(MediaDir + "Scenes\\Arboles00\\EscenaConArboles-TgcScene.xml");
+            casa = loader.loadSceneFromFile(MediaDir + "Meshes\\Edificios\\Casa\\Casa-TgcScene.xml");
         }
 
         private void initSkyBox(){
