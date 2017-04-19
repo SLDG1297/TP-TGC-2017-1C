@@ -53,43 +53,11 @@ namespace TGC.Group.Model
 
         public override void Init()
         {
-            //Device de DirectX para crear primitivas.
-            //var d3dDevice = D3DDevice.Instance.Device;
-
             Camara = new FirstPersonCamera(new Vector3(0, 1500, 0), Input);
+
             initSkyBox();
             initTerrain();
-            initScene();
-
-            //Dispongo las rocas en linea circular y luego la escalo
-            rocaOriginal = scene.getMeshByName("Roca");
-            Utils.disponerEnCirculoXZ(rocaOriginal, rocas, 4, 500, FastMath.PI_HALF);
-
-            foreach (var roca in rocas){
-                roca.Transform = Matrix.Scaling(6, 4, 6) * roca.Transform;
-            }
-
-            //Dispongo las palmeras en forma circular
-            Utils.disponerEnCirculoXZ(palmeraOriginal, palmeras, 8, 820, FastMath.QUARTER_PI);
-
-            //ubico la casa, trasladandola y luego rotandola
-            foreach (var mesh in casa.Meshes)
-            {
-                mesh.AutoTransformEnable = false;
-                mesh.Transform = Matrix.RotationY(FastMath.PI_HALF + FastMath.PI) * Matrix.Translation(-800, 0, 1200);
-            }
-            
-            //creo cajitas de paja y las ubico
-            cajita = TgcBox.fromSize(new Vector3(30,30,30), TgcTexture.createTexture(MediaDir + "Texturas\\paja4.jpg"));
-            Utils.disponerEnRectanguloXZ(cajita.toMesh("cajita"), cajitas, 2, 2, 50);
-            foreach (var mesh in cajitas)
-            {
-                mesh.AutoTransformEnable = false;
-                mesh.Transform = Matrix.Translation(-800, 20, 1400) * mesh.Transform;
-            }            
-
-            // SOLUCIÓN NUEVA A LO QUE APARECÍA EN EL CENTRO:
-            scene.Meshes.RemoveAll(mesh => mesh.Position == CENTRO);
+            initScene();           
         }
 
         public override void Update()
@@ -151,6 +119,36 @@ namespace TGC.Group.Model
             scene = loader.loadSceneFromFile(MediaDir + "Scenes\\Arboles00\\EscenaConArboles-TgcScene.xml");
             casa = loader.loadSceneFromFile(MediaDir + "Meshes\\Edificios\\Casa\\Casa-TgcScene.xml");
             pastito = scene.getMeshByName("Arbusto");
+
+             //Dispongo las rocas en linea circular y luego la escalo
+            rocaOriginal = scene.getMeshByName("Roca");
+            Utils.disponerEnCirculoXZ(rocaOriginal, rocas, 4, 500, FastMath.PI_HALF);
+
+            foreach (var roca in rocas){
+                roca.Transform = Matrix.Scaling(6, 4, 6) * roca.Transform;
+            }
+
+            //Dispongo las palmeras en forma circular
+            Utils.disponerEnCirculoXZ(palmeraOriginal, palmeras, 8, 820, FastMath.QUARTER_PI);
+
+            //ubico la casa, trasladandola y luego rotandola
+            foreach (var mesh in casa.Meshes)
+            {
+                mesh.AutoTransformEnable = false;
+                mesh.Transform = Matrix.Scaling(1.5f,2f,1.75f) *Matrix.RotationY(FastMath.PI_HALF + FastMath.PI) * Matrix.Translation(-800, 0, 1200);
+            }
+            
+            //creo cajitas de paja y las ubico
+            cajita = TgcBox.fromSize(new Vector3(30,30,30), TgcTexture.createTexture(MediaDir + "Texturas\\paja4.jpg"));
+            Utils.disponerEnRectanguloXZ(cajita.toMesh("cajita"), cajitas, 2, 2, 50);
+            foreach (var mesh in cajitas)
+            {
+                mesh.AutoTransformEnable = false;
+                mesh.Transform = Matrix.Translation(-800, 20, 1400) * mesh.Transform;
+            }            
+
+            // SOLUCIÓN NUEVA A LO QUE APARECÍA EN EL CENTRO:
+            scene.Meshes.RemoveAll(mesh => mesh.Position == CENTRO);
         }
 
         private void initSkyBox(){
