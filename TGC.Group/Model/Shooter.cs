@@ -38,6 +38,7 @@ namespace TGC.Group.Model
         private TgcMesh pastito;
         private List<TgcMesh> pastitos = new List<TgcMesh>();
 
+        private Player jugador;
 
         /// <summary>
         ///     Constructor del juego.
@@ -53,16 +54,22 @@ namespace TGC.Group.Model
 
         public override void Init()
         {
+            jugador = new Player(MediaDir, new Vector3(500, 0, 500));
             Camara = new FirstPersonCamera(new Vector3(0, 1500, 0), Input);
 
             initSkyBox();
             initTerrain();
-            initScene();           
+            initScene();    
         }
 
         public override void Update()
         {
             PreUpdate();
+
+            //con esto el jugador se mueve con WASD,
+            //pero lo comento porque si movemos la camara, movemos al jugador
+
+            //jugador.mover(Input, ElapsedTime);
         }
 
         public override void Render()
@@ -82,6 +89,7 @@ namespace TGC.Group.Model
             terreno.render();
             scene.renderAll();
             casa.renderAll();
+            jugador.render(ElapsedTime);
 
             //Finaliza el render y presenta en pantalla, al igual que el preRender se debe para casos puntuales es mejor utilizar a mano las operaciones de EndScene y PresentScene
             PostRender();
@@ -99,6 +107,8 @@ namespace TGC.Group.Model
 
             scene.disposeAll();
             casa.disposeAll();
+
+            jugador.dispose();
         }
 
 #region METODOS AUXILIARES
