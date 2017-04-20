@@ -1,39 +1,49 @@
 ﻿using Microsoft.DirectX;
+using Microsoft.DirectX.DirectInput;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using TGC.Core.Camara;
+using TGC.Core.Direct3D;
+using TGC.Core.Input;
+using TGC.Core.Utils;
 
 namespace TGC.Group.Model.Cameras
 {
-    public class TgcThirdPersonCamera : TgcCamera
+    public class ThirdPersonCamera : TgcCamera
     {
+        private readonly Point mouseCenter; //Centro de mouse 2D para ocultarlo.
+        
         private Vector3 position;
+        private Player objetivo;
+        private bool lockCam;
+        private float leftrightRot;
+        private float updownRot;
+        private float RotationSpeed;
 
         /// <summary>
         ///     Crear una nueva camara
         /// </summary>
-        public TgcThirdPersonCamera()
+        /// 
+        
+        public ThirdPersonCamera(Player target, float offsetHeight, float offsetForward, TgcD3dInput input)
         {
-            resetValues();
-        }
+            Input = input;
+            Target = target.Position;
+            objetivo = target;
 
-        public TgcThirdPersonCamera(Vector3 target, float offsetHeight, float offsetForward) : this()
-        {
-            Target = target;
             OffsetHeight = offsetHeight;
             OffsetForward = offsetForward;
         }
 
-        public TgcThirdPersonCamera(Vector3 target, Vector3 targetDisplacement, float offsetHeight, float offsetForward)
-            : this()
+        public ThirdPersonCamera(Player target, Vector3 targetDisplacement, float offsetHeight, float offsetForward, TgcD3dInput input)
+            : this(target,offsetHeight,offsetForward,input)
         {
-            Target = target;
             TargetDisplacement = targetDisplacement;
-            OffsetHeight = offsetHeight;
-            OffsetForward = offsetForward;
         }
 
         /// <summary>
@@ -63,11 +73,14 @@ namespace TGC.Group.Model.Cameras
         /// </summary>
         public Vector3 Target { get; set; }
 
-        public override void UpdateCamera(float elapsedTime)
+        private TgcD3dInput Input { get; }
+
+        public override void UpdateCamera(float ElapsedTime)
         {
+            var moveVector = new Vector3(0, 0, 0);
             Vector3 targetCenter;
             CalculatePositionTarget(out position, out targetCenter);
-            SetCamera(position, targetCenter);
+            SetCamera(position, targetCenter);         
         }
 
         /// <summary>

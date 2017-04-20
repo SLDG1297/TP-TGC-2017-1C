@@ -5,23 +5,32 @@ using System.Text;
 using System.Threading.Tasks;
 using TGC.Core.SkeletalAnimation;
 using TGC.Core.Input;
+using TGC.Core.Geometry;
 using Microsoft.DirectX.DirectInput;
 using TGC.Core.Collision;
 using Microsoft.DirectX;
+using TGC.Core.Utils;
 
 namespace TGC.Group.Model
 {
-    class Player
+    public class Player
     {
-        private int maxHealth;
+        private float velocidadCaminar = 400f;
+        private float velocidadIzqDer = 300f;
+        private float velocidadRotacion = 120f;
+        private float tiempoSalto = 10f;
+        private float velocidadSalto = 0.5f;
+
+        private int maxHealth = 100;
         private int health;
         private bool muerto;
+        private bool jumping;
         private TgcSkeletalMesh personaje;
 
         public Player(string mediaDir, Vector3 initPosition)
         {
-            maxHealth = 100;
             muerto = false;
+            health = maxHealth;
             loadPerson(mediaDir);
             personaje.move(initPosition);
         }
@@ -42,7 +51,9 @@ namespace TGC.Group.Model
                 new[]
                 {
                     MediaDir + "SkeletalAnimations\\BasicHuman\\Animations\\StandBy-TgcSkeletalAnim.xml",
-                    MediaDir + "SkeletalAnimations\\BasicHuman\\Animations\\Walk-TgcSkeletalAnim.xml"
+                    MediaDir + "SkeletalAnimations\\BasicHuman\\Animations\\Walk-TgcSkeletalAnim.xml",
+                    MediaDir + "SkeletalAnimations\\BasicHuman\\Animations\\Jump-TgcSkeletalAnim.xml",
+                    MediaDir + "SkeletalAnimations\\BasicHuman\\Animations\\Run-TgcSkeletalAnim.xml"
                 });
 
 
@@ -69,19 +80,33 @@ namespace TGC.Group.Model
             }
         }
 
-        public Vector3 Position(){
-            return personaje.Position;
+        public Vector3 Position
+        {
+            get { return personaje.Position; }
         }
 
         public void mover(TgcD3dInput Input, float ElapsedTime)
         {
-            var velocidadCaminar = 400f;
-            var velocidadRotacion = 120f;
             //Calcular proxima posicion de personaje segun Input
             var moveForward = 0f;
+            var moveLeftRight = 0f;
+
+            float jump = 0;
+            var jumpingElapsedTime = 0f;
             float rotate = 0;
+
             var moving = false;
             var rotating = false;
+            var running = false;
+
+            //Correr
+            if (Input.keyDown(Key.LeftShift)) {
+                velocidadCaminar = 450f;
+                running = true;
+            }
+            else{
+                velocidadCaminar = 400f;
+            }
 
             //Adelante
             if (Input.keyDown(Key.W))
@@ -99,31 +124,39 @@ namespace TGC.Group.Model
             //Derecha
             if (Input.keyDown(Key.D))
             {
+                moveLeftRight = - velocidadIzqDer;
                 rotate = velocidadRotacion;
                 rotating = true;
+                moving = true;
             }
 
             //Izquierda
             if (Input.keyDown(Key.A))
             {
+                moveLeftRight =velocidadIzqDer;
                 rotate = -velocidadRotacion;
                 rotating = true;
+                moving = true;
             }
-
-
+            
+            //Saltar
+            if (!jumping && Input.keyPressed(Key.Space))
+            {        
+                    jumping = true;
+             }
+            
             if (moving)
             {
                 //Activar animacion de caminando
                 personaje.playAnimation("Walk", true);
+                if (running)
+                {
+                    personaje.stopAnimation();
+                    personaje.playAnimation("Run", true);
+                }
 
                 //Aplicar movimiento hacia adelante o atras segun la orientacion actual del Mesh
-                var lastPos = personaje.Position;
-
-                //La velocidad de movimiento tiene que multiplicarse por el elapsedTime para hacerse independiente de la velocida de CPU
-                //Ver Unidad 2: Ciclo acoplado vs ciclo desacoplado
-                personaje.moveOrientedY(moveForward * ElapsedTime);
-
-
+                var lastPos = personaje.Position;               
             }
             //Si no se esta moviendo, activar animacion de Parado
             else
@@ -131,10 +164,34 @@ namespace TGC.Group.Model
                 if (muerto) personaje.playAnimation("CrouchWalk", true);
                 else
                 {
-                    personaje.playAnimation("StandBy", true);
+                    personaje.playAnimation("StandBy", true);                    
                 }
             }
+
+            //Actualizar salto
+            if (jumping)
+            {
+                personaje.playAnimation("Jump", true);
+                //El salto dura un tiempo hasta llegar a su fin
+                jumpingElapsedTime += ElapsedTime;
+                if (jumpingElapsedTime > tiempoSalto)
+                {
+                    jumping = false;
+                }
+                else
+                {
+                    jump = velocidadSalto * (tiempoSalto - jumpingElapsedTime);
+                }
+            }
+
+            personaje.move(moveLeftRight * ElapsedTime, jump, moveForward * ElapsedTime);
+
         }
+
+        public void rotateY(float angle)
+        {
+            personaje.rotateY(angle);
+        }       
 
         public void render(float elapsedTime)
         {

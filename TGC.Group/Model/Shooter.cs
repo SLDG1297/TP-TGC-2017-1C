@@ -19,13 +19,17 @@ namespace TGC.Group.Model
         private const float MAP_SCALE_XZ = 20.0f;
         private const float MAP_SCALE_Y = 1.3f;
         private Vector3 CENTRO = new Vector3(0, 0, 0);
+        private Vector3 PLAYER_INIT_POS = new Vector3(500, 0, 500);
 
         //VARIABLES DE INSTANCIA
         private TgcSimpleTerrain terreno;
 		private TgcSkyBox skyBox;
         private TgcScene scene;
         private TgcScene casa;
-        
+
+        private ThirdPersonCamera camaraInterna;
+
+#region OBJETOS QUE SE REPLICAN
         private TgcMesh rocaOriginal;
         private List<TgcMesh> rocas = new List<TgcMesh>();
 
@@ -37,6 +41,7 @@ namespace TGC.Group.Model
 
         private TgcMesh pastito;
         private List<TgcMesh> pastitos = new List<TgcMesh>();
+        #endregion
 
         private Player jugador;
 
@@ -54,22 +59,27 @@ namespace TGC.Group.Model
 
         public override void Init()
         {
-            jugador = new Player(MediaDir, new Vector3(500, 0, 500));
-            Camara = new FirstPersonCamera(new Vector3(0, 1500, 0), Input);
+            jugador = new Player(MediaDir, PLAYER_INIT_POS);
+            //Camara = new FirstPersonCamera(new Vector3(0, 1500, 0), Input);
 
             initSkyBox();
             initTerrain();
-            initScene();    
+            initScene();
+
+            //Configurar camara en Tercera Persona y la asigno al TGC.            
+            camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40,0,-50), 50, 150, Input);
+            //camaraInterna = new ThirdPersonCamera(jugador, 50, 150, Input);
+            Camara = camaraInterna;            
         }
 
         public override void Update()
         {
             PreUpdate();
+            
+            jugador.mover(Input, ElapsedTime);
 
-            //con esto el jugador se mueve con WASD,
-            //pero lo comento porque si movemos la camara, movemos al jugador
-
-            //jugador.mover(Input, ElapsedTime);
+            //Hacer que la camara siga al personaje en su nueva posicion
+            camaraInterna.Target = jugador.Position;
         }
 
         public override void Render()
