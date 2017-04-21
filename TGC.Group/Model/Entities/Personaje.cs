@@ -34,18 +34,23 @@ namespace TGC.Group.Model.Entities
         //solo tenemos que poner 'public override void loadPerson()'
         public virtual void loadPerson(string MediaDir, string skin)
         {
-            var skeletalLoader = new TgcSkeletalLoader();
-            personaje = skeletalLoader.loadMeshAndAnimationsFromFile(
+            //direccion del mesh
+            var meshPath = MediaDir + "SkeletalAnimations\\BasicHuman\\" + skin + "-TgcSkeletalMesh.xml";
+            //direccion para las texturas
+            var mediaPath = MediaDir + "SkeletalAnimations\\BasicHuman\\";
 
-                MediaDir + "SkeletalAnimations\\BasicHuman\\" + skin + "-TgcSkeletalMesh.xml",
-                MediaDir + "SkeletalAnimations\\BasicHuman\\",
-                new[]
-                {
-                    MediaDir + "SkeletalAnimations\\BasicHuman\\Animations\\StandBy-TgcSkeletalAnim.xml",
-                    MediaDir + "SkeletalAnimations\\BasicHuman\\Animations\\Walk-TgcSkeletalAnim.xml",
-                    MediaDir + "SkeletalAnimations\\BasicHuman\\Animations\\Jump-TgcSkeletalAnim.xml",
-                    MediaDir + "SkeletalAnimations\\BasicHuman\\Animations\\Run-TgcSkeletalAnim.xml"
-                });
+            var skeletalLoader = new TgcSkeletalLoader();
+
+            string[] animationList = {  "StandBy", "Walk", "Jump", "Run", "CrouchWalk" };
+
+            var animationsPath = new string[animationList.Length];
+            for (var i = 0; i < animationList.Length; i++)
+            {
+                //direccion de cada animacion
+                animationsPath[i] = MediaDir + "SkeletalAnimations\\BasicHuman\\Animations\\" + animationList[i] + "-TgcSkeletalAnim.xml";
+            }
+
+            personaje = skeletalLoader.loadMeshAndAnimationsFromFile(meshPath,mediaPath, animationsPath );
             //Configurar animacion inicial
             personaje.playAnimation("StandBy", true);
         }
@@ -80,5 +85,10 @@ namespace TGC.Group.Model.Entities
             personaje.dispose();
         }
 
+        protected void setVelocidad(float caminar, float izqDer)
+        {
+            velocidadCaminar = caminar;
+            velocidadIzqDer = izqDer;
+        }
     }
 }

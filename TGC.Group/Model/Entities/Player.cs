@@ -15,17 +15,32 @@ namespace TGC.Group.Model.Entities
 {
     public class Player : Personaje
     {
+        private bool moving;
+        private bool rotating;
+        private bool running;
+        private bool crouching;
+
         public Player(string mediaDir, Vector3 initPosition) : base(mediaDir, "CS_Gign", initPosition)
         {
-            velocidadCaminar = 400f;
-            velocidadIzqDer = 300f;
+            velocidadCaminar = 250f;
+            velocidadIzqDer = 250f;
             velocidadRotacion = 120f;
             tiempoSalto = 10f;
             velocidadSalto = 0.5f;
+            resetBooleans();
         }
 
-        public void recuperaSalud(int salud)
+
+        private void resetBooleans()
         {
+
+            moving = false;
+            rotating = false;
+            running = false;
+            crouching = false;
+        }
+
+        public void recuperaSalud(int salud){
             if (salud + health > maxHealth)
             {
                 health = maxHealth;
@@ -36,8 +51,7 @@ namespace TGC.Group.Model.Entities
             }
         }
 
-        public void mover(TgcD3dInput Input, float ElapsedTime)
-        {
+        public void mover(TgcD3dInput Input, float ElapsedTime){
             //Calcular proxima posicion de personaje segun Input
             var moveForward = 0f;
             var moveLeftRight = 0f;
@@ -46,18 +60,24 @@ namespace TGC.Group.Model.Entities
             var jumpingElapsedTime = 0f;
             float rotate = 0;
 
-            var moving = false;
-            var rotating = false;
-            var running = false;
+            resetBooleans();
 
             //Correr
             if (running = Input.keyDown(Key.LeftShift))
             {
-                velocidadCaminar = 450f;
+                setVelocidad(350f, 350f);
             }
             else
             {
-                velocidadCaminar = 400f;
+                //Agacharse
+                if (crouching = Input.keyDown(Key.LeftControl))
+                {
+                    setVelocidad(30f, 30f);
+                }
+                else
+                {
+                    setVelocidad(250f, 250f);
+                }
             }
 
             //Adelante
@@ -98,28 +118,7 @@ namespace TGC.Group.Model.Entities
                 jumping = true;
             }
 
-            if (moving)
-            {
-                if (running)
-                {//Activar animacion de caminando
-                    personaje.playAnimation("Run", true);
-                }
-                else
-                {
-                    personaje.playAnimation("Walk", true);
-
-                }
-                //Aplicar movimiento hacia adelante o atras segun la orientacion actual del Mesh
-                var lastPos = personaje.Position;
-            }
-            else
-            { //Si no se esta moviendo, activar animacion de Parado
-                if (muerto) personaje.playAnimation("CrouchWalk", true);
-                else
-                {
-                    personaje.playAnimation("StandBy", true);
-                }
-            }
+            displayAnimations();
 
             //Actualizar salto
             if (jumping)
@@ -139,6 +138,38 @@ namespace TGC.Group.Model.Entities
 
             personaje.move(moveLeftRight * ElapsedTime, jump, moveForward * ElapsedTime);
 
+        }
+
+
+        private void displayAnimations()
+        {
+            if (moving){
+
+                if (running){
+                    personaje.playAnimation("Run", true);
+                }
+                else{
+                    if (crouching){
+                        personaje.playAnimation("CrouchWalk", true);
+                    }
+                    else{
+                        personaje.playAnimation("Walk", true);
+                    }
+                }
+            }
+            else
+            {
+                if (crouching)
+                {
+                    personaje.stopAnimation();
+                    personaje.playAnimation("CrouchWalk", false);
+                    
+                }
+                else
+                {
+                    personaje.playAnimation("StandBy", true);
+                }
+            }
         }
 
         public void rotateY(float angle)
