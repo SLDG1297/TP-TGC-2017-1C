@@ -100,30 +100,27 @@ namespace TGC.Group.Model
             var running = false;
 
             //Correr
-            if (Input.keyDown(Key.LeftShift)) {
-                velocidadCaminar = 450f;
-                running = true;
+            if (running = Input.keyDown(Key.LeftShift)) {
+                velocidadCaminar = 450f;               
             }
             else{
                 velocidadCaminar = 400f;
             }
 
             //Adelante
-            if (Input.keyDown(Key.W))
-            {
+            if (Input.keyDown(Key.W)){
                 moveForward = -velocidadCaminar;
                 moving = true;
             }
+
             //Atras
-            if (Input.keyDown(Key.S))
-            {
+            if (Input.keyDown(Key.S)){
                 moveForward = velocidadCaminar;
                 moving = true;
             }
 
             //Derecha
-            if (Input.keyDown(Key.D))
-            {
+            if (Input.keyDown(Key.D)){
                 moveLeftRight = - velocidadIzqDer;
                 rotate = velocidadRotacion;
                 rotating = true;
@@ -131,8 +128,7 @@ namespace TGC.Group.Model
             }
 
             //Izquierda
-            if (Input.keyDown(Key.A))
-            {
+            if (Input.keyDown(Key.A)){
                 moveLeftRight =velocidadIzqDer;
                 rotate = -velocidadRotacion;
                 rotating = true;
@@ -140,27 +136,24 @@ namespace TGC.Group.Model
             }
             
             //Saltar
-            if (!jumping && Input.keyPressed(Key.Space))
-            {        
+            if (!jumping && Input.keyPressed(Key.Space)){        
                     jumping = true;
-             }
+            }
             
-            if (moving)
-            {
-                //Activar animacion de caminando
-                personaje.playAnimation("Walk", true);
+            if (moving){
                 if (running)
-                {
-                    personaje.stopAnimation();
+                {//Activar animacion de caminando
                     personaje.playAnimation("Run", true);
                 }
+                else
+                {
+                    personaje.playAnimation("Walk", true);
 
-                //Aplicar movimiento hacia adelante o atras segun la orientacion actual del Mesh
-                var lastPos = personaje.Position;               
-            }
-            //Si no se esta moviendo, activar animacion de Parado
-            else
-            {
+                }
+                               //Aplicar movimiento hacia adelante o atras segun la orientacion actual del Mesh
+                var lastPos = personaje.Position;
+            } 
+            else{ //Si no se esta moviendo, activar animacion de Parado
                 if (muerto) personaje.playAnimation("CrouchWalk", true);
                 else
                 {
@@ -169,8 +162,7 @@ namespace TGC.Group.Model
             }
 
             //Actualizar salto
-            if (jumping)
-            {
+            if (jumping){
                 personaje.playAnimation("Jump", true);
                 //El salto dura un tiempo hasta llegar a su fin
                 jumpingElapsedTime += ElapsedTime;
