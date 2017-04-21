@@ -11,6 +11,7 @@ using TGC.Core.Camara;
 using TGC.Core.Direct3D;
 using TGC.Core.Input;
 using TGC.Core.Utils;
+using TGC.Group.Model.Entities;
 
 namespace TGC.Group.Model.Cameras
 {

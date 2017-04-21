@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using TGC.Core.Utils;
 using TGC.Core.Geometry;
 using TGC.Core.Textures;
+using TGC.Group.Model.Entities;
 
 namespace TGC.Group.Model
 {
@@ -41,9 +42,13 @@ namespace TGC.Group.Model
 
         private TgcMesh pastito;
         private List<TgcMesh> pastitos = new List<TgcMesh>();
-        #endregion
+ #endregion
 
         private Player jugador;
+
+        //por ahora es para probar con uno solo, mas adelante podemos tener mas de uno
+        //private List<Enemy> enemigo = new List<Enemy>();
+        private Enemy enemigo;
 
         /// <summary>
         ///     Constructor del juego.
@@ -60,6 +65,7 @@ namespace TGC.Group.Model
         public override void Init()
         {
             jugador = new Player(MediaDir, PLAYER_INIT_POS);
+            enemigo = new Enemy(MediaDir, "CS_Arctic", new Vector3(500, 0, 400));         
             //Camara = new FirstPersonCamera(new Vector3(0, 1500, 0), Input);
 
             initSkyBox();
@@ -100,6 +106,7 @@ namespace TGC.Group.Model
             scene.renderAll();
             casa.renderAll();
             jugador.render(ElapsedTime);
+            enemigo.render(ElapsedTime);
 
             //Finaliza el render y presenta en pantalla, al igual que el preRender se debe para casos puntuales es mejor utilizar a mano las operaciones de EndScene y PresentScene
             PostRender();
@@ -119,6 +126,7 @@ namespace TGC.Group.Model
             casa.disposeAll();
 
             jugador.dispose();
+            enemigo.dispose();
         }
 
 #region METODOS AUXILIARES

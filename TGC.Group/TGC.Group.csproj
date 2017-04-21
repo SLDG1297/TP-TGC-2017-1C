@@ -87,8 +87,10 @@
     </Compile>
     <Compile Include="Model\Cameras\FirstPersonCamera.cs" />
     <Compile Include="Model\Cameras\ThirdPersonCamera.cs" />
+    <Compile Include="Model\Entities\Enemy.cs" />
+    <Compile Include="Model\Entities\Personaje.cs" />
     <Compile Include="Model\GameModel.cs" />
-    <Compile Include="Model\Player.cs" />
+    <Compile Include="Model\Entities\Player.cs" />
     <Compile Include="Model\Shooter.cs" />
     <Compile Include="Model\Utils.cs" />
     <Compile Include="Program.cs" />
