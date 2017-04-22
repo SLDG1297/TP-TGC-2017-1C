@@ -1,10 +1,13 @@
 ﻿using Microsoft.DirectX;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TGC.Core.Geometry;
 using TGC.Core.SkeletalAnimation;
+using TGC.Core.Utils;
 
 namespace TGC.Group.Model.Entities
 {
@@ -14,7 +17,9 @@ namespace TGC.Group.Model.Entities
         protected int health;
         protected bool muerto;
         protected bool jumping;
-        protected TgcSkeletalMesh personaje;
+
+        protected TgcSkeletalMesh esqueleto;
+        protected Arma arma;
 
         protected float velocidadCaminar;
         protected float velocidadIzqDer;
@@ -22,17 +27,27 @@ namespace TGC.Group.Model.Entities
         protected float tiempoSalto;
         protected float velocidadSalto;
 
+
+        //CONSTRUCTORES
         public Personaje(string mediaDir, string skin, Vector3 initPosition)
         {
             muerto = false;
             health = maxHealth;
-            loadPerson(mediaDir, skin);
-            personaje.move(initPosition);
+            loadSkeleton(mediaDir, skin);
+            esqueleto.move(initPosition);
         }
+
+        public Personaje(string mediaDir, string skin, Vector3 initPosition, Arma arma) :this(mediaDir, skin, initPosition)
+        {
+            setArma(arma);         
+        }
+
+        //METODOS
 
         //pongo virtual por si otro personaje requiera otras animaciones distintas, entonces cuando lo implementemos
         //solo tenemos que poner 'public override void loadPerson()'
-        public virtual void loadPerson(string MediaDir, string skin)
+        // skins: CS_Gign, CS_Arctic
+        public virtual void loadSkeleton(string MediaDir, string skin)
         {
             //direccion del mesh
             var meshPath = MediaDir + "SkeletalAnimations\\BasicHuman\\" + skin + "-TgcSkeletalMesh.xml";
@@ -50,45 +65,57 @@ namespace TGC.Group.Model.Entities
                 animationsPath[i] = MediaDir + "SkeletalAnimations\\BasicHuman\\Animations\\" + animationList[i] + "-TgcSkeletalAnim.xml";
             }
 
-            personaje = skeletalLoader.loadMeshAndAnimationsFromFile(meshPath,mediaPath, animationsPath );
-            //Configurar animacion inicial
-            personaje.playAnimation("StandBy", true);
-        }
+            esqueleto = skeletalLoader.loadMeshAndAnimationsFromFile(meshPath,mediaPath, animationsPath );
+
+            //Configurar animacion inicial    
+            esqueleto.playAnimation("StandBy", true);
+        }        
 
         public void recibiDanio(int danio)
         {
-            if (danio >= health)
-            {
+            if (danio >= health){
                 health = 0;
                 muerto = true;
             }
-            else
-            {
+            else{
                 health -= danio;
             }
         }
 
-
-        public Vector3 Position
-        {
-            get { return personaje.Position; }
+        public Vector3 Position{
+            get { return esqueleto.Position; }
         }
 
         public void render(float elapsedTime)
         {
-            personaje.Transform = Matrix.Translation(personaje.Position);
-            personaje.animateAndRender(elapsedTime);
+            esqueleto.Transform = Matrix.Translation(esqueleto.Position);
+            esqueleto.animateAndRender(elapsedTime);
         }
 
         public void dispose()
         {
-            personaje.dispose();
+            esqueleto.dispose();
         }
 
         protected void setVelocidad(float caminar, float izqDer)
         {
             velocidadCaminar = caminar;
             velocidadIzqDer = izqDer;
+        }
+        
+        //GETTERS Y SETTERS
+        public TgcSkeletalMesh Esqueleto
+        {
+            get { return esqueleto; }
+        }
+
+        public void setArma(Arma arma)
+        {
+            if (this.arma != null)
+            {
+                this.arma.dispose();
+            }
+            arma.setPlayer(this);
         }
     }
 }

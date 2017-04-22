@@ -64,8 +64,8 @@ namespace TGC.Group.Model
 
         public override void Init()
         {
-            jugador = new Player(MediaDir, PLAYER_INIT_POS);
-            enemigo = new Enemy(MediaDir, "CS_Arctic", new Vector3(500, 0, 400));         
+            jugador = new Player(MediaDir,"CS_Gign", PLAYER_INIT_POS, Arma.AK47(MediaDir));
+            enemigo = new Enemy(MediaDir, "CS_Arctic", new Vector3(500, 0, 400), Arma.AK47(MediaDir));         
             //Camara = new FirstPersonCamera(new Vector3(0, 1500, 0), Input);
 
             initSkyBox();

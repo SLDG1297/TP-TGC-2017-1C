@@ -20,8 +20,15 @@ namespace TGC.Group.Model.Entities
         private bool running;
         private bool crouching;
 
-        public Player(string mediaDir, Vector3 initPosition) : base(mediaDir, "CS_Gign", initPosition)
-        {
+        /// <summary>
+        ///     Construye un jugador manejado por el usuario (WASD).
+        /// </summary>
+        /// <param name="mediaDir">Ruta donde esta la carpeta con los assets</param>
+        /// <param name="skin">Nombre del skin a usar (ej: CS_Gign, CS_Arctic)</param>
+        /// <param name="skin">Posicion inicial del jugador</param>
+        /// <param name="arma">Arma con la que el jugador comienzar</param> 
+        public Player(string mediaDir, string skin,Vector3 initPosition, Arma arma) :base(mediaDir, skin, initPosition, arma) {
+
             velocidadCaminar = 250f;
             velocidadIzqDer = 250f;
             velocidadRotacion = 120f;
@@ -30,10 +37,8 @@ namespace TGC.Group.Model.Entities
             resetBooleans();
         }
 
-
         private void resetBooleans()
         {
-
             moving = false;
             rotating = false;
             running = false;
@@ -123,7 +128,7 @@ namespace TGC.Group.Model.Entities
             //Actualizar salto
             if (jumping)
             {
-                personaje.playAnimation("Jump", true);
+                esqueleto.playAnimation("Jump", true);
                 //El salto dura un tiempo hasta llegar a su fin
                 jumpingElapsedTime += ElapsedTime;
                 if (jumpingElapsedTime > tiempoSalto)
@@ -136,7 +141,7 @@ namespace TGC.Group.Model.Entities
                 }
             }
 
-            personaje.move(moveLeftRight * ElapsedTime, jump, moveForward * ElapsedTime);
+            esqueleto.move(moveLeftRight * ElapsedTime, jump, moveForward * ElapsedTime);
 
         }
 
@@ -146,14 +151,14 @@ namespace TGC.Group.Model.Entities
             if (moving){
 
                 if (running){
-                    personaje.playAnimation("Run", true);
+                    esqueleto.playAnimation("Run", true);
                 }
                 else{
                     if (crouching){
-                        personaje.playAnimation("CrouchWalk", true);
+                        esqueleto.playAnimation("CrouchWalk", true);
                     }
                     else{
-                        personaje.playAnimation("Walk", true);
+                        esqueleto.playAnimation("Walk", true);
                     }
                 }
             }
@@ -161,20 +166,20 @@ namespace TGC.Group.Model.Entities
             {
                 if (crouching)
                 {
-                    personaje.stopAnimation();
-                    personaje.playAnimation("CrouchWalk", false);
+                    esqueleto.stopAnimation();
+                    esqueleto.playAnimation("CrouchWalk", false);
                     
                 }
                 else
                 {
-                    personaje.playAnimation("StandBy", true);
+                    esqueleto.playAnimation("StandBy", true);
                 }
             }
         }
 
         public void rotateY(float angle)
         {
-            personaje.rotateY(angle);
+            esqueleto.rotateY(angle);
         }
 
     }
