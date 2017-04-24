@@ -15,11 +15,6 @@ namespace TGC.Group.Model.Entities
 {
     public class Player : Personaje
     {
-        private bool moving;
-        private bool rotating;
-        private bool running;
-        private bool crouching;
-
         /// <summary>
         ///     Construye un jugador manejado por el usuario (WASD).
         /// </summary>
@@ -29,20 +24,12 @@ namespace TGC.Group.Model.Entities
         /// <param name="arma">Arma con la que el jugador comienzar</param> 
         public Player(string mediaDir, string skin,Vector3 initPosition, Arma arma) :base(mediaDir, skin, initPosition, arma) {
 
-            velocidadCaminar = 250f;
-            velocidadIzqDer = 250f;
-            velocidadRotacion = 120f;
+            velocidadCaminar = 150f;
+            velocidadIzqDer = 150f;
+            velocidadRotacion = 20f;
             tiempoSalto = 10f;
             velocidadSalto = 0.5f;
             resetBooleans();
-        }
-
-        private void resetBooleans()
-        {
-            moving = false;
-            rotating = false;
-            running = false;
-            crouching = false;
         }
 
         public void recuperaSalud(int salud){
@@ -68,9 +55,8 @@ namespace TGC.Group.Model.Entities
             resetBooleans();
 
             //Correr
-            if (running = Input.keyDown(Key.LeftShift))
-            {
-                setVelocidad(350f, 350f);
+            if (running = Input.keyDown(Key.LeftShift)){
+                setVelocidad(250f, 250f);
             }
             else
             {
@@ -81,7 +67,7 @@ namespace TGC.Group.Model.Entities
                 }
                 else
                 {
-                    setVelocidad(250f, 250f);
+                    setVelocidad(150f, 150f);
                 }
             }
 
@@ -95,7 +81,7 @@ namespace TGC.Group.Model.Entities
             //Atras
             if (Input.keyDown(Key.S))
             {
-                moveForward = velocidadCaminar;
+                moveForward = velocidadCaminar - 50f;
                 moving = true;
             }
 
@@ -143,38 +129,11 @@ namespace TGC.Group.Model.Entities
 
             esqueleto.move(moveLeftRight * ElapsedTime, jump, moveForward * ElapsedTime);
 
-        }
+            var desplazamiento = new Vector3(moveLeftRight * ElapsedTime, jump, moveForward * ElapsedTime);
+            esqueleto.Position += desplazamiento;
 
+            esqueleto.Transform = Matrix.Translation(esqueleto.Position);
 
-        private void displayAnimations()
-        {
-            if (moving){
-
-                if (running){
-                    esqueleto.playAnimation("Run", true);
-                }
-                else{
-                    if (crouching){
-                        esqueleto.playAnimation("CrouchWalk", true);
-                    }
-                    else{
-                        esqueleto.playAnimation("Walk", true);
-                    }
-                }
-            }
-            else
-            {
-                if (crouching)
-                {
-                    esqueleto.stopAnimation();
-                    esqueleto.playAnimation("CrouchWalk", false);
-                    
-                }
-                else
-                {
-                    esqueleto.playAnimation("StandBy", true);
-                }
-            }
         }
 
         public void rotateY(float angle)

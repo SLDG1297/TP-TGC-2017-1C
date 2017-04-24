@@ -27,6 +27,10 @@ namespace TGC.Group.Model.Entities
         protected float tiempoSalto;
         protected float velocidadSalto;
 
+        protected bool moving;
+        protected bool rotating;
+        protected bool running;
+        protected bool crouching;
 
         //CONSTRUCTORES
         public Personaje(string mediaDir, string skin, Vector3 initPosition)
@@ -34,7 +38,13 @@ namespace TGC.Group.Model.Entities
             muerto = false;
             health = maxHealth;
             loadSkeleton(mediaDir, skin);
-            esqueleto.move(initPosition);
+
+
+            esqueleto.AutoTransformEnable = false;
+            esqueleto.Position = initPosition;
+            esqueleto.Transform = Matrix.Translation(esqueleto.Position);
+
+            resetBooleans();
         }
 
         public Personaje(string mediaDir, string skin, Vector3 initPosition, Arma arma) :this(mediaDir, skin, initPosition)
@@ -82,13 +92,44 @@ namespace TGC.Group.Model.Entities
             }
         }
 
-        public Vector3 Position{
-            get { return esqueleto.Position; }
-        }
+        protected void displayAnimations()
+        {
+            if (moving)
+            {
 
+                if (running)
+                {
+                    esqueleto.playAnimation("Run", true);
+                }
+                else
+                {
+                    if (crouching)
+                    {
+                        esqueleto.playAnimation("CrouchWalk", true);
+                    }
+                    else
+                    {
+                        esqueleto.playAnimation("Walk", true);
+                    }
+                }
+            }
+            else
+            {
+                if (crouching)
+                {
+                    esqueleto.stopAnimation();
+                    esqueleto.playAnimation("CrouchWalk", false);
+
+                }
+                else
+                {
+                    esqueleto.playAnimation("StandBy", true);
+                }
+            }
+        }
+        
         public void render(float elapsedTime)
         {
-            esqueleto.Transform = Matrix.Translation(esqueleto.Position);
             esqueleto.animateAndRender(elapsedTime);
         }
 
@@ -117,5 +158,19 @@ namespace TGC.Group.Model.Entities
             }
             arma.setPlayer(this);
         }
+
+        public Vector3 Position
+        {
+            get { return esqueleto.Position; }
+        }
+
+        protected void resetBooleans()
+        {
+            moving = false;
+            rotating = false;
+            running = false;
+            crouching = false;
+        }
+
     }
 }
