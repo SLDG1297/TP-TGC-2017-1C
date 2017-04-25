@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using TGC.Core.Utils;
 using TGC.Core.Geometry;
 using TGC.Core.Textures;
+using TGC.Core.Collision;
+using TGC.Core.BoundingVolumes;
 using TGC.Group.Model.Entities;
 
 namespace TGC.Group.Model
@@ -50,6 +52,8 @@ namespace TGC.Group.Model
         //private List<Enemy> enemigo = new List<Enemy>();
         private Enemy enemigo;
 
+		private List<TgcBoundingAxisAlignBox> obstaculos = new List<TgcBoundingAxisAlignBox>(); // Colisiones
+
         /// <summary>
         ///     Constructor del juego.
         /// </summary>
@@ -72,17 +76,19 @@ namespace TGC.Group.Model
             initTerrain();
             initScene();
 
-            //Configurar camara en Tercera Persona y la asigno al TGC.            
+			//Configurar camara en Tercera Persona y la asigno al TGC.
             camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40,0,-50), 50, 150, Input);
             //camaraInterna = new ThirdPersonCamera(jugador, 50, 150, Input);
-            Camara = camaraInterna;            
+            Camara = camaraInterna;
+
+			initObstaculos();
         }
 
         public override void Update()
         {
             PreUpdate();
             
-            jugador.mover(Input, ElapsedTime);
+			jugador.mover(Input, ElapsedTime, obstaculos);
 
             //Hacer que la camara siga al personaje en su nueva posicion
             camaraInterna.Target = jugador.Position;
@@ -108,6 +114,8 @@ namespace TGC.Group.Model
             jugador.render(ElapsedTime);
             enemigo.render(ElapsedTime);
 
+			renderAABB();
+
             //Finaliza el render y presenta en pantalla, al igual que el preRender se debe para casos puntuales es mejor utilizar a mano las operaciones de EndScene y PresentScene
             PostRender();
         }
@@ -127,6 +135,11 @@ namespace TGC.Group.Model
 
             jugador.dispose();
             enemigo.dispose();
+
+			foreach (var obstaculo in obstaculos)
+            {
+                obstaculo.dispose();
+            }
         }
 
 #region METODOS AUXILIARES
@@ -197,6 +210,24 @@ namespace TGC.Group.Model
 
             skyBox.Init();
         }
+
+		private void initObstaculos() {
+			foreach (var mesh in scene.Meshes) {
+				obstaculos.Add(mesh.BoundingBox);
+			}
+			foreach (var mesh in casa.Meshes) {
+				obstaculos.Add(mesh.BoundingBox);
+			}
+		}
+
+		// Renderizar bounding box
+		private void renderAABB() {
+			jugador.Esqueleto.BoundingBox.render();
+			enemigo.Esqueleto.BoundingBox.render();
+			foreach (var obstaculo in obstaculos) {
+				obstaculo.render();
+			}
+		}
 #endregion
     }
 }

@@ -8,6 +8,7 @@ using TGC.Core.Input;
 using TGC.Core.Geometry;
 using Microsoft.DirectX.DirectInput;
 using TGC.Core.Collision;
+using TGC.Core.BoundingVolumes;
 using Microsoft.DirectX;
 using TGC.Core.Utils;
 
@@ -30,6 +31,7 @@ namespace TGC.Group.Model.Entities
             tiempoSalto = 10f;
             velocidadSalto = 0.5f;
             resetBooleans();
+			lastPos = initPosition;
         }
 
         public void recuperaSalud(int salud){
@@ -43,7 +45,10 @@ namespace TGC.Group.Model.Entities
             }
         }
 
-        public void mover(TgcD3dInput Input, float ElapsedTime){
+
+		private Vector3 lastPos; // Ultima posicion
+
+		public void mover(TgcD3dInput Input, float ElapsedTime, List<TgcBoundingAxisAlignBox> obstaculos) {
             //Calcular proxima posicion de personaje segun Input
             var moveForward = 0f;
             var moveLeftRight = 0f;
@@ -127,13 +132,20 @@ namespace TGC.Group.Model.Entities
                 }
             }
 
-            esqueleto.move(moveLeftRight * ElapsedTime, jump, moveForward * ElapsedTime);
+			esqueleto.move(moveLeftRight * ElapsedTime, jump, moveForward * ElapsedTime);
 
-            var desplazamiento = new Vector3(moveLeftRight * ElapsedTime, jump, moveForward * ElapsedTime);
-            esqueleto.Position += desplazamiento;
-
+			var desplazamiento = new Vector3(moveLeftRight * ElapsedTime, jump, moveForward * ElapsedTime);
+			esqueleto.Position += desplazamiento;
             esqueleto.Transform = Matrix.Translation(esqueleto.Position);
 
+			var collider = getColliderAABB(obstaculos);
+			if (collider != null)
+			{
+				// TODO: Si hay colision, hacer algo
+				esqueleto.Position = lastPos;
+			}
+
+			lastPos = esqueleto.Position;
         }
 
         public void rotateY(float angle)
@@ -141,5 +153,17 @@ namespace TGC.Group.Model.Entities
             esqueleto.rotateY(angle);
         }
 
+
+		// Devuelve el bounding box del objeto con el cual esta colisionando
+		private TgcBoundingAxisAlignBox getColliderAABB(List<TgcBoundingAxisAlignBox> obstaculos)
+		{
+			foreach (var obstaculo in obstaculos)
+			{
+				if (TgcCollisionUtils.testAABBAABB(esqueleto.BoundingBox, obstaculo))
+				{
+					return obstaculo;
+				}
+			}
+			return null;		}
     }
 }
