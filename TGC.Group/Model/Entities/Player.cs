@@ -16,6 +16,8 @@ namespace TGC.Group.Model.Entities
 {
     public class Player : Personaje
     {
+        private Vector3 lastPos; // Ultima posicion
+
         /// <summary>
         ///     Construye un jugador manejado por el usuario (WASD).
         /// </summary>
@@ -25,8 +27,8 @@ namespace TGC.Group.Model.Entities
         /// <param name="arma">Arma con la que el jugador comienzar</param> 
         public Player(string mediaDir, string skin,Vector3 initPosition, Arma arma) :base(mediaDir, skin, initPosition, arma) {
 
-            velocidadCaminar = 150f;
-            velocidadIzqDer = 150f;
+            velocidadCaminar = 100f;
+            velocidadIzqDer = 100f;
             velocidadRotacion = 20f;
             tiempoSalto = 10f;
             velocidadSalto = 0.5f;
@@ -43,10 +45,7 @@ namespace TGC.Group.Model.Entities
             {
                 health += salud;
             }
-        }
-
-
-		private Vector3 lastPos; // Ultima posicion
+        }        
 
 		public void mover(TgcD3dInput Input, float ElapsedTime, List<TgcBoundingAxisAlignBox> obstaculos) {
             //Calcular proxima posicion de personaje segun Input
@@ -61,7 +60,7 @@ namespace TGC.Group.Model.Entities
 
             //Correr
             if (running = Input.keyDown(Key.LeftShift)){
-                setVelocidad(250f, 250f);
+                setVelocidad(200f, 200f);
             }
             else
             {
@@ -72,7 +71,7 @@ namespace TGC.Group.Model.Entities
                 }
                 else
                 {
-                    setVelocidad(150f, 150f);
+                    setVelocidad(100f, 100f);
                 }
             }
 
@@ -114,6 +113,18 @@ namespace TGC.Group.Model.Entities
                 jumping = true;
             }
 
+            //Disparar
+            if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT) || Input.buttonDown(TgcD3dInput.MouseButtons.BUTTON_LEFT))
+            {
+                arma.dispara(ElapsedTime, this.Position);
+            }
+
+            //Recargar
+            if (Input.keyPressed(Key.R))
+            {
+                arma.recarga();
+            }
+
             displayAnimations();
 
             //Actualizar salto
@@ -131,14 +142,15 @@ namespace TGC.Group.Model.Entities
                     jump = velocidadSalto * (tiempoSalto - jumpingElapsedTime);
                 }
             }
-
-			esqueleto.move(moveLeftRight * ElapsedTime, jump, moveForward * ElapsedTime);
+            
 
 			var desplazamiento = new Vector3(moveLeftRight * ElapsedTime, jump, moveForward * ElapsedTime);
 			esqueleto.Position += desplazamiento;
             esqueleto.Transform = Matrix.Translation(esqueleto.Position);
+            this.arma.updateBullets(ElapsedTime);
 
-			var collider = getColliderAABB(obstaculos);
+
+            var collider = getColliderAABB(obstaculos);
 			if (collider != null)
 			{
 				// TODO: Si hay colision, hacer algo
@@ -165,5 +177,19 @@ namespace TGC.Group.Model.Entities
 				}
 			}
 			return null;		}
+
+
+
+
+        //GETTERS Y SETTERS
+        public Arma Arma
+        {
+            get { return arma; }
+        }
+
+        public int Health
+        {
+            get { return health; }
+        }
     }
 }

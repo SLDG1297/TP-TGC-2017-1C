@@ -13,6 +13,7 @@ using TGC.Core.Textures;
 using TGC.Core.Collision;
 using TGC.Core.BoundingVolumes;
 using TGC.Group.Model.Entities;
+using System.Drawing;
 
 namespace TGC.Group.Model
 {
@@ -114,7 +115,11 @@ namespace TGC.Group.Model
             jugador.render(ElapsedTime);
             enemigo.render(ElapsedTime);
 
-			renderAABB();
+
+            DrawText.drawText("HEALTH: " + jugador.Health + "; BALAS: " + jugador.Arma.Balas + "; RECARGAS: " + jugador.Arma.Recargas, 50, 1000, Color.OrangeRed);
+
+
+            renderAABB();
 
             //Finaliza el render y presenta en pantalla, al igual que el preRender se debe para casos puntuales es mejor utilizar a mano las operaciones de EndScene y PresentScene
             PostRender();

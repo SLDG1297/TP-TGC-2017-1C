@@ -36,6 +36,8 @@ namespace TGC.Group.Model.Entities
         public Personaje(string mediaDir, string skin, Vector3 initPosition)
         {
             muerto = false;
+
+            maxHealth = 100;
             health = maxHealth;
             loadSkeleton(mediaDir, skin);
 
@@ -131,6 +133,7 @@ namespace TGC.Group.Model.Entities
         public void render(float elapsedTime)
         {
             esqueleto.animateAndRender(elapsedTime);
+            arma.renderBullets();
         }
 
         public void dispose()
@@ -156,6 +159,7 @@ namespace TGC.Group.Model.Entities
             {
                 this.arma.dispose();
             }
+            this.arma = arma;
             arma.setPlayer(this);
         }
 
