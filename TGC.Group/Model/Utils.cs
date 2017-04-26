@@ -83,5 +83,10 @@ namespace TGC.Group.Model
                 mesh.Transform = matriz * mesh.Transform;
             }
         }
+
+		public static float DegreeToRadian(float degree)
+		{
+			return degree * (3.141592654f / 180.0f);
+		}
     }
 }

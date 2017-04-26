@@ -25,6 +25,11 @@ namespace TGC.Group.Model
         private Vector3 CENTRO = new Vector3(0, 0, 0);
         private Vector3 PLAYER_INIT_POS = new Vector3(500, 0, 500);
 
+		// Rotacion de la camara segun el puntero del mouse
+		private float leftrightRot = 0f;
+		private float updownRot = 0f;
+
+
         //VARIABLES DE INSTANCIA
         private TgcSimpleTerrain terreno;
 		private TgcSkyBox skyBox;
@@ -90,6 +95,10 @@ namespace TGC.Group.Model
             PreUpdate();
             
 			jugador.mover(Input, ElapsedTime, obstaculos);
+
+			leftrightRot -= -Input.XposRelative * 0.05f;
+
+			camaraInterna.RotationY = leftrightRot;
 
             //Hacer que la camara siga al personaje en su nueva posicion
             camaraInterna.Target = jugador.Position;

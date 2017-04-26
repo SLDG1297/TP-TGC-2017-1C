@@ -17,6 +17,7 @@ namespace TGC.Group.Model.Entities
     public class Player : Personaje
     {
         private Vector3 lastPos; // Ultima posicion
+		private float Rotacion = 0f;
 
         /// <summary>
         ///     Construye un jugador manejado por el usuario (WASD).
@@ -53,10 +54,13 @@ namespace TGC.Group.Model.Entities
             var moveLeftRight = 0f;
 
             float jump = 0;
-            var jumpingElapsedTime = 0f;
+			float jumpingElapsedTime = 0f;
             float rotate = 0;
 
             resetBooleans();
+
+			// Rotar respecto a la posicion del mouse
+			Rotacion += -Input.XposRelative * 0.05f;
 
             //Correr
             if (running = Input.keyDown(Key.LeftShift)){
@@ -142,11 +146,12 @@ namespace TGC.Group.Model.Entities
                     jump = velocidadSalto * (tiempoSalto - jumpingElapsedTime);
                 }
             }
-            
 
 			var desplazamiento = new Vector3(moveLeftRight * ElapsedTime, jump, moveForward * ElapsedTime);
+
 			esqueleto.Position += desplazamiento;
-            esqueleto.Transform = Matrix.Translation(esqueleto.Position);
+			esqueleto.Transform = Matrix.RotationY(Rotacion) * Matrix.Translation(esqueleto.Position);
+
             this.arma.updateBullets(ElapsedTime);
 
 
