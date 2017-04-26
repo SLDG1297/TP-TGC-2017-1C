@@ -23,7 +23,7 @@ namespace TGC.Group.Model
         private const float MAP_SCALE_XZ = 20.0f;
         private const float MAP_SCALE_Y = 1.3f;
         private Vector3 CENTRO = new Vector3(0, 0, 0);
-        private Vector3 PLAYER_INIT_POS = new Vector3(500, 0, 500);
+        private Vector3 PLAYER_INIT_POS = new Vector3(400, 0, 500);
 
 		// Rotacion de la camara segun el puntero del mouse
 		private float leftrightRot = 0f;
@@ -230,6 +230,7 @@ namespace TGC.Group.Model
 			foreach (var mesh in casa.Meshes) {
 				obstaculos.Add(mesh.BoundingBox);
 			}
+			obstaculos.Add(enemigo.Esqueleto.BoundingBox);
 		}
 
 		// Renderizar bounding box
