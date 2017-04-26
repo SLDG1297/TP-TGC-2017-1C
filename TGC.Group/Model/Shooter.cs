@@ -25,9 +25,6 @@ namespace TGC.Group.Model
         private Vector3 CENTRO = new Vector3(0, 0, 0);
         private Vector3 PLAYER_INIT_POS = new Vector3(400, 0, 500);
 
-		// Rotacion de la camara segun el puntero del mouse
-		private float leftrightRot = 0f;
-
         //VARIABLES DE INSTANCIA
         private TgcSimpleTerrain terreno;
 		private TgcSkyBox skyBox;
@@ -81,8 +78,7 @@ namespace TGC.Group.Model
             initScene();
 
 			//Configurar camara en Tercera Persona y la asigno al TGC.
-            //camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40,0,-50), 50, 150, Input);
-			camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-50,0,-50), 40, 150, Input);
+            camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40,0,-50), 50, 150, Input);
             //camaraInterna = new ThirdPersonCamera(jugador, 50, 150, Input);
             Camara = camaraInterna;
 
@@ -95,10 +91,11 @@ namespace TGC.Group.Model
             
 			jugador.mover(Input, ElapsedTime, obstaculos);
 
-			leftrightRot -= -Input.XposRelative * 0.05f;
+			//updownRot -= Input.YposRelative * 0.05f;
+			camaraInterna.OffsetHeight -= Input.YposRelative;
 
-			camaraInterna.RotationY = leftrightRot;
-			camaraInterna.TargetDisplacement *= leftrightRot * ElapsedTime;
+			camaraInterna.rotateY(Input.XposRelative * 0.05f);
+			camaraInterna.TargetDisplacement *= camaraInterna.RotationY * ElapsedTime;
 
             //Hacer que la camara siga al personaje en su nueva posicion
             camaraInterna.Target = jugador.Position;
