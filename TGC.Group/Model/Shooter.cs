@@ -98,7 +98,7 @@ namespace TGC.Group.Model
 			leftrightRot -= -Input.XposRelative * 0.05f;
 
 			camaraInterna.RotationY = leftrightRot;
-			camaraInterna.TargetDisplacement *= leftrightRot;
+			camaraInterna.TargetDisplacement *= leftrightRot * ElapsedTime;
 
             //Hacer que la camara siga al personaje en su nueva posicion
             camaraInterna.Target = jugador.Position;
