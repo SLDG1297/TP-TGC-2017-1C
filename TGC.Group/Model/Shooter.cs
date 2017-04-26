@@ -81,7 +81,8 @@ namespace TGC.Group.Model
             initScene();
 
 			//Configurar camara en Tercera Persona y la asigno al TGC.
-            camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40,0,-50), 50, 150, Input);
+            //camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40,0,-50), 50, 150, Input);
+			camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-50,0,-50), 40, 150, Input);
             //camaraInterna = new ThirdPersonCamera(jugador, 50, 150, Input);
             Camara = camaraInterna;
 
@@ -97,6 +98,7 @@ namespace TGC.Group.Model
 			leftrightRot -= -Input.XposRelative * 0.05f;
 
 			camaraInterna.RotationY = leftrightRot;
+			camaraInterna.TargetDisplacement *= leftrightRot;
 
             //Hacer que la camara siga al personaje en su nueva posicion
             camaraInterna.Target = jugador.Position;

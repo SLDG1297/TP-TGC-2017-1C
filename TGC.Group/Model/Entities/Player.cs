@@ -60,7 +60,7 @@ namespace TGC.Group.Model.Entities
             resetBooleans();
 
 			// Rotar respecto a la posicion del mouse
-			Rotacion += -Input.XposRelative * 0.05f;
+			Rotacion += Input.XposRelative * 0.05f;
 
             //Correr
             if (running = Input.keyDown(Key.LeftShift)){
@@ -148,6 +148,8 @@ namespace TGC.Group.Model.Entities
             }
 
 			var desplazamiento = new Vector3(moveLeftRight * ElapsedTime, jump, moveForward * ElapsedTime);
+
+			desplazamiento.TransformCoordinate(Matrix.RotationY(Rotacion));
 
 			esqueleto.Position += desplazamiento;
 			esqueleto.Transform = Matrix.RotationY(Rotacion) * Matrix.Translation(esqueleto.Position);
