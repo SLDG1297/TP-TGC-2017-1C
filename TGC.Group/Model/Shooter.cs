@@ -27,8 +27,6 @@ namespace TGC.Group.Model
 
 		// Rotacion de la camara segun el puntero del mouse
 		private float leftrightRot = 0f;
-		private float updownRot = 0f;
-
 
         //VARIABLES DE INSTANCIA
         private TgcSimpleTerrain terreno;
