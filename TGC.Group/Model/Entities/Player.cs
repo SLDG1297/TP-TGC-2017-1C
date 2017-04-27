@@ -17,6 +17,7 @@ namespace TGC.Group.Model.Entities
     public class Player : Personaje
     {
         private Vector3 lastPos; // Ultima posicion
+        private float lastPosTerreno;
 		private float Rotacion = 0f;
 
         /// <summary>
@@ -48,7 +49,7 @@ namespace TGC.Group.Model.Entities
             }
         }        
 
-		public void mover(TgcD3dInput Input, float ElapsedTime, List<TgcBoundingAxisAlignBox> obstaculos) {
+		public void mover(TgcD3dInput Input, float posicionY, float ElapsedTime, List<TgcBoundingAxisAlignBox> obstaculos) {
             //Calcular proxima posicion de personaje segun Input
             var moveForward = 0f;
             var moveLeftRight = 0f;
@@ -147,7 +148,7 @@ namespace TGC.Group.Model.Entities
                 }
             }
 
-			var desplazamiento = new Vector3(moveLeftRight * ElapsedTime, jump, moveForward * ElapsedTime);
+			var desplazamiento = new Vector3(moveLeftRight * ElapsedTime, jump + posicionY - lastPosTerreno, moveForward * ElapsedTime);
 
 			desplazamiento.TransformCoordinate(Matrix.RotationY(Rotacion));
 
@@ -207,6 +208,7 @@ namespace TGC.Group.Model.Entities
 			}
 
 			lastPos = esqueleto.Position;
+            lastPosTerreno = posicionY;
         }
 
         public void rotateY(float angle)

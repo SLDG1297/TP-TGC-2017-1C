@@ -89,7 +89,7 @@ namespace TGC.Group.Model
         {
             PreUpdate();
             
-			jugador.mover(Input, ElapsedTime, obstaculos);
+			jugador.mover(Input, this.posicionEnTerreno(jugador.Position.X, jugador.Position.Z), ElapsedTime, obstaculos);
 
 			//updownRot -= Input.YposRelative * 0.05f;
 			camaraInterna.OffsetHeight += Input.YposRelative;
@@ -245,6 +245,43 @@ namespace TGC.Group.Model
 				obstaculo.render();
 			}
 		}
+
+        private float posicionEnTerreno(float x, float z)
+        {
+            var largo = MAP_SCALE_XZ * 200;
+            var pos_i = 200f * (0.5f + x / largo);
+            var pos_j = 200f * (0.5f + z / largo);
+
+            var pi = (int)pos_i;
+            var fracc_i = pos_i - pi;
+            var pj = (int)pos_j;
+            var fracc_j = pos_j - pj;
+
+            if (pi < 0)
+                pi = 0;
+            else if (pi > 199)
+                pi = 199;
+
+            if (pj < 0)
+                pj = 0;
+            else if (pj > 199)
+                pj = 199;
+
+            var pi1 = pi + 1;
+            var pj1 = pj + 1;
+            if (pi1 > 199)
+                pi1 = 199;
+            if (pj1 > 199)
+                pj1 = 199;
+
+            var H0 = terreno.HeightmapData[pi, pj] * MAP_SCALE_Y;
+            var H1 = terreno.HeightmapData[pi1, pj] * MAP_SCALE_Y;
+            var H2 = terreno.HeightmapData[pi, pj1] * MAP_SCALE_Y;
+            var H3 = terreno.HeightmapData[pi1, pj1] * MAP_SCALE_Y;
+            var H = (H0 * (1 - fracc_i) + H1 * fracc_i) * (1 - fracc_j) +
+                    (H2 * (1 - fracc_i) + H3 * fracc_i) * fracc_j;
+            return H;
+        }
 #endregion
     }
 }
