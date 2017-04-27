@@ -117,11 +117,7 @@ namespace TGC.Group.Model.Entities
                 jumping = true;
             }
 
-            //Disparar
-            if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT) || Input.buttonDown(TgcD3dInput.MouseButtons.BUTTON_LEFT))
-            {
-                arma.dispara(ElapsedTime, this.Position);
-            }
+        
 
             //Recargar
             if (Input.keyPressed(Key.R))
@@ -155,7 +151,13 @@ namespace TGC.Group.Model.Entities
 
 			esqueleto.Transform = Matrix.RotationY(Rotacion) * Matrix.Translation(esqueleto.Position);
 
-			this.arma.updateBullets(ElapsedTime, Rotacion);
+            //Disparar
+            if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT) || Input.buttonDown(TgcD3dInput.MouseButtons.BUTTON_LEFT))
+            {
+                arma.dispara(ElapsedTime, this.Position, Rotacion);
+            }
+
+            this.arma.updateBullets(ElapsedTime);
 
 
             var collider = getColliderAABB(obstaculos);
