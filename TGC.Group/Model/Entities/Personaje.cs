@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using TGC.Core.Geometry;
 using TGC.Core.SkeletalAnimation;
 using TGC.Core.Utils;
+using TGC.Core.BoundingVolumes;
+using TGC.Core.Collision;
 
 namespace TGC.Group.Model.Entities
 {
@@ -82,6 +84,19 @@ namespace TGC.Group.Model.Entities
             //Configurar animacion inicial    
             esqueleto.playAnimation("StandBy", true);
         }        
+
+		// Devuelve el bounding box del objeto con el cual esta colisionando
+		protected TgcBoundingAxisAlignBox getColliderAABB(List<TgcBoundingAxisAlignBox> obstaculos)
+		{
+			foreach (var obstaculo in obstaculos)
+			{
+				if (TgcCollisionUtils.testAABBAABB(esqueleto.BoundingBox, obstaculo))
+				{
+					return obstaculo;
+				}
+			}
+			return null;
+		}
 
         public void recibiDanio(int danio)
         {

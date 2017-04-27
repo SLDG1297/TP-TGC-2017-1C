@@ -34,7 +34,7 @@ namespace TGC.Group.Model.Cameras
         public ThirdPersonCamera(Player target, float offsetHeight, float offsetForward, TgcD3dInput input)
         {
             Input = input;
-            Target = target.Position;
+			Target = Vector3.Add(target.Position,new Vector3(0,0,0));
             objetivo = target;
 
             OffsetHeight = offsetHeight;

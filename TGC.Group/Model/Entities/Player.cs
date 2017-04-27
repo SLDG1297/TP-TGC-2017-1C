@@ -220,22 +220,7 @@ namespace TGC.Group.Model.Entities
         }
 
 
-		// Devuelve el bounding box del objeto con el cual esta colisionando
-		private TgcBoundingAxisAlignBox getColliderAABB(List<TgcBoundingAxisAlignBox> obstaculos)
-		{
-			foreach (var obstaculo in obstaculos)
-			{
-				if (TgcCollisionUtils.testAABBAABB(esqueleto.BoundingBox, obstaculo))
-				{
-					return obstaculo;
-				}
-			}
-			return null;		}
-
-
-
-
-        //GETTERS Y SETTERS
+		//GETTERS Y SETTERS
         public Arma Arma
         {
             get { return arma; }

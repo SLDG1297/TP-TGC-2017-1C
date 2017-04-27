@@ -52,7 +52,7 @@ namespace TGC.Group.Model
 
         //por ahora es para probar con uno solo, mas adelante podemos tener mas de uno
         //private List<Enemy> enemigo = new List<Enemy>();
-        private Enemy enemigo;
+        private List<Enemy> enemigos = new List<Enemy>();
 
 		private List<TgcBoundingAxisAlignBox> obstaculos = new List<TgcBoundingAxisAlignBox>();
 
@@ -69,13 +69,14 @@ namespace TGC.Group.Model
             Category = Game.Default.Category;
             Name = Game.Default.Name;
             Description = Game.Default.Description;
+
         }
 
         public override void Init()
         {
             jugador = new Player(MediaDir,"CS_Gign", PLAYER_INIT_POS, Arma.AK47(MediaDir));
-            enemigo = new Enemy(MediaDir, "CS_Arctic", new Vector3(500, 0, 400), Arma.AK47(MediaDir));         
-            //Camara = new FirstPersonCamera(new Vector3(0, 1500, 0), Input);
+           
+			//Camara = new FirstPersonCamera(new Vector3(0, 1500, 0), Input);
 
             initSkyBox();
             initTerrain();
@@ -84,19 +85,38 @@ namespace TGC.Group.Model
 			initText();
 
 			//Configurar camara en Tercera Persona y la asigno al TGC.
-            camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40,0,-50), 50, 150, Input);
+            camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40,50,-50), 100, 150, Input);
             //camaraInterna = new ThirdPersonCamera(jugador, 50, 150, Input);
             Camara = camaraInterna;
 
 			initObstaculos();
-        }
+
+			var rndm = new Random();
+			for (var i = 0; i < 15; i++)
+			{
+				var enemy_position_X = -rndm.Next(-1500, 1500);
+				var enemy_position_Z = -rndm.Next(-1500, 1500);
+				var enemy_position_Y = posicionEnTerreno(enemy_position_X, enemy_position_Z);
+				var enemy_position = new Vector3(enemy_position_X, enemy_position_Y, enemy_position_Z);
+				enemy_position = Vector3.TransformCoordinate(enemy_position, Matrix.RotationY(Utils.DegreeToRadian(rndm.Next(0, 360))));
+				var enemigo = new Enemy(MediaDir, "CS_Arctic",enemy_position , Arma.AK47(MediaDir));
+				if (!enemigo.isCollidingWithObject(obstaculos))
+				{
+					enemigos.Add(enemigo);
+				}
+				else {
+					i--;
+				}
+			}
+
+		}
 
         public override void Update()
         {
             PreUpdate();
 
             var aux = jugador.Arma.Proyectiles.Count;
-            jugador.mover(Input, this.posicionEnTerreno(jugador.Position.X, jugador.Position.Z), ElapsedTime, obstaculos);
+            jugador.mover(Input, posicionEnTerreno(jugador.Position.X, jugador.Position.Z), ElapsedTime, obstaculos);
 
 			//updownRot -= Input.YposRelative * 0.05f;
 			camaraInterna.OffsetHeight += Input.YposRelative;
@@ -107,6 +127,12 @@ namespace TGC.Group.Model
 			var forward = camaraInterna.OffsetForward - Input.WheelPos * 10;
 			if (forward > 10) {
 				camaraInterna.OffsetForward -= Input.WheelPos * 10;
+			}
+
+			// IA 
+			foreach (var enemy in enemigos)
+			{
+				enemy.updateStatus(jugador.Position, ElapsedTime, obstaculos, posicionEnTerreno(enemy.Position.X, enemy.Position.Z));
 			}
 
             //agrego a la lista nuevos proyectiles
@@ -143,7 +169,9 @@ namespace TGC.Group.Model
             scene.renderAll();
             casa.renderAll();
             jugador.render(ElapsedTime);
-            enemigo.render(ElapsedTime);
+			foreach (var enemigo in enemigos) {
+				enemigo.render(ElapsedTime);
+			}
 
 
 			//DrawText.drawText("HEALTH: " + jugador.Health + "; BALAS: " + jugador.Arma.Balas + "; RECARGAS: " + jugador.Arma.Recargas, 50, 1000, Color.OrangeRed);
@@ -170,7 +198,9 @@ namespace TGC.Group.Model
             casa.disposeAll();
 
             jugador.dispose();
-            enemigo.dispose();
+			foreach (var enemigo in enemigos) {
+				enemigo.dispose();
+			}
 
 			foreach (var obstaculo in obstaculos)
             {
@@ -257,7 +287,9 @@ namespace TGC.Group.Model
 			foreach (var mesh in casa.Meshes) {
 				obstaculos.Add(mesh.BoundingBox);
 			}
-			obstaculos.Add(enemigo.Esqueleto.BoundingBox);
+			foreach (var enemigo in enemigos) {  
+				obstaculos.Add(enemigo.Esqueleto.BoundingBox);
+			}
 		}
 
 		private void initText() {
@@ -294,7 +326,7 @@ namespace TGC.Group.Model
 			}
 		}
 
-        private float posicionEnTerreno(float x, float z)
+		public float posicionEnTerreno(float x, float z)
         {
             var largo = MAP_SCALE_XZ * 200;
             var pos_i = 200f * (0.5f + x / largo);
