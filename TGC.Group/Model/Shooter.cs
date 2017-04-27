@@ -5,6 +5,7 @@ using TGC.Core.Direct3D;
 using TGC.Core.Example;
 using TGC.Core.Terrain;
 using TGC.Core.SceneLoader;
+using TGC.Core.Text;
 using TGC.Group.Model.Cameras;
 using System.Collections.Generic;
 using TGC.Core.Utils;
@@ -53,7 +54,10 @@ namespace TGC.Group.Model
         //private List<Enemy> enemigo = new List<Enemy>();
         private Enemy enemigo;
 
-		private List<TgcBoundingAxisAlignBox> obstaculos = new List<TgcBoundingAxisAlignBox>(); // Colisiones
+		private List<TgcBoundingAxisAlignBox> obstaculos = new List<TgcBoundingAxisAlignBox>();
+
+		private TgcText2D texto = new TgcText2D();
+		private TgcText2D sombraTexto = new TgcText2D();
 
         /// <summary>
         ///     Constructor del juego.
@@ -77,6 +81,8 @@ namespace TGC.Group.Model
             initTerrain();
             initScene();
 
+			initText();
+
 			//Configurar camara en Tercera Persona y la asigno al TGC.
             camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40,0,-50), 50, 150, Input);
             //camaraInterna = new ThirdPersonCamera(jugador, 50, 150, Input);
@@ -88,8 +94,9 @@ namespace TGC.Group.Model
         public override void Update()
         {
             PreUpdate();
-            
-			jugador.mover(Input, this.posicionEnTerreno(jugador.Position.X, jugador.Position.Z), ElapsedTime, obstaculos);
+
+            var aux = jugador.Arma.Proyectiles.Count;
+            jugador.mover(Input, this.posicionEnTerreno(jugador.Position.X, jugador.Position.Z), ElapsedTime, obstaculos);
 
 			//updownRot -= Input.YposRelative * 0.05f;
 			camaraInterna.OffsetHeight += Input.YposRelative;
@@ -102,8 +109,20 @@ namespace TGC.Group.Model
 				camaraInterna.OffsetForward -= Input.WheelPos * 10;
 			}
 
+            //agrego a la lista nuevos proyectiles
+            if(aux != jugador.Arma.Proyectiles.Count)
+            {
+                for (int i = aux; i < jugador.Arma.Proyectiles.Count; i++)
+                {
+                    var bala = jugador.Arma.Proyectiles[i];
+                    obstaculos.Add(bala.Mesh.BoundingBox);
+                }
+            }
+
             //Hacer que la camara siga al personaje en su nueva posicion
             camaraInterna.Target = jugador.Position;
+
+			updateText();
         }
 
         public override void Render()
@@ -127,8 +146,9 @@ namespace TGC.Group.Model
             enemigo.render(ElapsedTime);
 
 
-            DrawText.drawText("HEALTH: " + jugador.Health + "; BALAS: " + jugador.Arma.Balas + "; RECARGAS: " + jugador.Arma.Recargas, 50, 1000, Color.OrangeRed);
-
+			//DrawText.drawText("HEALTH: " + jugador.Health + "; BALAS: " + jugador.Arma.Balas + "; RECARGAS: " + jugador.Arma.Recargas, 50, 1000, Color.OrangeRed);
+			sombraTexto.render();
+			texto.render();
 
             renderAABB();
 
@@ -156,6 +176,9 @@ namespace TGC.Group.Model
             {
                 obstaculo.dispose();
             }
+
+			texto.Dispose();
+			sombraTexto.Dispose();
         }
 
 #region METODOS AUXILIARES
@@ -237,10 +260,35 @@ namespace TGC.Group.Model
 			obstaculos.Add(enemigo.Esqueleto.BoundingBox);
 		}
 
+		private void initText() {
+			updateText();
+			texto.Color = Color.Maroon;
+			// Lo pongo arriba a la izquierda porque no sabemos el tamanio de pantalla
+			texto.Position = new Point(50, 50);
+			texto.Size = new Size(texto.Text.Length * 24, 24);
+			texto.Align = TgcText2D.TextAlign.LEFT;
+
+			var font = new System.Drawing.Text.PrivateFontCollection();
+			font.AddFontFile(MediaDir + "Fonts\\pdark.ttf");
+			texto.changeFont(new Font(font.Families[0], 24, FontStyle.Bold));
+
+			sombraTexto.Color = Color.DarkGray;
+			sombraTexto.Position = new Point(53, 52);
+			sombraTexto.Size = new Size(texto.Text.Length * 24, 24);
+			sombraTexto.Align = TgcText2D.TextAlign.LEFT;
+			sombraTexto.changeFont(new Font(font.Families[0], 24, FontStyle.Bold));
+		}
+
+		private void updateText() {
+			texto.Text = "HEALTH: " + jugador.Health;
+			texto.Text += "\tBALAS: " + jugador.Arma.Balas;
+			texto.Text += "\tRECARGAS: " + jugador.Arma.Recargas;
+			sombraTexto.Text = texto.Text;
+		}
+
 		// Renderizar bounding box
 		private void renderAABB() {
 			jugador.Esqueleto.BoundingBox.render();
-			enemigo.Esqueleto.BoundingBox.render();
 			foreach (var obstaculo in obstaculos) {
 				obstaculo.render();
 			}

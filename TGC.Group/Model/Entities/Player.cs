@@ -72,7 +72,7 @@ namespace TGC.Group.Model.Entities
                 //Agacharse
                 if (crouching = Input.keyDown(Key.LeftControl))
                 {
-                    setVelocidad(30f, 30f);
+                    setVelocidad(40f, 40f);
                 }
                 else
                 {
@@ -90,15 +90,17 @@ namespace TGC.Group.Model.Entities
             //Atras
             if (Input.keyDown(Key.S))
             {
-                moveForward = velocidadCaminar - 50f;
+				moveForward = velocidadCaminar - 10f;
                 moving = true;
+				rotate = 180;
             }
 
             //Derecha
             if (Input.keyDown(Key.D))
             {
                 moveLeftRight = -velocidadIzqDer;
-                rotate = velocidadRotacion;
+				//rotate = velocidadRotacion;
+				rotate += Input.keyDown(Key.W) ? 45 : Input.keyDown(Key.S) ? 315 : 90;
                 rotating = true;
                 moving = true;
             }
@@ -107,8 +109,9 @@ namespace TGC.Group.Model.Entities
             if (Input.keyDown(Key.A))
             {
                 moveLeftRight = velocidadIzqDer;
-                rotate = -velocidadRotacion;
-                rotating = true;
+				//rotate = -velocidadRotacion;
+				rotate = Input.keyDown(Key.W) ? -45 : Input.keyDown(Key.S) ? -135 : -90;
+				rotating = true;
                 moving = true;
             }
 
@@ -116,12 +119,6 @@ namespace TGC.Group.Model.Entities
             if (!jumping && Input.keyPressed(Key.Space))
             {
                 jumping = true;
-            }
-
-            //Disparar
-            if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT) || Input.buttonDown(TgcD3dInput.MouseButtons.BUTTON_LEFT))
-            {
-                arma.dispara(ElapsedTime, this.Position);
             }
 
             //Recargar
@@ -154,10 +151,16 @@ namespace TGC.Group.Model.Entities
 
 			esqueleto.Position += desplazamiento;
 
-			esqueleto.Transform = Matrix.RotationY(Rotacion) * Matrix.Translation(esqueleto.Position);
+			esqueleto.Transform = Matrix.RotationY(Utils.DegreeToRadian(rotate))
+								* Matrix.RotationY(Rotacion)
+								* Matrix.Translation(esqueleto.Position);
+            //Disparar
+            if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT))
+            {
+                arma.dispara(ElapsedTime, this.Position, Rotacion);
+            }
 
-			this.arma.updateBullets(ElapsedTime, Rotacion);
-
+            this.arma.updateBullets(ElapsedTime);
 
             var collider = getColliderAABB(obstaculos);
 			if (collider != null)
