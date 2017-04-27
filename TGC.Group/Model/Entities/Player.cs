@@ -120,11 +120,15 @@ namespace TGC.Group.Model.Entities
                 jumping = true;
             }
 
+/*<<<<<<< HEAD
             //Disparar
             if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT))
             {
                 arma.dispara(ElapsedTime, this.Position);
             }
+=======
+        
+>>>>>>> 805ea368e0cf4eaaff658de62d9065f483b3b0eb*/
 
             //Recargar
             if (Input.keyPressed(Key.R))
@@ -159,8 +163,18 @@ namespace TGC.Group.Model.Entities
 			esqueleto.Transform = Matrix.RotationY(Utils.DegreeToRadian(rotate))
 								* Matrix.RotationY(Rotacion)
 								* Matrix.Translation(esqueleto.Position);
-
+			/*
+<<<<<<< HEAD
 			arma.updateBullets(ElapsedTime, Rotacion);
+=======*/
+            //Disparar
+            if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT))
+            {
+                arma.dispara(ElapsedTime, this.Position, Rotacion);
+            }
+
+            this.arma.updateBullets(ElapsedTime);
+//>>>>>>> 805ea368e0cf4eaaff658de62d9065f483b3b0eb
 
 
             var collider = getColliderAABB(obstaculos);
