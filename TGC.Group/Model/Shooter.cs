@@ -57,6 +57,7 @@ namespace TGC.Group.Model
 		private List<TgcBoundingAxisAlignBox> obstaculos = new List<TgcBoundingAxisAlignBox>();
 
 		private TgcText2D texto = new TgcText2D();
+		private TgcText2D sombraTexto = new TgcText2D();
 
         /// <summary>
         ///     Constructor del juego.
@@ -135,6 +136,7 @@ namespace TGC.Group.Model
 
 
 			//DrawText.drawText("HEALTH: " + jugador.Health + "; BALAS: " + jugador.Arma.Balas + "; RECARGAS: " + jugador.Arma.Recargas, 50, 1000, Color.OrangeRed);
+			sombraTexto.render();
 			texto.render();
 
             renderAABB();
@@ -165,6 +167,7 @@ namespace TGC.Group.Model
             }
 
 			texto.Dispose();
+			sombraTexto.Dispose();
         }
 
 #region METODOS AUXILIARES
@@ -248,17 +251,28 @@ namespace TGC.Group.Model
 
 		private void initText() {
 			updateText();
-			texto.Color = Color.Brown;
+			texto.Color = Color.Maroon;
+			// Lo pongo arriba a la izquierda porque no sabemos el tamanio de pantalla
 			texto.Position = new Point(50, 50);
-			texto.Size = new Size(300, 150);
+			texto.Size = new Size(texto.Text.Length * 24, 24);
 			texto.Align = TgcText2D.TextAlign.LEFT;
-			texto.changeFont(new Font("Impact", 24, FontStyle.Bold));
+
+			var font = new System.Drawing.Text.PrivateFontCollection();
+			font.AddFontFile(MediaDir + "Fonts\\pdark.ttf");
+			texto.changeFont(new Font(font.Families[0], 24, FontStyle.Bold));
+
+			sombraTexto.Color = Color.DarkGray;
+			sombraTexto.Position = new Point(53, 52);
+			sombraTexto.Size = new Size(texto.Text.Length * 24, 24);
+			sombraTexto.Align = TgcText2D.TextAlign.LEFT;
+			sombraTexto.changeFont(new Font(font.Families[0], 24, FontStyle.Bold));
 		}
 
 		private void updateText() {
 			texto.Text = "HEALTH: " + jugador.Health;
-			texto.Text += "\nBALAS: " + jugador.Arma.Balas;
-			texto.Text += "\nRECARGAS: " + jugador.Arma.Recargas;
+			texto.Text += "\tBALAS: " + jugador.Arma.Balas;
+			texto.Text += "\tRECARGAS: " + jugador.Arma.Recargas;
+			sombraTexto.Text = texto.Text;
 		}
 
 		// Renderizar bounding box
