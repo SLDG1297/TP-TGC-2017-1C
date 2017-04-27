@@ -105,7 +105,8 @@ namespace TGC.Group.Model.Entities
 
                     bala.AutoTransformEnable = false;
                     bala.Position += desplazamiento;
-                    bala.Transform = Matrix.RotationX(-FastMath.PI_HALF) * Matrix.Scaling(0.005f, 0.005f, 0.005f) * Matrix.Translation(bala.Position);
+                    
+                    bala.Transform =  Matrix.RotationX(-FastMath.PI_HALF * FastMath.ToRad(angulo)) * Matrix.Scaling(0.005f, 0.005f, 0.005f) * Matrix.Translation(bala.Position);
                 }
             }
         }
