@@ -94,8 +94,8 @@ namespace TGC.Group.Model
         public override void Update()
         {
             PreUpdate();
-            
-			jugador.mover(Input, ElapsedTime, obstaculos);
+            var aux = jugador.Arma.Proyectiles.Count;
+            jugador.mover(Input, ElapsedTime, obstaculos);
 
 			//updownRot -= Input.YposRelative * 0.05f;
 			camaraInterna.OffsetHeight += Input.YposRelative;
@@ -107,6 +107,16 @@ namespace TGC.Group.Model
 			if (forward > 10) {
 				camaraInterna.OffsetForward -= Input.WheelPos * 10;
 			}
+
+            //agrego a la lista nuevos proyectiles
+            if(aux != jugador.Arma.Proyectiles.Count)
+            {
+                for (int i = aux; i < jugador.Arma.Proyectiles.Count; i++)
+                {
+                    var bala = jugador.Arma.Proyectiles[i];
+                    obstaculos.Add(bala.Mesh.BoundingBox);
+                }
+            }
 
             //Hacer que la camara siga al personaje en su nueva posicion
             camaraInterna.Target = jugador.Position;

@@ -67,6 +67,7 @@ namespace TGC.Group.Model.Entities
             if (balas > 0)
             {
                 var bala = new Bala(media, position, angulo);
+                bala.Arma = this;   //lo pongo por si lo tengo que sacar de la lista de proyectiles
                 proyectiles.Add(bala);
                 balas--;
             }
@@ -120,6 +121,7 @@ namespace TGC.Group.Model.Entities
     {
         private Vector3 direccion;
         private TgcMesh bala;
+        private Arma arma;
 
         public Bala(string mediaDir, Vector3 pos, float angulo)
         {
@@ -127,9 +129,13 @@ namespace TGC.Group.Model.Entities
             bala = loader.loadSceneFromFile(mediaDir + "Meshes\\Armas\\Bullet\\Bullet-TgcScene.xml").Meshes[0];
 
             bala.Position = pos + new Vector3(0, 40, 0);
+            bala.Scale = new Vector3(0.005f, 0.005f, 0.005f);
+            bala.rotateX(-FastMath.PI_HALF);
+            bala.rotateY(-FastMath.ToRad(angulo));
 
             direccion = new Vector3(0, 0, -700f);
-            direccion.TransformCoordinate(Matrix.RotationY(angulo));            
+            direccion.TransformCoordinate(Matrix.RotationY(angulo));
+            bala.createBoundingBox();
         }
 
         public void update(float ElapsedTime)
@@ -139,11 +145,25 @@ namespace TGC.Group.Model.Entities
             bala.Position += desplazamiento;
             bala.AutoTransformEnable = false;
             bala.Transform = Matrix.RotationX(-FastMath.PI_HALF) * Matrix.Scaling(0.005f, 0.005f, 0.005f) * Matrix.Translation(bala.Position);
+            bala.BoundingBox.transform(bala.Transform);
         }
 
         public void render()
         {
             bala.render();
+        }
+
+
+        //GETTERS Y SETTERS
+        public TgcMesh Mesh
+        {
+            get { return bala; }
+        }
+
+        public Arma Arma
+        {
+            get { return arma; }
+            set { this.arma = value; }
         }
 
     }
