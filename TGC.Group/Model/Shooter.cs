@@ -97,7 +97,10 @@ namespace TGC.Group.Model
 			camaraInterna.rotateY(Input.XposRelative * 0.05f);
 			camaraInterna.TargetDisplacement *= camaraInterna.RotationY * ElapsedTime;
 
-			camaraInterna.OffsetForward += Input.WheelPos * 10;
+			var forward = camaraInterna.OffsetForward - Input.WheelPos * 10;
+			if (forward > 10) {
+				camaraInterna.OffsetForward -= Input.WheelPos * 10;
+			}
 
             //Hacer que la camara siga al personaje en su nueva posicion
             camaraInterna.Target = jugador.Position;

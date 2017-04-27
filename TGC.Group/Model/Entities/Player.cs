@@ -152,9 +152,10 @@ namespace TGC.Group.Model.Entities
 			desplazamiento.TransformCoordinate(Matrix.RotationY(Rotacion));
 
 			esqueleto.Position += desplazamiento;
+
 			esqueleto.Transform = Matrix.RotationY(Rotacion) * Matrix.Translation(esqueleto.Position);
 
-            this.arma.updateBullets(ElapsedTime);
+			this.arma.updateBullets(ElapsedTime, Rotacion);
 
 
             var collider = getColliderAABB(obstaculos);

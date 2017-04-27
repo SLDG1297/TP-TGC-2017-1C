@@ -94,13 +94,14 @@ namespace TGC.Group.Model.Entities
             if (proyectiles.Count != 0) Utils.renderMeshes(proyectiles);
         }
 
-        public void updateBullets(float elapsedTime)
+        public void updateBullets(float elapsedTime, float angulo)
         {
             if (proyectiles.Count != 0)
             {
                 foreach (var bala in proyectiles)
                 {
                     var desplazamiento = new Vector3(0, 0, -700f * elapsedTime);
+					desplazamiento.TransformCoordinate(Matrix.RotationY(angulo));
 
                     bala.AutoTransformEnable = false;
                     bala.Position += desplazamiento;
