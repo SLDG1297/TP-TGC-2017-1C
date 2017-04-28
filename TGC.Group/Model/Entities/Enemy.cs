@@ -87,7 +87,7 @@ namespace TGC.Group.Model.Entities
 				moving = true;
 				dir_movimiento = Position - posicionJugador;
 				moveForward = velocidadCaminar - 10f;
-				float dot = Vector3.Dot(direccion, -dir_movimiento);
+				float dot = Math.Abs(Vector3.Dot(direccion, -dir_movimiento));
 				if (dot > Math.PI / 3) { 
 					rotate = (float)Math.Acos(System.Convert.ToDouble(dot));
 				}
@@ -97,7 +97,7 @@ namespace TGC.Group.Model.Entities
 				moving = true;
 				dir_movimiento = posicionJugador - Position;
 				moveForward = -velocidadCaminar;
-				float dot = Vector3.Dot(direccion, dir_movimiento);
+				float dot = Math.Abs(Vector3.Dot(direccion, dir_movimiento));
 				if (dot > Math.PI / 3)
 				{
 					rotate = (float)Math.Acos(System.Convert.ToDouble(dot));
@@ -125,7 +125,7 @@ namespace TGC.Group.Model.Entities
 			desplazamiento.Y = posicionY - esqueleto.Position.Y;
 
 			esqueleto.Position += desplazamiento;
-			esqueleto.Transform = Matrix.RotationY(rotate) * Matrix.Translation(esqueleto.Position);
+			esqueleto.Transform = Matrix.Translation(esqueleto.Position);
 
 			var collider = getColliderAABB(obstaculos);
 			if (collider != null)
