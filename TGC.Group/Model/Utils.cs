@@ -37,9 +37,12 @@ namespace TGC.Group.Model
                 var instance = originalMesh.createMeshInstance(originalMesh.Name + i);
                 instance.AutoTransformEnable = false;
 
-                instance.Transform = Matrix.Translation(radio * FastMath.Cos((i * angulo) + anguloFase),
+                var position = new Vector3(radio * FastMath.Cos((i * angulo) + anguloFase),
                                                         0,
-                                                        radio * FastMath.Sin((i * angulo) + anguloFase))
+                                                        radio * FastMath.Sin((i * angulo) + anguloFase));
+                instance.Position = position;
+
+                instance.Transform = Matrix.Translation(instance.Position)
                                     * instance.Transform;
 
                 lista.Add(instance);
@@ -55,10 +58,12 @@ namespace TGC.Group.Model
                 {
                     //Crear instancia de modelo
                     var instance = originalMesh.createMeshInstance(originalMesh.Name + i + "_" + j);
-                    //No recomendamos utilizar AutoTransform, en juegos complejos se pierde el control. mejor utilizar Transformaciones con matrices.
+
+                    var position = new Vector3(i * offset, 0, j * offset);
                     instance.AutoTransformEnable = false;
+                    instance.Position = position;
                     //Desplazarlo
-                    instance.Transform = Matrix.Translation(i * offset, 0, j * offset) * instance.Transform;
+                    instance.Transform = Matrix.Translation(instance.Position) * instance.Transform;
                     //instance.Scale = new Vector3(0.25f, 0.25f, 0.25f);
 
                     meshes.Add(instance);

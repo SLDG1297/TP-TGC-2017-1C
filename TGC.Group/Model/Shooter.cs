@@ -46,9 +46,8 @@ namespace TGC.Group.Model
         private List<TgcMesh> rocas = new List<TgcMesh>();
         private List<TgcMesh> palmeras = new List<TgcMesh>();
         private List<TgcMesh> pastitos = new List<TgcMesh>();
-
         private List<TgcMesh> cajitas = new List<TgcMesh>();
-
+        
         // Bounding boxes del escenario
         private List<TgcBoundingAxisAlignBox> obstaculos = new List<TgcBoundingAxisAlignBox>();
 
@@ -197,7 +196,6 @@ namespace TGC.Group.Model
 
             // Render bounding boxes
             renderAABB();
-
             // Render HUD
             // DrawText.drawText("HEALTH: " + jugador.Health + "; BALAS: " + jugador.Arma.Balas + "; RECARGAS: " + jugador.Arma.Recargas, 50, 1000, Color.OrangeRed);
             sombraTexto.render();
@@ -280,8 +278,10 @@ namespace TGC.Group.Model
             casa = cargarScene(casaDir);
             foreach (var mesh in casa.Meshes)
             {
+                var position = new Vector3(-800 * FACTOR, 0, 1200 * FACTOR);
+                mesh.Position = position;
                 mesh.AutoTransformEnable = false;
-                mesh.Transform = Matrix.Scaling(1.5f, 2f, 1.75f) * Matrix.RotationY(FastMath.PI_HALF + FastMath.PI) * Matrix.Translation(-800 * FACTOR, 0, 1200 * FACTOR);
+                mesh.Transform = Matrix.Scaling(1.5f, 2f, 1.75f) * Matrix.RotationY(FastMath.PI_HALF + FastMath.PI) * Matrix.Translation(mesh.Position);
             }
 
             // Creación de rocas en línea circular y escaladas.
@@ -291,7 +291,9 @@ namespace TGC.Group.Model
             foreach (var roca in rocas)
             {
                 roca.AutoTransformEnable = false;
-                roca.Transform = Matrix.Scaling(3 * FACTOR, 2 * FACTOR, 3 * FACTOR) * roca.Transform;
+                roca.Scale = new Vector3(3 * FACTOR, 2 * FACTOR, 3 * FACTOR);
+
+                roca.Transform = Matrix.Scaling(roca.Scale) * roca.Transform;
             }
 
             // Creación de palmeras dispuestas circularmente.
@@ -301,7 +303,8 @@ namespace TGC.Group.Model
             foreach (var palmera in palmeras)
             {
                 palmera.AutoTransformEnable = false;
-                palmera.Transform = Matrix.Scaling(1.5f, 1.5f, 1.5f) * palmera.Transform;
+                palmera.Scale = new Vector3(1.5f, 1.5f, 1.5f);
+                palmera.Transform = Matrix.Scaling(palmera.Scale) * palmera.Transform;
             }
 
             // Creación de pastitos.
@@ -312,6 +315,7 @@ namespace TGC.Group.Model
             string faraonDir = MediaDir + "Meshes\\Objetos\\EstatuaFaraon\\EstatuaFaraon-TgcScene.xml";
             faraon = cargarMesh(faraonDir);
             faraon.AutoTransformEnable = false;
+            //faraon.Scale = new Vector3(FACTOR, FACTOR, FACTOR);
             faraon.Transform = Matrix.Scaling(FACTOR, FACTOR, FACTOR) * faraon.Transform;
            
             // Creación de cajitas.
@@ -320,7 +324,8 @@ namespace TGC.Group.Model
             foreach (var cajita in cajitas)
             {
                 cajita.AutoTransformEnable = false;
-                cajita.Transform = Matrix.Translation(-800 * FACTOR, 20 * FACTOR, 1400 * FACTOR) * cajita.Transform;
+                cajita.Scale = new Vector3(-800 * FACTOR, 20 * FACTOR, 1400 * FACTOR);
+                cajita.Transform = Matrix.Translation(cajita.Scale) * cajita.Transform;
             } 
         }
 
@@ -347,10 +352,10 @@ namespace TGC.Group.Model
 
             aniadirObstaculoAABB(rocas);
             aniadirObstaculoAABB(palmeras);
-            aniadirObstaculoAABB(pastitos);
+            //aniadirObstaculoAABB(pastitos);
 
-            aniadirObstaculoAABB(cajitas);
-
+            aniadirObstaculoAABB(cajitas);   
+            
             // Añadir enemigos.
             aniadirObstaculoAABB(enemigos);
         }
@@ -385,6 +390,9 @@ namespace TGC.Group.Model
 		private void renderAABB() {
             // Del Jugador
             jugador.Esqueleto.BoundingBox.render();
+
+
+            foreach (var roca in rocas) roca.BoundingBox.render();
 
             // De todos los obstáculos
             obstaculos.ForEach(o => o.render());
