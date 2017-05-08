@@ -20,42 +20,49 @@ namespace TGC.Group.Model
 {
     public  class Shooter : TgcExample
     {
-        //CONSTANTES
-        private const float MAP_SCALE_XZ = 20.0f;
-        private const float MAP_SCALE_Y = 1.3f;
+        // Constantes de escenario
+        private const float MAP_SCALE_XZ = 160.0f; // Original = 20
+        private const float MAP_SCALE_Y = 10.4f; // Original = 1.3
+        private const int FACTOR = 8; // Significa las veces que se agrandó según el MAP_SCALE original.
+        // Esto se hace así porque ya hay valores hardcodeados de posiciones que no quiero cambiar.
+        // Habría que ver una forma de ubicar meshes en posición relativa en el espacio.
         private Vector3 CENTRO = new Vector3(0, 0, 0);
-        private Vector3 PLAYER_INIT_POS = new Vector3(400, 0, 500);
+        
 
-        //VARIABLES DE INSTANCIA
-        private TgcSimpleTerrain terreno;
+        // Escenario
+        private TgcSimpleTerrain heightmap;
+
 		private TgcSkyBox skyBox;
-        private TgcScene scene;
+
         private TgcScene casa;
 
-        private ThirdPersonCamera camaraInterna;
-
-#region OBJETOS QUE SE REPLICAN
         private TgcMesh rocaOriginal;
-        private List<TgcMesh> rocas = new List<TgcMesh>();
-
         private TgcMesh palmeraOriginal;
-        private List<TgcMesh> palmeras = new List<TgcMesh>();
+        private TgcMesh pastito;
+        private TgcMesh faraon;
 
         private TgcBox cajita;
+
+        private List<TgcMesh> rocas = new List<TgcMesh>();
+        private List<TgcMesh> palmeras = new List<TgcMesh>();
+        private List<TgcMesh> pastitos = new List<TgcMesh>();
+
         private List<TgcMesh> cajitas = new List<TgcMesh>();
 
-        private TgcMesh pastito;
-        private List<TgcMesh> pastitos = new List<TgcMesh>();
- #endregion
+        // Bounding boxes del escenario
+        private List<TgcBoundingAxisAlignBox> obstaculos = new List<TgcBoundingAxisAlignBox>();
 
+        // Cámara
+        private ThirdPersonCamera camaraInterna;
+
+        // Jugador
         private Player jugador;
+        private Vector3 PLAYER_INIT_POS = new Vector3(400, 0, 500);
 
-        //por ahora es para probar con uno solo, mas adelante podemos tener mas de uno
-        //private List<Enemy> enemigo = new List<Enemy>();
+        // Enemigos
         private List<Enemy> enemigos = new List<Enemy>();
-
-		private List<TgcBoundingAxisAlignBox> obstaculos = new List<TgcBoundingAxisAlignBox>();
-
+		
+        // HUD
 		private TgcText2D texto = new TgcText2D();
 		private TgcText2D sombraTexto = new TgcText2D();
 
@@ -74,68 +81,71 @@ namespace TGC.Group.Model
 
         public override void Init()
         {
-            jugador = new Player(MediaDir,"CS_Gign", PLAYER_INIT_POS, Arma.AK47(MediaDir));
-           
-			//Camara = new FirstPersonCamera(new Vector3(0, 1500, 0), Input);
+            // Iniciar jugador
+
+            initJugador();
+
+            // Iniciar HUD
+
+            initText();
+
+            // Iniciar escenario
+
+            initHeightmap();
 
             initSkyBox();
-            initTerrain();
+
             initScene();
 
-			initText();
+            // Iniciar enemigos
 
-			//Configurar camara en Tercera Persona y la asigno al TGC.
+            initEnemigos();
+
+            // Iniciar bounding boxes
+
+            initObstaculos();
+
+            // Iniciar cámara
+
+            // Antigua cámara en primera persona.
+            // Camara = new FirstPersonCamera(new Vector3(0, 1500, 0), Input);
+
+            // Antigua cámara en tercera persona.
+            // camaraInterna = new ThirdPersonCamera(jugador, 50, 150, Input);
+
+            // Cámara actual en tercera persona.
+            // Configurar cámara en Tercera Persona y la asigno al TGC.
             camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40,50,-50), 100, 150, Input);
-            //camaraInterna = new ThirdPersonCamera(jugador, 50, 150, Input);
             Camara = camaraInterna;
-
-			initObstaculos();
-
-			var rndm = new Random();
-			for (var i = 0; i < 15; i++)
-			{
-				var enemy_position_X = -rndm.Next(-1500, 1500);
-				var enemy_position_Z = -rndm.Next(-1500, 1500);
-				var enemy_position_Y = posicionEnTerreno(enemy_position_X, enemy_position_Z);
-				var enemy_position = new Vector3(enemy_position_X, enemy_position_Y, enemy_position_Z);
-				enemy_position = Vector3.TransformCoordinate(enemy_position, Matrix.RotationY(Utils.DegreeToRadian(rndm.Next(0, 360))));
-				var enemigo = new Enemy(MediaDir, "CS_Arctic",enemy_position , Arma.AK47(MediaDir));
-				if (!enemigo.isCollidingWithObject(obstaculos))
-				{
-					enemigos.Add(enemigo);
-				}
-				else {
-					i--;
-				}
-			}
-
-		}
+        }
 
         public override void Update()
         {
             PreUpdate();
 
-            var aux = jugador.Arma.Proyectiles.Count;
+            // Update jugador
+            int aux = jugador.Arma.Proyectiles.Count;
             jugador.mover(Input, posicionEnTerreno(jugador.Position.X, jugador.Position.Z), ElapsedTime, obstaculos);
 
-			//updownRot -= Input.YposRelative * 0.05f;
+			// updownRot -= Input.YposRelative * 0.05f;
 			camaraInterna.OffsetHeight += Input.YposRelative;
-
 			camaraInterna.rotateY(Input.XposRelative * 0.05f);
 			camaraInterna.TargetDisplacement *= camaraInterna.RotationY * ElapsedTime;
+            // Hacer que la camara siga al personaje en su nueva posicion
+            camaraInterna.Target = jugador.Position;
 
-			var forward = camaraInterna.OffsetForward - Input.WheelPos * 10;
+            var forward = camaraInterna.OffsetForward - Input.WheelPos * 10;
 			if (forward > 10) {
 				camaraInterna.OffsetForward -= Input.WheelPos * 10;
 			}
 
-			// IA 
+			// Update enemigos.
 			foreach (var enemy in enemigos)
 			{
 				enemy.updateStatus(jugador.Position, ElapsedTime, obstaculos, posicionEnTerreno(enemy.Position.X, enemy.Position.Z));
 			}
 
-            //agrego a la lista nuevos proyectiles
+            // Agrego a la lista nuevos proyectiles.
             if(aux != jugador.Arma.Proyectiles.Count)
             {
                 for (int i = aux; i < jugador.Arma.Proyectiles.Count; i++)
@@ -145,157 +155,211 @@ namespace TGC.Group.Model
                 }
             }
 
-            //Hacer que la camara siga al personaje en su nueva posicion
-            camaraInterna.Target = jugador.Position;
+            // Update SkyBox
 
-			updateText();
+            // Cuando se quiera probar cámara en primera persona
+            // skyBox.Center = Camara.Position;
+
+            // Cuando se quiera probar cámara en tercera persona
+            skyBox.Center = jugador.Position;
+
+            // Update HUD
+            updateText();
         }
 
         public override void Render()
         {
-            //Inicio el render de la escena, para ejemplos simples.
+            // Inicio el render de la escena, para ejemplos simples.
             // Cuando tenemos postprocesado o shaders es mejor realizar las operaciones según nuestra conveniencia.
             PreRender();
 
-			skyBox.render();
+            // Render escenario
+            heightmap.render();
 
-            //Renderizar instancias de las rocas y palmeras del medio
+            skyBox.render();
+
+            casa.renderAll();
+
             Utils.renderMeshes(rocas);
             Utils.renderMeshes(palmeras);
             Utils.renderMeshes(pastitos);
+            faraon.render();
+
             Utils.renderMeshes(cajitas);
 
-            terreno.render();
-            scene.renderAll();
-            casa.renderAll();
+            // Render jugador
+
             jugador.render(ElapsedTime);
-			foreach (var enemigo in enemigos) {
-				enemigo.render(ElapsedTime);
-			}
 
+            // Render jugador
 
-			//DrawText.drawText("HEALTH: " + jugador.Health + "; BALAS: " + jugador.Arma.Balas + "; RECARGAS: " + jugador.Arma.Recargas, 50, 1000, Color.OrangeRed);
-			sombraTexto.render();
-			texto.render();
+            enemigos.ForEach(e => e.render(ElapsedTime));
 
+            // Render bounding boxes
             renderAABB();
 
-            //Finaliza el render y presenta en pantalla, al igual que el preRender se debe para casos puntuales es mejor utilizar a mano las operaciones de EndScene y PresentScene
+            // Render HUD
+            // DrawText.drawText("HEALTH: " + jugador.Health + "; BALAS: " + jugador.Arma.Balas + "; RECARGAS: " + jugador.Arma.Recargas, 50, 1000, Color.OrangeRed);
+            sombraTexto.render();
+			texto.render();       
+
+            // Finaliza el render y presenta en pantalla, al igual que el preRender se debe para casos puntuales es mejor utilizar a mano las operaciones de EndScene y PresentScene
             PostRender();
         }
 
         public override void Dispose()
         {
+            // Dispose escenario
+            heightmap.dispose();
             skyBox.dispose();
-            terreno.dispose();
+
+            casa.disposeAll();
 
             rocaOriginal.dispose();
             palmeraOriginal.dispose();
             pastito.dispose();
+            faraon.dispose();
+
             cajita.dispose();
 
-            scene.disposeAll();
-            casa.disposeAll();
+            // Dispose bounding boxes
+            obstaculos.ForEach(o => o.dispose());
 
+            // Dispose jugador
             jugador.dispose();
-			foreach (var enemigo in enemigos) {
-				enemigo.dispose();
-			}
 
-			foreach (var obstaculo in obstaculos)
-            {
-                obstaculo.dispose();
-            }
+            // Dispose enemigos
+            enemigos.ForEach(e => e.dispose());
 
+            // Dispose HUD
 			texto.Dispose();
 			sombraTexto.Dispose();
         }
 
-#region METODOS AUXILIARES
-        private void initTerrain(){
+#region Métodos Auxiliares
+        private void initJugador()
+        {
+            jugador = new Player(MediaDir, "CS_Gign", PLAYER_INIT_POS, Arma.AK47(MediaDir));
+        }
 
-            string heightmapDir = MediaDir + "Heightmaps\\heightmap_v2.jpg";
-            string terrainTextureDir = MediaDir + "Texturas\\map_v2.jpg";
+        private void initEnemigos()
+        {
+            var rndm = new Random();
+            for (var i = 0; i < 15; i++)
+            {
+                var enemy_position_X = -rndm.Next(-1500 * FACTOR, 1500 * FACTOR);
+                var enemy_position_Z = -rndm.Next(-1500 * FACTOR, 1500 * FACTOR);
+                var enemy_position_Y = posicionEnTerreno(enemy_position_X, enemy_position_Z);
+                var enemy_position = new Vector3(enemy_position_X, enemy_position_Y, enemy_position_Z);
+                enemy_position = Vector3.TransformCoordinate(enemy_position, Matrix.RotationY(Utils.DegreeToRadian(rndm.Next(0, 360))));
+                var enemigo = new Enemy(MediaDir, "CS_Arctic", enemy_position, Arma.AK47(MediaDir));
+                if (!enemigo.isCollidingWithObject(obstaculos))
+                {
+                    enemigos.Add(enemigo);
+                }
+                else
+                {
+                    i--;
+                }
+            }
+        }
 
-            terreno = new TgcSimpleTerrain();
-            terreno.loadHeightmap(heightmapDir, MAP_SCALE_XZ, MAP_SCALE_Y, Camara.LookAt);
-            terreno.loadTexture(terrainTextureDir);
+        private void initHeightmap(){
+            string heightmapDir = MediaDir + "Heightmaps\\heightmap.jpg";
+            string textureDir = MediaDir + "Texturas\\map_v2.jpg";
+
+            heightmap = new TgcSimpleTerrain();
+
+            heightmap.loadHeightmap(heightmapDir, MAP_SCALE_XZ, MAP_SCALE_Y, Camara.LookAt);
+            heightmap.loadTexture(textureDir);
         }
 
         private void initScene(){
-            var loader = new TgcSceneLoader();
-            palmeraOriginal = loader.loadSceneFromFile(MediaDir + "Meshes\\Vegetation\\Palmera\\Palmera-TgcScene.xml").Meshes[0];
-
-            scene = loader.loadSceneFromFile(MediaDir + "Scenes\\Arboles00\\EscenaConArboles-TgcScene.xml");
-            casa = loader.loadSceneFromFile(MediaDir + "Meshes\\Edificios\\Casa\\Casa-TgcScene.xml");
-            pastito = scene.getMeshByName("Arbusto");
-
-             //Dispongo las rocas en linea circular y luego la escalo
-            rocaOriginal = scene.getMeshByName("Roca");
-            Utils.disponerEnCirculoXZ(rocaOriginal, rocas, 4, 500, FastMath.PI_HALF);
-
-            foreach (var roca in rocas){
-                roca.Transform = Matrix.Scaling(6, 4, 6) * roca.Transform;
-            }
-
-            //Dispongo las palmeras en forma circular
-            Utils.disponerEnCirculoXZ(palmeraOriginal, palmeras, 8, 820, FastMath.QUARTER_PI);
-
-            //ubico la casa, trasladandola y luego rotandola
+            // Ubicación de la casa.
+            string casaDir = MediaDir + "Meshes\\Edificios\\Casa\\Casa-TgcScene.xml";
+            casa = cargarScene(casaDir);
             foreach (var mesh in casa.Meshes)
             {
                 mesh.AutoTransformEnable = false;
-                mesh.Transform = Matrix.Scaling(1.5f,2f,1.75f) *Matrix.RotationY(FastMath.PI_HALF + FastMath.PI) * Matrix.Translation(-800, 0, 1200);
+                mesh.Transform = Matrix.Scaling(1.5f, 2f, 1.75f) * Matrix.RotationY(FastMath.PI_HALF + FastMath.PI) * Matrix.Translation(-800 * FACTOR, 0, 1200 * FACTOR);
             }
-            
-            //creo cajitas de paja y las ubico
-            cajita = TgcBox.fromSize(new Vector3(30,30,30), TgcTexture.createTexture(MediaDir + "Texturas\\paja4.jpg"));
-            Utils.disponerEnRectanguloXZ(cajita.toMesh("cajita"), cajitas, 2, 2, 50);
-            foreach (var mesh in cajitas)
-            {
-                mesh.AutoTransformEnable = false;
-                mesh.Transform = Matrix.Translation(-800, 20, 1400) * mesh.Transform;
-            }            
 
-            // SOLUCIÓN NUEVA A LO QUE APARECÍA EN EL CENTRO:
-            scene.Meshes.RemoveAll(mesh => mesh.Position == CENTRO);
+            // Creación de rocas en línea circular y escaladas.
+            string rocaDir = MediaDir + "Meshes\\Vegetation\\Roca\\Roca-TgcScene.xml";
+            rocaOriginal = cargarMesh(rocaDir);
+            Utils.disponerEnCirculoXZ(rocaOriginal, rocas, 4, 500 * FACTOR, FastMath.PI_HALF);
+            foreach (var roca in rocas)
+            {
+                roca.AutoTransformEnable = false;
+                roca.Transform = Matrix.Scaling(3 * FACTOR, 2 * FACTOR, 3 * FACTOR) * roca.Transform;
+            }
+
+            // Creación de palmeras dispuestas circularmente.
+            string palmeraDir = MediaDir + "Meshes\\Vegetation\\Palmera\\Palmera-TgcScene.xml";
+            palmeraOriginal = cargarMesh(palmeraDir);
+            Utils.disponerEnCirculoXZ(palmeraOriginal, palmeras, 200, 820 * FACTOR, 1);
+            foreach (var palmera in palmeras)
+            {
+                palmera.AutoTransformEnable = false;
+                palmera.Transform = Matrix.Scaling(1.5f, 1.5f, 1.5f) * palmera.Transform;
+            }
+
+            // Creación de pastitos.
+            string pastitoDir = MediaDir + "Meshes\\Vegetation\\Pasto\\Pasto-TgcScene.xml";
+            pastito = cargarMesh(pastitoDir);
+
+            // Creación de faraón.
+            string faraonDir = MediaDir + "Meshes\\Objetos\\EstatuaFaraon\\EstatuaFaraon-TgcScene.xml";
+            faraon = cargarMesh(faraonDir);
+            faraon.AutoTransformEnable = false;
+            faraon.Transform = Matrix.Scaling(FACTOR, FACTOR, FACTOR) * faraon.Transform;
+           
+            // Creación de cajitas.
+            cajita = TgcBox.fromSize(new Vector3(30 * FACTOR, 30 * FACTOR, 30 * FACTOR), TgcTexture.createTexture(MediaDir + "Texturas\\paja4.jpg"));
+            Utils.disponerEnRectanguloXZ(cajita.toMesh("cajita"), cajitas, 2, 2, 50);
+            foreach (var cajita in cajitas)
+            {
+                cajita.AutoTransformEnable = false;
+                cajita.Transform = Matrix.Translation(-800 * FACTOR, 20 * FACTOR, 1400 * FACTOR) * cajita.Transform;
+            } 
         }
 
         private void initSkyBox(){
-
-            //Crear SkyBox
             skyBox = new TgcSkyBox();
-            skyBox.Center = new Vector3(0, 500, 0);
-            skyBox.Size = new Vector3(8000, 8000, 8000);
+            skyBox.Center = jugador.Position;
+            skyBox.Size = new Vector3(10000, 10000, 10000);
 
-			var texturesPath = MediaDir + "Texturas\\Quake\\SkyBoxWhale\\Whale";
+			string skyBoxDir = MediaDir + "Texturas\\Quake\\SkyBoxWhale\\Whale";
 
-			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Up, texturesPath + "up.jpg");
-			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Down, texturesPath + "dn.jpg");
-			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Left, texturesPath + "lf.jpg");
-			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Right, texturesPath + "rt.jpg");
-			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Front, texturesPath + "bk.jpg");
-			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Back, texturesPath + "ft.jpg");
+			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Up, skyBoxDir + "up.jpg");
+			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Down, skyBoxDir + "dn.jpg");
+			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Left, skyBoxDir + "lf.jpg");
+			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Right, skyBoxDir + "rt.jpg");
+			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Front, skyBoxDir + "bk.jpg");
+			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Back, skyBoxDir + "ft.jpg");
 
             skyBox.Init();
         }
 
 		private void initObstaculos() {
-			foreach (var mesh in scene.Meshes) {
-				obstaculos.Add(mesh.BoundingBox);
-			}
-			foreach (var mesh in casa.Meshes) {
-				obstaculos.Add(mesh.BoundingBox);
-			}
-			foreach (var enemigo in enemigos) {  
-				obstaculos.Add(enemigo.Esqueleto.BoundingBox);
-			}
-		}
+            // Añadir escenario.
+            aniadirObstaculoAABB(casa.Meshes);
+
+            aniadirObstaculoAABB(rocas);
+            aniadirObstaculoAABB(palmeras);
+            aniadirObstaculoAABB(pastitos);
+
+            aniadirObstaculoAABB(cajitas);
+
+            // Añadir enemigos.
+            aniadirObstaculoAABB(enemigos);
+        }
 
 		private void initText() {
 			updateText();
-			texto.Color = Color.Maroon;
-			// Lo pongo arriba a la izquierda porque no sabemos el tamanio de pantalla
+
+            // Lo pongo arriba a la izquierda porque no sabemos el tamanio de pantalla
+            texto.Color = Color.Maroon;
 			texto.Position = new Point(50, 50);
 			texto.Size = new Size(texto.Text.Length * 24, 24);
 			texto.Align = TgcText2D.TextAlign.LEFT;
@@ -318,16 +382,17 @@ namespace TGC.Group.Model
 			sombraTexto.Text = texto.Text;
 		}
 
-		// Renderizar bounding box
 		private void renderAABB() {
-			jugador.Esqueleto.BoundingBox.render();
-			foreach (var obstaculo in obstaculos) {
-				obstaculo.render();
-			}
+            // Del Jugador
+            jugador.Esqueleto.BoundingBox.render();
+
+            // De todos los obstáculos
+            obstaculos.ForEach(o => o.render());
 		}
 
 		public float posicionEnTerreno(float x, float z)
         {
+            // Da la posición del terreno en función del heightmap.
             var largo = MAP_SCALE_XZ * 200;
             var pos_i = 200f * (0.5f + x / largo);
             var pos_j = 200f * (0.5f + z / largo);
@@ -354,14 +419,40 @@ namespace TGC.Group.Model
             if (pj1 > 199)
                 pj1 = 199;
 
-            var H0 = terreno.HeightmapData[pi, pj] * MAP_SCALE_Y;
-            var H1 = terreno.HeightmapData[pi1, pj] * MAP_SCALE_Y;
-            var H2 = terreno.HeightmapData[pi, pj1] * MAP_SCALE_Y;
-            var H3 = terreno.HeightmapData[pi1, pj1] * MAP_SCALE_Y;
+            var H0 = heightmap.HeightmapData[pi, pj] * MAP_SCALE_Y;
+            var H1 = heightmap.HeightmapData[pi1, pj] * MAP_SCALE_Y;
+            var H2 = heightmap.HeightmapData[pi, pj1] * MAP_SCALE_Y;
+            var H3 = heightmap.HeightmapData[pi1, pj1] * MAP_SCALE_Y;
             var H = (H0 * (1 - fracc_i) + H1 * fracc_i) * (1 - fracc_j) +
                     (H2 * (1 - fracc_i) + H3 * fracc_i) * fracc_j;
             return H;
         }
-#endregion
+
+        TgcScene cargarScene(string unaDireccion)
+        {
+            return new TgcSceneLoader().loadSceneFromFile(unaDireccion);
+        }
+
+        TgcMesh cargarMesh(string unaDireccion)
+        {
+            return cargarScene(unaDireccion).Meshes[0];
+        }
+
+        void aniadirObstaculoAABB(List<TgcMesh> meshes)
+        {
+            foreach (var mesh in meshes)
+            {
+                obstaculos.Add(mesh.BoundingBox);
+            }
+        }
+
+        void aniadirObstaculoAABB(List<Enemy> enemigos)
+        {
+            foreach (var enemigo in enemigos)
+            {
+                obstaculos.Add(enemigo.Esqueleto.BoundingBox);
+            }
+        }
+        #endregion
     }
 }
