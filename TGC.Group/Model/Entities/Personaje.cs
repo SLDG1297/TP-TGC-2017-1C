@@ -22,6 +22,10 @@ namespace TGC.Group.Model.Entities
 
         protected TgcSkeletalMesh esqueleto;
         protected Arma arma;
+        protected TgcBoundingCylinderFixedY cylinderBB;
+        protected TgcBoundingCylinderFixedY cylinderHead;
+
+        protected Vector3 lastPos; // Ultima posicion
 
         protected float velocidadCaminar;
         protected float velocidadIzqDer;
@@ -47,8 +51,19 @@ namespace TGC.Group.Model.Entities
             esqueleto.AutoTransformEnable = false;
             esqueleto.Position = initPosition;
             esqueleto.Transform = Matrix.Translation(esqueleto.Position);
-
+            
             resetBooleans();
+
+            lastPos = initPosition;
+            cylinderBB = new TgcBoundingCylinderFixedY(esqueleto.BoundingBox.calculateBoxCenter(), 8, 25);
+
+            var x = esqueleto.BoundingBox.calculateBoxCenter().X;
+            var y = esqueleto.BoundingBox.calculateBoxCenter().Y + 20;
+            var z = esqueleto.BoundingBox.calculateBoxCenter().Z;
+
+            Vector3 center = new Vector3(x,y,z);
+
+            cylinderHead = new TgcBoundingCylinderFixedY(center, 3, 3);                  
         }
 
         public Personaje(string mediaDir, string skin, Vector3 initPosition, Arma arma) :this(mediaDir, skin, initPosition)
@@ -113,7 +128,6 @@ namespace TGC.Group.Model.Entities
         {
             if (moving)
             {
-
                 if (running)
                 {
                     esqueleto.playAnimation("Run", true);
@@ -144,16 +158,38 @@ namespace TGC.Group.Model.Entities
                 }
             }
         }
-        
+
+                
+        public void updateBoundingBoxes()
+        {
+            BoundingCylinder.move(Position - lastPos);
+            cylinderHead.move(Position - lastPos);
+
+            BoundingCylinder.updateValues();
+            cylinderHead.updateValues();
+        }
+
+
+        public void moveCylindersXZ(Vector3 dif)
+        {
+            cylinderBB.move(dif.X,0,dif.Z);
+            cylinderHead.move(dif.X,0,dif.Z);
+        }
+
         public void render(float elapsedTime)
         {
             esqueleto.animateAndRender(elapsedTime);
-            arma.renderBullets();
+            //arma.renderBullets();
+
+            //todo: sacar
+            cylinderBB.render();
+            cylinderHead.render();
         }
 
         public void dispose()
         {
-            esqueleto.dispose();
+            arma.dispose();
+            //esqueleto.dispose();            
         }
 
         protected void setVelocidad(float caminar, float izqDer)
@@ -178,9 +214,35 @@ namespace TGC.Group.Model.Entities
             arma.setPlayer(this);
         }
 
+        public int Health
+        {
+            get { return health; }
+        }
+
+        public bool Muerto
+        {
+            get { return muerto; }
+        }
+
+        public Vector3 LastPosition
+        {
+            get { return lastPos; }
+        }
+
+
         public Vector3 Position
         {
             get { return esqueleto.Position; }
+        }
+
+        public TgcBoundingCylinderFixedY BoundingCylinder
+        {
+            get { return cylinderBB; }
+        }
+
+        public TgcBoundingCylinderFixedY HeadCylinder
+        {
+            get { return cylinderHead; }
         }
 
         protected void resetBooleans()
@@ -190,6 +252,7 @@ namespace TGC.Group.Model.Entities
             running = false;
             crouching = false;
         }
+
 
     }
 }

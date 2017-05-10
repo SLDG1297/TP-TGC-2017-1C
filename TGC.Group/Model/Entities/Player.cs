@@ -11,12 +11,13 @@ using TGC.Core.Collision;
 using TGC.Core.BoundingVolumes;
 using Microsoft.DirectX;
 using TGC.Core.Utils;
+using TGC.Group.Model.Collisions;
 
 namespace TGC.Group.Model.Entities
 {
     public class Player : Personaje
     {
-        private Vector3 lastPos; // Ultima posicion
+        
 		private float Rotacion = 0f;
 
         /// <summary>
@@ -34,7 +35,7 @@ namespace TGC.Group.Model.Entities
             tiempoSalto = 10f;
             velocidadSalto = 0.5f;
             resetBooleans();
-			lastPos = initPosition;
+			
         }
 
         public void recuperaSalud(int salud){
@@ -65,9 +66,10 @@ namespace TGC.Group.Model.Entities
             //Correr
             if (running = Input.keyDown(Key.LeftShift)){
 
-                //setVelocidad(200f,200f); 
+                setVelocidad(300f,300f); 
                 //es para que exploremos mas rapido el terreno
-                setVelocidad(1700f, 1700f);
+                //setVelocidad(1700f, 1700f);
+
             }
             else
             {
@@ -148,72 +150,26 @@ namespace TGC.Group.Model.Entities
             }
 
 			var desplazamiento = new Vector3(moveLeftRight * ElapsedTime, jump + posicionY - lastPos.Y, moveForward * ElapsedTime);
+            desplazamiento.TransformCoordinate(Matrix.RotationY(Rotacion));
+            esqueleto.Position += desplazamiento;
 
-			desplazamiento.TransformCoordinate(Matrix.RotationY(Rotacion));
 
-			esqueleto.Position += desplazamiento;
-
-			esqueleto.Transform = Matrix.RotationY(Utils.DegreeToRadian(rotate))
-								* Matrix.RotationY(Rotacion)
-								* Matrix.Translation(esqueleto.Position);
+            esqueleto.Transform = Matrix.RotationY(Utils.DegreeToRadian(rotate))
+                                * Matrix.RotationY(Rotacion)
+                                * Matrix.Translation(esqueleto.Position);
             //Disparar
             if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT))
             {
                 arma.dispara(ElapsedTime, this.Position, Rotacion);
             }
-
-            this.arma.updateBullets(ElapsedTime);
-
+            
 			var colliders = getColliderAABBList(obstaculos);
-			if (colliders != null)
-			{
-				foreach (var collider in colliders)
-				{
-					var movementRay = lastPos - Position;
+            updateBoundingBoxes();
 
-					var rs = Vector3.Empty;
-					if (((esqueleto.BoundingBox.PMax.X > collider.PMax.X && movementRay.X > 0) ||
-						(esqueleto.BoundingBox.PMin.X < collider.PMin.X && movementRay.X < 0)) &&
-						((esqueleto.BoundingBox.PMax.Z > collider.PMax.Z && movementRay.Z > 0) ||
-						(esqueleto.BoundingBox.PMin.Z < collider.PMin.Z && movementRay.Z < 0)))
-					{
-						//Este primero es un caso particularse dan las dos condiciones simultaneamente entonces para saber de que lado moverse hay que hacer algunos calculos mas.
-						//por el momento solo se esta verificando que la posicion actual este dentro de un bounding para moverlo en ese plano.
-						if (esqueleto.Position.X > collider.PMin.X &&
-							esqueleto.Position.X < collider.PMax.X)
-						{
-							//El personaje esta contenido en el bounding X
-							rs = new Vector3(movementRay.X, movementRay.Y, 0);
-						}
-						if (esqueleto.Position.Z > collider.PMin.Z &&
-							esqueleto.Position.Z < collider.PMax.Z)
-						{
-							//El personaje esta contenido en el bounding Z
-							rs = new Vector3(0, movementRay.Y, movementRay.Z);
-						}
-
-						//Seria ideal sacar el punto mas proximo al bounding que colisiona y chequear con eso, en ves que con la posicion.
-
-					}
-					else
-					{
-						if ((esqueleto.BoundingBox.PMax.X > collider.PMax.X && movementRay.X > 0) ||
-							(esqueleto.BoundingBox.PMin.X < collider.PMin.X && movementRay.X < 0))
-						{
-							rs = new Vector3(0, movementRay.Y, movementRay.Z);
-						}
-						if ((esqueleto.BoundingBox.PMax.Z > collider.PMax.Z && movementRay.Z > 0) ||
-							(esqueleto.BoundingBox.PMin.Z < collider.PMin.Z && movementRay.Z < 0))
-						{
-							rs = new Vector3(movementRay.X, movementRay.Y, 0);
-						}
-					}
-					esqueleto.Position = lastPos - rs;
-
-				}
-
-			}
-			lastPos = esqueleto.Position;
+            //adjustPosition
+            CollisionManager.Instance.adjustPosition(this);
+            
+            lastPos = esqueleto.Position;
         }
 
 		protected List<TgcBoundingAxisAlignBox> getColliderAABBList(List<TgcBoundingAxisAlignBox> obstaculos)
@@ -230,16 +186,10 @@ namespace TGC.Group.Model.Entities
             esqueleto.rotateY(angle);
         }
 
-
 		//GETTERS Y SETTERS
         public Arma Arma
         {
             get { return arma; }
-        }
-
-        public int Health
-        {
-            get { return health; }
         }
     }
 }

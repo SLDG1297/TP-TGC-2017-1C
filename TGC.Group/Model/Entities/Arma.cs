@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TGC.Core.BoundingVolumes;
 using TGC.Core.SceneLoader;
 using TGC.Core.SkeletalAnimation;
 using TGC.Core.Utils;
+using TGC.Group.Model.Collisions;
 
 namespace TGC.Group.Model.Entities
 {
@@ -15,8 +17,8 @@ namespace TGC.Group.Model.Entities
         private int balas;
         private int recargas;
         private TgcSkeletalBoneAttach attachment;
-        private List<Bala> proyectiles = new List<Bala>();
         private string media;
+        private int danioBala;
 
         //Por cada arma generamos un constructor, asi no tenemos que setear el path a manopla y
         //viene de una
@@ -28,8 +30,9 @@ namespace TGC.Group.Model.Entities
             //desplazo al arma para que quede al lado de la mano, depende de como venga cada mesh
             arma.attachment.Offset = Matrix.Translation(-25, -3, -65) * Matrix.Scaling(0.5f, 0.5f, 0.5f) * Matrix.RotationX(FastMath.ToRad(90));
 
-            arma.balas = 30;
+            arma.balas = 35;
             arma.recargas = 3;
+            arma.danioBala = 3;
 
             return arma;
         }
@@ -66,9 +69,8 @@ namespace TGC.Group.Model.Entities
         {
             if (balas > 0)
             {
-                var bala = new Bala(media, position, angulo);
-                bala.Arma = this;   //lo pongo por si lo tengo que sacar de la lista de proyectiles
-                proyectiles.Add(bala);
+                var bala = new Bala(media, position, angulo,danioBala);
+                CollisionManager.Instance.agregarBala(bala);
                 balas--;
             }
         }
@@ -81,24 +83,7 @@ namespace TGC.Group.Model.Entities
                 recargas--;
             }
         }
-
-        //GESTION DE BALAS
-        public void renderBullets()
-        {
-            if (proyectiles.Count != 0)
-            {
-                foreach (var bala in proyectiles) bala.render();
-            }
-        }
-
-        public void updateBullets(float elapsedTime)
-        {
-            if (proyectiles.Count != 0)
-            {
-                foreach (var bala in proyectiles) bala.update(elapsedTime);
-            }
-        }
-
+        
         //GETTERS Y SETTERS
         public int Balas
         {
@@ -110,20 +95,19 @@ namespace TGC.Group.Model.Entities
             get { return recargas; }
         }
 
-        public List<Bala> Proyectiles
+        public int DanioBala
         {
-            get { return proyectiles; }
+            get { return danioBala; }
         }
-
     }
 
     public class Bala
     {
         private Vector3 direccion;
         private TgcMesh bala;
-        private Arma arma;
+        private int danio;
 
-        public Bala(string mediaDir, Vector3 pos, float angulo)
+        public Bala(string mediaDir, Vector3 pos, float angulo, int danio)
         {
             var loader = new Core.SceneLoader.TgcSceneLoader();
             bala = loader.loadSceneFromFile(mediaDir + "Meshes\\Armas\\Bullet\\Bullet-TgcScene.xml").Meshes[0];
@@ -132,6 +116,8 @@ namespace TGC.Group.Model.Entities
             bala.Scale = new Vector3(0.005f, 0.005f, 0.005f);
             bala.rotateX(-FastMath.PI_HALF);
             bala.rotateY(-FastMath.ToRad(angulo));
+
+            this.danio = danio;
 
             direccion = new Vector3(0, 0, -700f);
             direccion.TransformCoordinate(Matrix.RotationY(angulo));
@@ -148,11 +134,15 @@ namespace TGC.Group.Model.Entities
             bala.BoundingBox.transform(bala.Transform);
         }
 
+        public void dispose()
+        {
+            bala.dispose();
+        }
+
         public void render()
         {
             bala.render();
         }
-
 
         //GETTERS Y SETTERS
         public TgcMesh Mesh
@@ -160,11 +150,14 @@ namespace TGC.Group.Model.Entities
             get { return bala; }
         }
 
-        public Arma Arma
+        public TgcBoundingAxisAlignBox BoundingBox
         {
-            get { return arma; }
-            set { this.arma = value; }
+            get { return bala.BoundingBox; }
         }
 
+        public int Danio
+        {
+            get { return danio; }
+        }
     }
 }

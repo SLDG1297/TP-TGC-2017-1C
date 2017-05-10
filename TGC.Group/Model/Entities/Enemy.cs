@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TGC.Core.SkeletalAnimation;
 using TGC.Core.BoundingVolumes;
+using TGC.Group.Model.Collisions;
 
 namespace TGC.Group.Model.Entities
 {
@@ -14,7 +15,6 @@ namespace TGC.Group.Model.Entities
 		// Setear estatus de la IA. 0 = Parado, 1 = escapando, 2 = persiguiendo al jugador
 		private int estatus_ia;
 		private float Rotacion = 0f;
-		private Vector3 lastPos; // Ultima posicion
 		private float lastPosTerreno;
 
 
@@ -121,62 +121,16 @@ namespace TGC.Group.Model.Entities
 				desplazamiento = Vector3.Scale(desplazamiento, moveForward);
 			}
 
-
 			desplazamiento.Y = posicionY - esqueleto.Position.Y;
+            desplazamiento.TransformCoordinate(Matrix.RotationY(esqueleto.Rotation.Y));
+            esqueleto.Position += desplazamiento;
 
-			esqueleto.Position += desplazamiento;
-			esqueleto.Transform = Matrix.Translation(esqueleto.Position);
+            updateBoundingBoxes();
 
-			var collider = getColliderAABB(obstaculos);
-			if (collider != null)
-			{
-				//esqueleto.Position = lastPos;
+            esqueleto.Transform = Matrix.Translation(esqueleto.Position);
+            CollisionManager.Instance.adjustPosition(this);
 
-				var movementRay = lastPos - Position;
-
-				var rs = Vector3.Empty;
-				if (((esqueleto.BoundingBox.PMax.X > collider.PMax.X && movementRay.X > 0) ||
-					(esqueleto.BoundingBox.PMin.X < collider.PMin.X && movementRay.X < 0)) &&
-					((esqueleto.BoundingBox.PMax.Z > collider.PMax.Z && movementRay.Z > 0) ||
-					(esqueleto.BoundingBox.PMin.Z < collider.PMin.Z && movementRay.Z < 0)))
-				{
-					//Este primero es un caso particularse dan las dos condiciones simultaneamente entonces para saber de que lado moverse hay que hacer algunos calculos mas.
-					//por el momento solo se esta verificando que la posicion actual este dentro de un bounding para moverlo en ese plano.
-					if (esqueleto.Position.X > collider.PMin.X &&
-						esqueleto.Position.X < collider.PMax.X)
-					{
-						//El personaje esta contenido en el bounding X
-						rs = new Vector3(movementRay.X, movementRay.Y, 0);
-					}
-					if (esqueleto.Position.Z > collider.PMin.Z &&
-						esqueleto.Position.Z < collider.PMax.Z)
-					{
-						//El personaje esta contenido en el bounding Z
-						rs = new Vector3(0, movementRay.Y, movementRay.Z);
-					}
-
-					//Seria ideal sacar el punto mas proximo al bounding que colisiona y chequear con eso, en ves que con la posicion.
-
-				}
-				else
-				{
-					if ((esqueleto.BoundingBox.PMax.X > collider.PMax.X && movementRay.X > 0) ||
-						(esqueleto.BoundingBox.PMin.X < collider.PMin.X && movementRay.X < 0))
-					{
-						rs = new Vector3(0, movementRay.Y, movementRay.Z);
-					}
-					if ((esqueleto.BoundingBox.PMax.Z > collider.PMax.Z && movementRay.Z > 0) ||
-						(esqueleto.BoundingBox.PMin.Z < collider.PMin.Z && movementRay.Z < 0))
-					{
-						rs = new Vector3(movementRay.X, movementRay.Y, 0);
-					}
-				}
-
-				esqueleto.Position = 
-				esqueleto.Position = lastPos - rs;
-
-			}
-
+                        
 			lastPos = esqueleto.Position;
 			lastPosTerreno = posicionY;
 

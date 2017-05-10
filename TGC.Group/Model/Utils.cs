@@ -69,7 +69,6 @@ namespace TGC.Group.Model
                     meshes.Add(instance);
                 }
             }
-
         }
 
         /// <summary>

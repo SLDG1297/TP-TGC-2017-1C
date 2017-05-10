@@ -15,6 +15,7 @@ using TGC.Core.Collision;
 using TGC.Core.BoundingVolumes;
 using TGC.Group.Model.Entities;
 using System.Drawing;
+using TGC.Group.Model.Collisions;
 
 namespace TGC.Group.Model
 {
@@ -40,6 +41,7 @@ namespace TGC.Group.Model
         private TgcMesh palmeraOriginal;
         private TgcMesh pastito;
         private TgcMesh faraon;
+        private TgcMesh arbolSelvatico;
 
         private TgcBox cajita;
 
@@ -47,7 +49,8 @@ namespace TGC.Group.Model
         private List<TgcMesh> palmeras = new List<TgcMesh>();
         private List<TgcMesh> pastitos = new List<TgcMesh>();
         private List<TgcMesh> cajitas = new List<TgcMesh>();
-        
+        private List<TgcMesh> arbolesSelvaticos = new List<TgcMesh>();
+
         // Bounding boxes del escenario
         private List<TgcBoundingAxisAlignBox> obstaculos = new List<TgcBoundingAxisAlignBox>();
 
@@ -56,7 +59,7 @@ namespace TGC.Group.Model
 
         // Jugador
         private Player jugador;
-        private Vector3 PLAYER_INIT_POS = new Vector3(400, 0, 500);
+        private Vector3 PLAYER_INIT_POS = new Vector3(800, 0, 1000);
 
         // Enemigos
         private List<Enemy> enemigos = new List<Enemy>();
@@ -64,6 +67,9 @@ namespace TGC.Group.Model
         // HUD
 		private TgcText2D texto = new TgcText2D();
 		private TgcText2D sombraTexto = new TgcText2D();
+
+        //otros
+        private CollisionManager collisionManager;
 
         /// <summary>
         ///     Constructor del juego.
@@ -76,20 +82,18 @@ namespace TGC.Group.Model
             Name = Game.Default.Name;
             Description = Game.Default.Description;
 
+            collisionManager = CollisionManager.Instance;
         }
 
         public override void Init()
         {
             // Iniciar jugador
-
             initJugador();
 
             // Iniciar HUD
-
             initText();
 
             // Iniciar escenario
-
             initHeightmap();
 
             initSkyBox();
@@ -97,11 +101,9 @@ namespace TGC.Group.Model
             initScene();
 
             // Iniciar enemigos
-
             initEnemigos();
 
             // Iniciar bounding boxes
-
             initObstaculos();
 
             // Iniciar cámara
@@ -123,7 +125,6 @@ namespace TGC.Group.Model
             PreUpdate();
 
             // Update jugador
-            int aux = jugador.Arma.Proyectiles.Count;
             jugador.mover(Input, posicionEnTerreno(jugador.Position.X, jugador.Position.Z), ElapsedTime, obstaculos);
 
 			// updownRot -= Input.YposRelative * 0.05f;
@@ -143,17 +144,7 @@ namespace TGC.Group.Model
 			{
 				enemy.updateStatus(jugador.Position, ElapsedTime, obstaculos, posicionEnTerreno(enemy.Position.X, enemy.Position.Z));
 			}
-
-            // Agrego a la lista nuevos proyectiles.
-            if(aux != jugador.Arma.Proyectiles.Count)
-            {
-                for (int i = aux; i < jugador.Arma.Proyectiles.Count; i++)
-                {
-                    var bala = jugador.Arma.Proyectiles[i];
-                    obstaculos.Add(bala.Mesh.BoundingBox);
-                }
-            }
-
+            
             // Update SkyBox
 
             // Cuando se quiera probar cámara en primera persona
@@ -162,6 +153,8 @@ namespace TGC.Group.Model
             // Cuando se quiera probar cámara en tercera persona
             skyBox.Center = jugador.Position;
 
+            //chequear colisiones con balas
+            collisionManager.checkCollisions(ElapsedTime);
             // Update HUD
             updateText();
         }
@@ -187,15 +180,18 @@ namespace TGC.Group.Model
             Utils.renderMeshes(cajitas);
 
             // Render jugador
+            //jugador.render(ElapsedTime);
 
-            jugador.render(ElapsedTime);
+            // Render enemigos
+            //enemigos.ForEach(e => e.render(ElapsedTime));
 
-            // Render jugador
-
-            enemigos.ForEach(e => e.render(ElapsedTime));
-
+            arbolSelvatico.render();
             // Render bounding boxes
-            renderAABB();
+            //renderAABB();            
+
+            //renderizar balas y jugadores
+            collisionManager.renderAll(ElapsedTime);
+
             // Render HUD
             // DrawText.drawText("HEALTH: " + jugador.Health + "; BALAS: " + jugador.Arma.Balas + "; RECARGAS: " + jugador.Arma.Recargas, 50, 1000, Color.OrangeRed);
             sombraTexto.render();
@@ -217,21 +213,23 @@ namespace TGC.Group.Model
             palmeraOriginal.dispose();
             pastito.dispose();
             faraon.dispose();
-
+            arbolSelvatico.dispose();
             cajita.dispose();
 
             // Dispose bounding boxes
             obstaculos.ForEach(o => o.dispose());
 
             // Dispose jugador
-            jugador.dispose();
+            //jugador.dispose();
 
             // Dispose enemigos
-            enemigos.ForEach(e => e.dispose());
+            //enemigos.ForEach(e => e.dispose());
+            collisionManager.disposeAll();
 
             // Dispose HUD
 			texto.Dispose();
 			sombraTexto.Dispose();
+
         }
 
 #region Métodos Auxiliares
@@ -260,6 +258,8 @@ namespace TGC.Group.Model
                     i--;
                 }
             }
+
+            foreach (var enemy in enemigos) collisionManager.addEnemy(enemy);
         }
 
         private void initHeightmap(){
@@ -325,8 +325,15 @@ namespace TGC.Group.Model
             {
                 cajita.AutoTransformEnable = false;
                 cajita.Scale = new Vector3(-800 * FACTOR, 20 * FACTOR, 1400 * FACTOR);
-                cajita.Transform = Matrix.Translation(cajita.Scale) * cajita.Transform;
-            } 
+                cajita.Transform = Matrix.Scaling(0.25f,0.25f,0.25f) * Matrix.Translation(cajita.Scale) * cajita.Transform;
+            }
+
+            //creacion de arboles selvaticos
+            string arbolSelvaticoDir = MediaDir + "Meshes\\Vegetation\\ArbolSelvatico\\ArbolSelvatico-TgcScene.xml";
+            arbolSelvatico = cargarMesh(arbolSelvaticoDir);
+
+            arbolSelvatico.Position = new Vector3(800, 0, 200);
+
         }
 
         private void initSkyBox(){
@@ -347,17 +354,31 @@ namespace TGC.Group.Model
         }
 
 		private void initObstaculos() {
-            // Añadir escenario.
+            //Añadir escenario.
             aniadirObstaculoAABB(casa.Meshes);
 
             aniadirObstaculoAABB(rocas);
-            aniadirObstaculoAABB(palmeras);
-            //aniadirObstaculoAABB(pastitos);
+            //aniadirObstaculoAABB(palmeras);
 
-            aniadirObstaculoAABB(cajitas);   
-            
+            foreach (var palmera in palmeras)
+            {
+                var despl = new Vector3(0, 100, 0);
+                var cilindro = new TgcBoundingCylinderFixedY(
+                    palmera.Position + despl, 20, 100);
+
+                collisionManager.agregarCylinder(cilindro);
+            }
+
+            //aniadirObstaculoAABB(pastitos);
+            aniadirObstaculoAABB(cajitas);
+
             // Añadir enemigos.
-            aniadirObstaculoAABB(enemigos);
+            //aniadirObstaculoAABB(enemigos);
+
+            var cylinder = new TgcBoundingCylinderFixedY(arbolSelvatico.BoundingBox.calculateBoxCenter() + new Vector3(500,0,45),
+                60, 200);
+            CollisionManager.Instance.agregarCylinder(cylinder);            
+            CollisionManager.Instance.setPlayer(jugador);
         }
 
 		private void initText() {
@@ -384,14 +405,14 @@ namespace TGC.Group.Model
 			texto.Text = "HEALTH: " + jugador.Health;
 			texto.Text += "\tBALAS: " + jugador.Arma.Balas;
 			texto.Text += "\tRECARGAS: " + jugador.Arma.Recargas;
-			sombraTexto.Text = texto.Text;
+            texto.Text += " Position: " + jugador.Position;
+
+            sombraTexto.Text = texto.Text;
 		}
 
 		private void renderAABB() {
             // Del Jugador
-            jugador.Esqueleto.BoundingBox.render();
-
-
+            //jugador.Esqueleto.BoundingBox.render();
             foreach (var roca in rocas) roca.BoundingBox.render();
 
             // De todos los obstáculos
@@ -450,7 +471,8 @@ namespace TGC.Group.Model
         {
             foreach (var mesh in meshes)
             {
-                obstaculos.Add(mesh.BoundingBox);
+                //obstaculos.Add(mesh.BoundingBox);
+                CollisionManager.Instance.agregarAABB(mesh.BoundingBox);
             }
         }
 
