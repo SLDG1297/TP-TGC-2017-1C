@@ -214,6 +214,13 @@ namespace TGC.Group.Model.Collisions
                 );
         }
 
+        public bool debeDisparar(Enemy enemigo)
+        {
+            var cilindro = player.BoundingCylinder;
+            return TgcCollisionUtils.testRayCylinder(enemigo.Ray,cilindro);
+        }
+
+
         public void agregarAABB(TgcBoundingAxisAlignBox a)
         {
             boundingBoxes.Add(a);
