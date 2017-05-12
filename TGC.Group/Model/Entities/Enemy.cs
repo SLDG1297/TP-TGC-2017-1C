@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using TGC.Core.SkeletalAnimation;
 using TGC.Core.BoundingVolumes;
 using TGC.Group.Model.Collisions;
+using TGC.Core.Geometry;
 
 namespace TGC.Group.Model.Entities
 {
@@ -17,6 +18,7 @@ namespace TGC.Group.Model.Entities
 		private float Rotacion = 0f;
 		private float lastPosTerreno;
 
+        private TgcRay ray;
 
 		/// <summary>
 		///     Construye un enemigo que trata de encontrar al jugador y matarlo.
@@ -27,7 +29,6 @@ namespace TGC.Group.Model.Entities
 		/// <param name="arma">Arma con la que el jugador comienzar</param> 
 		public Enemy(string mediaDir, string skin, Vector3 initPosition, Arma arma) : base(mediaDir, skin, initPosition, arma)
 		{
-
 			maxHealth = 100;
 
 			velocidadCaminar = 50f;
@@ -35,8 +36,9 @@ namespace TGC.Group.Model.Entities
 			velocidadRotacion = 120f;
 			tiempoSalto = 10f;
 			velocidadSalto = 0.5f;
-
 			estatus_ia = 0;
+
+            ray = new TgcRay();
 		}
 
 		public bool isCollidingWithObject(List<TgcBoundingAxisAlignBox> obstaculos) { 
@@ -128,12 +130,34 @@ namespace TGC.Group.Model.Entities
             updateBoundingBoxes();
 
             esqueleto.Transform = Matrix.Translation(esqueleto.Position);
+
+            //con esto determino el largo y la direccion del rayo
+            ray.Direction = Vector3.Multiply(direccion, 1000);
+
             CollisionManager.Instance.adjustPosition(this);
 
-                        
+            //me fijo si el rayo colisiona con el jugador para ver si puedo disparar
+            if (CollisionManager.Instance.debeDisparar(this))
+            {
+                if (arma.Balas <= 0)
+                {
+                    arma.recarga();
+                }
+                arma.dispara(elapsedTime, Position, esqueleto.Rotation.Y);
+            }
+
 			lastPos = esqueleto.Position;
 			lastPosTerreno = posicionY;
 
+            //actualizo el rayo
+            ray.Origin = esqueleto.Position;           
 		}
+
+        public TgcRay Ray
+        {
+            get { return ray; }
+        }
 	}
+
+   
 }
