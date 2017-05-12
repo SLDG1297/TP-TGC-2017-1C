@@ -158,7 +158,7 @@ namespace TGC.Group.Model.Entities
                                 * Matrix.RotationY(Rotacion)
                                 * Matrix.Translation(esqueleto.Position);
             //Disparar
-            if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT))
+            if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT) || Input.buttonDown(TgcD3dInput.MouseButtons.BUTTON_LEFT))
             {
                 arma.dispara(ElapsedTime, this.Position, Rotacion);
             }

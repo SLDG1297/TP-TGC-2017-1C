@@ -178,12 +178,7 @@ namespace TGC.Group.Model.Entities
 
         public void render(float elapsedTime)
         {
-            esqueleto.animateAndRender(elapsedTime);
-            //arma.renderBullets();
-
-            //todo: sacar
-            cylinderBB.render();
-            cylinderHead.render();
+            esqueleto.animateAndRender(elapsedTime);        
         }
 
         public void dispose()

@@ -180,10 +180,10 @@ namespace TGC.Group.Model
             Utils.renderMeshes(cajitas);
 
             // Render jugador
-            //jugador.render(ElapsedTime);
+            jugador.render(ElapsedTime);
 
             // Render enemigos
-            //enemigos.ForEach(e => e.render(ElapsedTime));
+            enemigos.ForEach(e => e.render(ElapsedTime));
 
             arbolSelvatico.render();
             // Render bounding boxes

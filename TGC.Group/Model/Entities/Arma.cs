@@ -106,13 +106,14 @@ namespace TGC.Group.Model.Entities
         private Vector3 direccion;
         private TgcMesh bala;
         private int danio;
+        private bool impacto = false;
 
         public Bala(string mediaDir, Vector3 pos, float angulo, int danio)
         {
             var loader = new Core.SceneLoader.TgcSceneLoader();
             bala = loader.loadSceneFromFile(mediaDir + "Meshes\\Armas\\Bullet\\Bullet-TgcScene.xml").Meshes[0];
 
-            bala.Position = pos + new Vector3(0, 40, 0);
+            bala.Position = pos + new Vector3(0, 30, 0);
             bala.Scale = new Vector3(0.005f, 0.005f, 0.005f);
             bala.rotateX(-FastMath.PI_HALF);
             bala.rotateY(-FastMath.ToRad(angulo));
@@ -159,5 +160,16 @@ namespace TGC.Group.Model.Entities
         {
             get { return danio; }
         }
+
+        public void setImpacto(bool b)
+        {
+            impacto = b;
+        }
+
+        public bool Impacto
+        {
+            get { return impacto; }
+        }
+        
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.DirectX;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -113,15 +114,11 @@ namespace TGC.Group.Model.Collisions
                 Vector3 newPos = new Vector3(cylinder.Center.X, personaje.Esqueleto.Position.Y, cylinder.Center.Z);
                 personaje.Esqueleto.Position = newPos;
             }
-
         }
-
-
 
         //METODOS ASOCIADOS A LAS COLISIONES CON BALAS
         public void checkBulletCollisions(float ElapsedTime)
-        {
-            var aSacar = new List<Bala>();
+        { 
             var enemigosASacar = new List<Personaje>();
 
             //chequeo las colisiones de las balas que se esten moviendo
@@ -132,32 +129,23 @@ namespace TGC.Group.Model.Collisions
                     //actualizo la posicion de la bala
                     bala.update(ElapsedTime);
 
+                    var boundingBox = bala.BoundingBox;
+
                     //si colisiona con un objeto, desaparece
-                    if (colisionaConAAAB(bala.BoundingBox)) aSacar.Add(bala);
-                    if (colisionaConCilindro(bala.BoundingBox)) aSacar.Add(bala);
-
-                    //si colisiona con un Personaje, sacarle vida
-                    var enemigo = enemigoQueColisionaCon(bala.BoundingBox);
-                    if (enemigo != null)
+                    if (colisionaConAAAB(boundingBox) || colisionaConCilindro(boundingBox)) bala.setImpacto(true); //aSacar.Add(bala);
+                                        //si colisiona con un Personaje, sacarle vida
+                    if (colisionaConJugador(boundingBox))
                     {
-                        aSacar.Add(bala);
-                        //resto salud al que recibio el impacto de la bala
-                        enemigo.recibiDanio(bala.Danio);                            
+                        bala.setImpacto(true);
+                        bala.BoundingBox.setRenderColor(Color.Red);
+                        var jugador = enemigoQueColisionaCon(boundingBox);
+                        jugador.recibiDanio(bala.Danio);
 
-                            //si murio, lo saco del juego xd
-                       if(enemigo.Muerto)enemigosASacar.Add(enemigo);                                               
-                    }
+                        if (jugador.Muerto) enemigosASacar.Add(jugador);
+                    }                   
                 }
             }
 
-            //remuevo las balas que colisionaron con algo
-            foreach (var bala in aSacar)
-            {
-                bala.dispose();
-                balas.Remove(bala);
-            }
-
-            //remuevo las balas que colisionaron con algo
             foreach (var enemigo in enemigosASacar)
             {
                 enemigo.dispose();
@@ -167,21 +155,28 @@ namespace TGC.Group.Model.Collisions
         
         public void renderAll(float elapsedTime)
         {
-            //renderizar personajes
-            player.render(elapsedTime);
-            foreach (var enemy in jugadores) enemy.render(elapsedTime);
-
             foreach (var bb in boundingBoxes) bb.render();
             foreach (var bb in boundingCylinders) bb.render();
-
+            foreach(var bb in jugadores)
+            {
+                bb.BoundingCylinder.render();
+                bb.HeadCylinder.render();
+            }
             //renderizar balas
-            if (balas.Count != 0)
+            //remuevo primero las que impactaron
+            balas.FindAll(bala => bala.Impacto == true).ForEach(bala => bala.dispose());
+            balas.RemoveAll(bala => bala.Impacto == true);
+
+            if (balas.Count > 0)
             {
                 foreach (var bala in balas)
                 {
-                    bala.render();
-                    //TODO: BORRAR
-                    bala.Mesh.BoundingBox.render();
+                    if (bala.Impacto == false)
+                    {
+                        bala.render();
+                        //TODO: BORRAR
+                        bala.Mesh.BoundingBox.render();
+                    }
                 }
             }
         }
@@ -204,6 +199,12 @@ namespace TGC.Group.Model.Collisions
         {
             return boundingCylinders.Any(
                 boundingCylinder => TgcCollisionUtils.testAABBCylinder(aabb, boundingCylinder));
+        }
+
+        public bool colisionaConJugador(TgcBoundingAxisAlignBox aabb)
+        {
+            return jugadores.Any(
+                jugador => TgcCollisionUtils.testAABBCylinder(aabb,jugador.BoundingCylinder));
         }
 
 
@@ -241,15 +242,14 @@ namespace TGC.Group.Model.Collisions
         {
             boundingBoxes.Clear();
             boundingCylinders.Clear();
-
-
         }
 
 
         //TODO: Borrar
-        public void setPlayer(Player player)
+        public void setPlayer(Player p)
         {
-            this.player = player;
+            player = p;
+            jugadores.Add(p);
         }
 
         public void addEnemy(Enemy enemy)

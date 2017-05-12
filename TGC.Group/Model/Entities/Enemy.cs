@@ -8,6 +8,7 @@ using TGC.Core.SkeletalAnimation;
 using TGC.Core.BoundingVolumes;
 using TGC.Group.Model.Collisions;
 using TGC.Core.Geometry;
+using TGC.Core.Utils;
 
 namespace TGC.Group.Model.Entities
 {
@@ -17,27 +18,25 @@ namespace TGC.Group.Model.Entities
 		private int estatus_ia;
 		private float Rotacion = 0f;
 		private float lastPosTerreno;
-
         private TgcRay ray;
 
-		/// <summary>
-		///     Construye un enemigo que trata de encontrar al jugador y matarlo.
-		/// </summary>
-		/// <param name="mediaDir">Ruta donde esta la carpeta con los assets</param>
-		/// <param name="skin">Nombre del skin a usar (ej: CS_Gign, CS_Arctic)</param>
-		/// <param name="skin">Posicion inicial del jugador</param>
-		/// <param name="arma">Arma con la que el jugador comienzar</param> 
-		public Enemy(string mediaDir, string skin, Vector3 initPosition, Arma arma) : base(mediaDir, skin, initPosition, arma)
+        /// <summary>
+        ///     Construye un enemigo que trata de encontrar al jugador y matarlo.
+        /// </summary>
+        /// <param name="mediaDir">Ruta donde esta la carpeta con los assets</param>
+        /// <param name="skin">Nombre del skin a usar (ej: CS_Gign, CS_Arctic)</param>
+        /// <param name="skin">Posicion inicial del jugador</param>
+        /// <param name="arma">Arma con la que el jugador comienzar</param> 
+        public Enemy(string mediaDir, string skin, Vector3 initPosition, Arma arma) : base(mediaDir, skin, initPosition, arma)
 		{
 			maxHealth = 100;
 
-			velocidadCaminar = 50f;
+			velocidadCaminar = 100f;
 			velocidadIzqDer = 50f;
 			velocidadRotacion = 120f;
 			tiempoSalto = 10f;
 			velocidadSalto = 0.5f;
 			estatus_ia = 0;
-
             ray = new TgcRay();
 		}
 
@@ -56,10 +55,11 @@ namespace TGC.Group.Model.Entities
 			switch (estatus_ia)
 			{
 				case 0:
-					if (dist <= 250) { 
-						estatus_ia = 1;
-					}
-					break;
+                    if (dist <= 250)
+                    {
+                        estatus_ia = 1;
+                    }
+                    break;
 
 				case 1:
 					if (dist >= 400) { 
@@ -82,8 +82,9 @@ namespace TGC.Group.Model.Entities
 			var direccion = Position - new Vector3(Position.X, Position.Y, Position.Z + 1);
 			float rotate = 0;
 			Vector3 dir_movimiento = new Vector3(0,0,0);
+            var desplazamiento = new Vector3(0, 0, 0);
 
-			resetBooleans();
+            resetBooleans();
 
 			if (estatus_ia == 1){
 				moving = true;
@@ -110,14 +111,12 @@ namespace TGC.Group.Model.Entities
 				moving = false;
 				moveForward = 0;
 				rotate = 0;
-
 			}
 
 			displayAnimations();
 
 			dir_movimiento.Y = 0;
-
-			var desplazamiento = new Vector3(0, 0, 0);
+			
 			if (Vector3.Length(dir_movimiento) > 0){
 				desplazamiento = Vector3.Scale(dir_movimiento, 1 / Vector3.Length(dir_movimiento));
 				desplazamiento = Vector3.Scale(desplazamiento, moveForward);
@@ -130,34 +129,29 @@ namespace TGC.Group.Model.Entities
             updateBoundingBoxes();
 
             esqueleto.Transform = Matrix.Translation(esqueleto.Position);
-
+            //actualizo el rayo
+            ray.Origin = esqueleto.Position;
             //con esto determino el largo y la direccion del rayo
-            ray.Direction = Vector3.Multiply(direccion, 1000);
-
+            ray.Direction = direccion;
+            
             CollisionManager.Instance.adjustPosition(this);
-
+            ray.Origin = esqueleto.Position;
             //me fijo si el rayo colisiona con el jugador para ver si puedo disparar
             if (CollisionManager.Instance.debeDisparar(this))
             {
-                if (arma.Balas <= 0)
-                {
-                    arma.recarga();
-                }
+                if (arma.Balas <= 0) arma.recarga();                
                 arma.dispara(elapsedTime, Position, esqueleto.Rotation.Y);
             }
 
 			lastPos = esqueleto.Position;
 			lastPosTerreno = posicionY;
 
-            //actualizo el rayo
-            ray.Origin = esqueleto.Position;           
+           
 		}
 
         public TgcRay Ray
         {
             get { return ray; }
         }
-	}
-
-   
+	}   
 }
