@@ -62,12 +62,53 @@ namespace TGC.Group.Model
                     var position = new Vector3(i * offset, 0, j * offset);
                     instance.AutoTransformEnable = false;
                     instance.Position = position;
+                    instance.Scale = originalMesh.Scale;
                     //Desplazarlo
-                    instance.Transform = Matrix.Translation(instance.Position) * instance.Transform;
+                    instance.Transform = Matrix.Scaling(instance.Scale) * Matrix.Translation(instance.Position) * instance.Transform;
                     //instance.Scale = new Vector3(0.25f, 0.25f, 0.25f);
-
                     meshes.Add(instance);
                 }
+            }
+        }
+
+        public static void disponerEnLineaX(TgcMesh originalMesh, List<TgcMesh> meshes, int veces, float offset)
+        {
+            for (var i = 0; i < veces; i++)
+            {
+                //Crear instancia de modelo
+                var instance = originalMesh.createMeshInstance(originalMesh.Name + i);
+
+                var position = new Vector3(originalMesh.Position.X + i * offset, originalMesh.Position.Y, originalMesh.Position.Z);
+
+                instance.AutoTransformEnable = false;
+                instance.Position = position;
+                instance.Scale = originalMesh.Scale;
+
+                instance.AlphaBlendEnable = true;
+                //Desplazarlo
+                instance.Transform = Matrix.Scaling(instance.Scale) * Matrix.Translation(instance.Position) * instance.Transform;
+                
+                meshes.Add(instance);
+            }
+        }
+
+
+        public static void disponerEnLineaZ(TgcMesh originalMesh, List<TgcMesh> meshes, int veces, float offset)
+        {
+            for (var i = 0; i < veces; i++)
+            {
+                //Crear instancia de modelo
+                var instance = originalMesh.createMeshInstance(originalMesh.Name + i);
+
+                var position = new Vector3(originalMesh.Position.X, originalMesh.Position.Y, originalMesh.Position.Z + i * offset);
+
+                instance.AutoTransformEnable = false;
+                instance.Position = position;
+
+                instance.AlphaBlendEnable = true;
+                //Desplazarlo
+                instance.Transform = Matrix.Translation(instance.Position) * instance.Transform;
+                meshes.Add(instance);
             }
         }
 

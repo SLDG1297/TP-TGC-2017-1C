@@ -27,24 +27,22 @@ namespace TGC.Group.Model
         private const int FACTOR = 8; // Significa las veces que se agrandó según el MAP_SCALE original.
         // Esto se hace así porque ya hay valores hardcodeados de posiciones que no quiero cambiar.
         // Habría que ver una forma de ubicar meshes en posición relativa en el espacio.
-        private Vector3 CENTRO = new Vector3(0, 0, 0);
-        
+        private Vector3 CENTRO = new Vector3(0, 0, 0);        
 
         // Escenario
         private TgcSimpleTerrain heightmap;
-
 		private TgcSkyBox skyBox;
 
         private TgcScene casa;
-
         private TgcMesh rocaOriginal;
         private TgcMesh palmeraOriginal;
         private TgcMesh pastito;
         private TgcMesh faraon;
         private TgcMesh arbolSelvatico;
-
+        private TgcMesh hummer;
         private TgcBox cajita;
 
+        //objetos que se replican
         private List<TgcMesh> rocas = new List<TgcMesh>();
         private List<TgcMesh> palmeras = new List<TgcMesh>();
         private List<TgcMesh> pastitos = new List<TgcMesh>();
@@ -70,7 +68,6 @@ namespace TGC.Group.Model
 
         //otros
         private CollisionManager collisionManager;
-
         private bool FPSCamera = true;
 
         /// <summary>
@@ -99,7 +96,6 @@ namespace TGC.Group.Model
             initHeightmap();
 
             initSkyBox();
-
             initScene();
 
             // Iniciar enemigos
@@ -109,20 +105,14 @@ namespace TGC.Group.Model
             initObstaculos();
 
             // Iniciar cámara
-            if (!FPSCamera)
-            {
-                // Antigua cámara en tercera persona.
-                // camaraInterna = new ThirdPersonCamera(jugador, 50, 150, Input);
-
-                // Cámara actual en tercera persona.
+            if (!FPSCamera){ 
                 // Configurar cámara en Tercera Persona y la asigno al TGC.
                 camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40, 50, -50), 100, 150, Input);
                 Camara = camaraInterna;
             }
-            else
-            {
+            else{
                 // Antigua cámara en primera persona.
-                Camara = new FirstPersonCamera(new Vector3(0, 1500, 0), Input);
+                Camara = new FirstPersonCamera(new Vector3(400, 1500, 500), Input);
             }   
         }
 
@@ -149,7 +139,6 @@ namespace TGC.Group.Model
                 }
 
                 // Update SkyBox
-
                 // Cuando se quiera probar cámara en tercera persona
                 skyBox.Center = jugador.Position;
             }
@@ -179,16 +168,27 @@ namespace TGC.Group.Model
             // Render escenario
             heightmap.render();
 
-            if(!FPSCamera)skyBox.render();
+            if (!FPSCamera)
+            {
+                skyBox.render();
+
+            }
+            else
+            {
+                DrawText.drawText(Convert.ToString(Camara.Position), 10, 1000, Color.OrangeRed);
+            }
 
             casa.renderAll();
 
             Utils.renderMeshes(rocas);
             Utils.renderMeshes(palmeras);
             Utils.renderMeshes(pastitos);
-            faraon.render();
-
             Utils.renderMeshes(cajitas);
+            Utils.renderMeshes(arbolesSelvaticos);
+
+            faraon.render();
+            hummer.render();
+            arbolSelvatico.render();
 
             // Render jugador
             jugador.render(ElapsedTime);
@@ -196,7 +196,6 @@ namespace TGC.Group.Model
             // Render enemigos
             enemigos.ForEach(e => e.render(ElapsedTime));
 
-            arbolSelvatico.render();
             // Render bounding boxes
             //renderAABB();            
 
@@ -226,7 +225,7 @@ namespace TGC.Group.Model
             faraon.dispose();
             arbolSelvatico.dispose();
             cajita.dispose();
-
+            hummer.dispose();
             // Dispose bounding boxes
             obstaculos.ForEach(o => o.dispose());
 
@@ -343,8 +342,21 @@ namespace TGC.Group.Model
             string arbolSelvaticoDir = MediaDir + "Meshes\\Vegetation\\ArbolSelvatico\\ArbolSelvatico-TgcScene.xml";
             arbolSelvatico = cargarMesh(arbolSelvaticoDir);
 
-            arbolSelvatico.Position = new Vector3(800, 0, 200);
+            //TODO: ajustar posicion segun heightmap
+            arbolSelvatico.Position = new Vector3(-4228, 83, 15842);
+            arbolSelvatico.Scale = new Vector3(2f, 2f, 2f);
+            arbolSelvatico.AutoTransformEnable = false;
+            arbolSelvatico.Transform = Matrix.Scaling(2f, 2f, 2f) * Matrix.Translation(arbolSelvatico.Position) * arbolSelvatico.Transform;
 
+            Utils.disponerEnLineaX(arbolSelvatico, arbolesSelvaticos, 15, 700);
+
+            //autitos!
+            hummer = cargarMesh(MediaDir + "Meshes\\Vehiculos\\Hummer\\Hummer-TgcScene.xml");
+            hummer.Position = new Vector3(1754, 0, 9723);
+            hummer.AutoTransformEnable = false;
+            hummer.Transform = Matrix.Scaling(1.1f, 1.08f, 1.25f) * Matrix.Translation(hummer.Position) * hummer.Transform;
+            hummer.createBoundingBox();
+            hummer.updateBoundingBox();
         }
 
         private void initSkyBox(){
@@ -382,14 +394,23 @@ namespace TGC.Group.Model
 
             //aniadirObstaculoAABB(pastitos);
             aniadirObstaculoAABB(cajitas);
-
+            collisionManager.agregarAABB(hummer.BoundingBox);
             // Añadir enemigos.
             //aniadirObstaculoAABB(enemigos);
 
-            var cylinder = new TgcBoundingCylinderFixedY(arbolSelvatico.BoundingBox.calculateBoxCenter() + new Vector3(500,0,45),
-                60, 200);
+            //bounding cyilinder del arbol
+            var adjustPos =new Vector3(0, 0, 44);                
+            var cylinder = new TgcBoundingCylinderFixedY(arbolSelvatico.BoundingBox.calculateBoxCenter()+ adjustPos, 60, 200);
             CollisionManager.Instance.agregarCylinder(cylinder);            
             CollisionManager.Instance.setPlayer(jugador);
+
+            foreach (var arbol in arbolesSelvaticos)
+            {
+                arbol.createBoundingBox();
+                arbol.updateBoundingBox();
+                var cilindro = new TgcBoundingCylinderFixedY(arbol.BoundingBox.calculateBoxCenter(), 120, 400);
+                collisionManager.agregarCylinder(cilindro);
+            }
         }
 
 		private void initText() {
