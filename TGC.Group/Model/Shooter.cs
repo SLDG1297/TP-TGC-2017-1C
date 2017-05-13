@@ -71,6 +71,8 @@ namespace TGC.Group.Model
         //otros
         private CollisionManager collisionManager;
 
+        private bool FPSCamera = true;
+
         /// <summary>
         ///     Constructor del juego.
         /// </summary>
@@ -107,51 +109,60 @@ namespace TGC.Group.Model
             initObstaculos();
 
             // Iniciar cámara
+            if (!FPSCamera)
+            {
+                // Antigua cámara en tercera persona.
+                // camaraInterna = new ThirdPersonCamera(jugador, 50, 150, Input);
 
-            // Antigua cámara en primera persona.
-            // Camara = new FirstPersonCamera(new Vector3(0, 1500, 0), Input);
-
-            // Antigua cámara en tercera persona.
-            // camaraInterna = new ThirdPersonCamera(jugador, 50, 150, Input);
-
-            // Cámara actual en tercera persona.
-            // Configurar cámara en Tercera Persona y la asigno al TGC.
-            camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40,50,-50), 100, 150, Input);
-            Camara = camaraInterna;
+                // Cámara actual en tercera persona.
+                // Configurar cámara en Tercera Persona y la asigno al TGC.
+                camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40, 50, -50), 100, 150, Input);
+                Camara = camaraInterna;
+            }
+            else
+            {
+                // Antigua cámara en primera persona.
+                Camara = new FirstPersonCamera(new Vector3(0, 1500, 0), Input);
+            }   
         }
 
         public override void Update()
         {
             PreUpdate();
 
-            // Update jugador
-            jugador.mover(Input, posicionEnTerreno(jugador.Position.X, jugador.Position.Z), ElapsedTime, obstaculos);
+            if (!FPSCamera)
+            {
+                // Update jugador
+                jugador.mover(Input, posicionEnTerreno(jugador.Position.X, jugador.Position.Z), ElapsedTime, obstaculos);
 
-			// updownRot -= Input.YposRelative * 0.05f;
-			camaraInterna.OffsetHeight += Input.YposRelative;
-			camaraInterna.rotateY(Input.XposRelative * 0.05f);
-			camaraInterna.TargetDisplacement *= camaraInterna.RotationY * ElapsedTime;
-            // Hacer que la camara siga al personaje en su nueva posicion
-            camaraInterna.Target = jugador.Position;
+                // updownRot -= Input.YposRelative * 0.05f;
+                camaraInterna.OffsetHeight += Input.YposRelative;
+                camaraInterna.rotateY(Input.XposRelative * 0.05f);
+                camaraInterna.TargetDisplacement *= camaraInterna.RotationY * ElapsedTime;
+                // Hacer que la camara siga al personaje en su nueva posicion
+                camaraInterna.Target = jugador.Position;
 
-            var forward = camaraInterna.OffsetForward - Input.WheelPos * 10;
-			if (forward > 10) {
-				camaraInterna.OffsetForward -= Input.WheelPos * 10;
-			}
+                var forward = camaraInterna.OffsetForward - Input.WheelPos * 10;
+                if (forward > 10)
+                {
+                    camaraInterna.OffsetForward -= Input.WheelPos * 10;
+                }
+
+                // Update SkyBox
+
+                // Cuando se quiera probar cámara en tercera persona
+                skyBox.Center = jugador.Position;
+            }
+            else
+            {
+                skyBox.Center = Camara.Position;
+            }          
 
 			// Update enemigos.
 			foreach (var enemy in enemigos)
 			{
 				enemy.updateStatus(jugador.Position, ElapsedTime, obstaculos, posicionEnTerreno(enemy.Position.X, enemy.Position.Z));
-			}
-            
-            // Update SkyBox
-
-            // Cuando se quiera probar cámara en primera persona
-            // skyBox.Center = Camara.Position;
-
-            // Cuando se quiera probar cámara en tercera persona
-            skyBox.Center = jugador.Position;
+			}     
 
             //chequear colisiones con balas
             collisionManager.checkCollisions(ElapsedTime);
@@ -168,7 +179,7 @@ namespace TGC.Group.Model
             // Render escenario
             heightmap.render();
 
-            skyBox.render();
+            if(!FPSCamera)skyBox.render();
 
             casa.renderAll();
 
