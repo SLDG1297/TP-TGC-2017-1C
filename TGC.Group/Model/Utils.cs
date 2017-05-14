@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TGC.Core.BoundingVolumes;
+using TGC.Core.Collision;
 using TGC.Core.Geometry;
 using TGC.Core.SceneLoader;
 using TGC.Core.Utils;
@@ -63,6 +65,7 @@ namespace TGC.Group.Model
                     instance.AutoTransformEnable = false;
                     instance.Position = position;
                     instance.Scale = originalMesh.Scale;
+                    instance.AlphaBlendEnable = originalMesh.AlphaBlendEnable;
                     //Desplazarlo
                     instance.Transform = Matrix.Scaling(instance.Scale) * Matrix.Translation(instance.Position) * instance.Transform;
                     //instance.Scale = new Vector3(0.25f, 0.25f, 0.25f);
@@ -118,6 +121,19 @@ namespace TGC.Group.Model
         public static void renderMeshes(List<TgcMesh> meshes)
         {
             foreach(var mesh in meshes) mesh.render();
+        }
+
+
+        public static void renderFromFrustum(List<TgcMesh> meshes,TgcFrustum frustum)
+        {
+            foreach (var mesh in meshes)
+            {
+                var r = TgcCollisionUtils.classifyFrustumAABB(frustum, mesh.BoundingBox);
+                if (r != TgcCollisionUtils.FrustumResult.OUTSIDE)
+                {
+                    mesh.render();
+                }
+            }
         }
 
         public static void applyTransform(List<TgcMesh> meshes, Matrix matriz)

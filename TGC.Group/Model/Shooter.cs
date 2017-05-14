@@ -68,7 +68,7 @@ namespace TGC.Group.Model
 
         //otros
         private CollisionManager collisionManager;
-        private bool FPSCamera = true;
+        private bool FPSCamera = false;
 
         /// <summary>
         ///     Constructor del juego.
@@ -178,13 +178,19 @@ namespace TGC.Group.Model
                 DrawText.drawText(Convert.ToString(Camara.Position), 10, 1000, Color.OrangeRed);
             }
 
+            
             casa.renderAll();
 
-            Utils.renderMeshes(rocas);
-            Utils.renderMeshes(palmeras);
-            Utils.renderMeshes(pastitos);
-            Utils.renderMeshes(cajitas);
-            Utils.renderMeshes(arbolesSelvaticos);
+            /* con esto bajan mucho los FPS. Aplico Frustum Culling con fuerza bruta para aumentar un poco la performance
+             * Utils.renderMeshes(rocas);
+             * Utils.renderMeshes(palmeras);
+             *  Utils.renderMeshes(cajitas);
+             * Utils.renderMeshes(arbolesSelvaticos);
+            */
+            Utils.renderFromFrustum(rocas, Frustum);
+            Utils.renderFromFrustum(palmeras, Frustum);
+            Utils.renderFromFrustum(cajitas, Frustum);
+            Utils.renderFromFrustum(arbolesSelvaticos, Frustum);
 
             faraon.render();
             hummer.render();
@@ -320,6 +326,18 @@ namespace TGC.Group.Model
             // Creación de pastitos.
             string pastitoDir = MediaDir + "Meshes\\Vegetation\\Pasto\\Pasto-TgcScene.xml";
             pastito = cargarMesh(pastitoDir);
+            pastito.AlphaBlendEnable = true;
+            Utils.disponerEnRectanguloXZ(pastito, pastitos, 40,40, 50);
+
+            foreach(var pasto in pastitos)
+            {
+                var despl = new Vector3(0, 0, 8000);
+                pasto.Position += despl;
+                pasto.Scale = new Vector3(0.15f, 0.15f, 0.15f);
+                pasto.AutoTransformEnable = false;
+                pasto.Transform = Matrix.Translation(pasto.Scale) * Matrix.Translation(pasto.Position);
+            }
+
 
             // Creación de faraón.
             string faraonDir = MediaDir + "Meshes\\Objetos\\EstatuaFaraon\\EstatuaFaraon-TgcScene.xml";
