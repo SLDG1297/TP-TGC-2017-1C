@@ -135,6 +135,25 @@ namespace TGC.Group.Model
             }
         }
 
+
+        public static void disponerAleatorioXZ(TgcMesh originalMesh, List<TgcMesh> meshes, int veces)
+        {
+            var n = new Random();
+            for (var i = 0; i < veces; i++)
+            {
+                var x = n.Next(-160*8, 160*8);
+                var y = n.Next(-160*8, 160*8);
+                var instance = originalMesh.createMeshInstance(originalMesh.Name + meshes.Count + 1);
+
+                instance.AutoTransformEnable = false;
+                instance.AlphaBlendEnable = true;
+
+                instance.Position = new Vector3(x, 0, y);
+                instance.Transform = Matrix.Translation(instance.Position) * instance.Transform;
+                meshes.Add(instance);
+            }
+        } 
+
         /// <summary>
         ///     Renderiza todos los elementos de una lista de meshes.
         /// </summary>

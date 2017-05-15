@@ -47,6 +47,8 @@ namespace TGC.Group.Model
         private TgcMesh canoa;
         private TgcMesh helicopter;
         private TgcMesh camionCisterna;
+        private TgcMesh tractor;
+        private TgcMesh barril;
 
         private TgcBox cajita;
         private TgcMesh cajitaMuniciones;
@@ -209,6 +211,8 @@ namespace TGC.Group.Model
             camionCisterna.render();
             helicopter.render();
             ametralladora2.render();
+            tractor.render();
+            barril.render();
             // Render jugador
             jugador.render(ElapsedTime);
 
@@ -249,6 +253,8 @@ namespace TGC.Group.Model
             ametralladora2.dispose();
             camionCisterna.dispose();
             helicopter.dispose();
+            tractor.dispose();
+            barril.render();
             // Dispose bounding boxes
             obstaculos.ForEach(o => o.dispose());
 
@@ -337,8 +343,7 @@ namespace TGC.Group.Model
             string pastitoDir = MediaDir + "Meshes\\Vegetation\\Pasto\\Pasto-TgcScene.xml";
             pastito = cargarMesh(pastitoDir);
             pastito.AlphaBlendEnable = true;
-            Utils.disponerEnRectanguloXZ(pastito, pastitos, 40, 40, 50);
-
+            Utils.disponerEnRectanguloXZ(pastito, pastitos, 40, 40, 50);       
             foreach(var pasto in pastitos)
             {
                 var despl = new Vector3(0, 0, 8000);
@@ -347,6 +352,7 @@ namespace TGC.Group.Model
                 pasto.AutoTransformEnable = false;
                 pasto.Transform = Matrix.Translation(pasto.Scale) * Matrix.Translation(pasto.Position);
             }
+            Utils.disponerAleatorioXZ(pastito, pastitos, 80);
             corregirAltura(pastitos);
 
             // Creación de faraón.
@@ -442,6 +448,12 @@ namespace TGC.Group.Model
 
             corregirAltura(rocas);
 
+
+            //barril
+            barril = cargarMesh(MediaDir + "Meshes\\Objetos\\BarrilPolvora\\BarrilPolvora-TgcScene.xml");
+            barril.Position = new Vector3(-6802, 0, 10985);
+            barril.updateBoundingBox();
+
             // Autitos!
             hummer = cargarMesh(MediaDir + "Meshes\\Vehiculos\\Hummer\\Hummer-TgcScene.xml");
             hummer.Position = new Vector3(1754, this.posicionEnTerreno(1754,9723), 9723);
@@ -460,6 +472,14 @@ namespace TGC.Group.Model
             helicopter.createBoundingBox();
             helicopter.BoundingBox.transform(Matrix.Scaling(0.8f,2.25f,3.55f)* Matrix.Translation(helicopter.Position));
             
+            //tractor
+            tractor = cargarMesh(MediaDir + "Meshes\\Vehiculos\\Tractor\\Tractor-TgcScene.xml");
+            tractor.Position = new Vector3(-6802,0, 10385);
+            tractor.Scale = new Vector3(2f, 2f, 2f);
+            helicopter.AutoTransformEnable = false;
+            tractor.Transform = Matrix.Translation(tractor.Position) * tractor.Transform;
+            tractor.updateBoundingBox();
+
             //canoa
             canoa = cargarMesh(MediaDir + "Meshes\\Vehiculos\\Canoa\\Canoa-TgcScene.xml");
             canoa.Position = new Vector3(3423, 10, -3847);

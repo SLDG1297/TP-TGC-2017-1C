@@ -15,11 +15,11 @@ namespace TGC.Group.Model.Collisions
     public class CollisionManager
     {
         //Boundingboxes de objetos estaticos
-        List<TgcBoundingAxisAlignBox> boundingBoxes = new List<TgcBoundingAxisAlignBox>();
-        List<TgcBoundingCylinderFixedY> boundingCylinders = new List<TgcBoundingCylinderFixedY>();
-
+        private List<TgcBoundingAxisAlignBox> boundingBoxes = new List<TgcBoundingAxisAlignBox>();
+        private List<TgcBoundingCylinderFixedY> boundingCylinders = new List<TgcBoundingCylinderFixedY>();
+        private List<TgcBoundingSphere> boundingSpheres = new List<TgcBoundingSphere>();
         //objetos que cambian su posicion
-        List<Bala> balas = new List<Bala>();
+        private List<Bala> balas = new List<Bala>();
         Player player;
         List<Personaje> jugadores = new List<Personaje>();
 
