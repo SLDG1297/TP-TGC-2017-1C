@@ -1,21 +1,23 @@
 ﻿using Microsoft.DirectX;
 using Microsoft.DirectX.Direct3D;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Drawing;
 using TGC.Core.Direct3D;
 using TGC.Core.Example;
 using TGC.Core.Terrain;
 using TGC.Core.SceneLoader;
 using TGC.Core.Text;
-using TGC.Group.Model.Cameras;
-using System.Collections.Generic;
 using TGC.Core.Utils;
 using TGC.Core.Geometry;
 using TGC.Core.Textures;
 using TGC.Core.Collision;
 using TGC.Core.BoundingVolumes;
+using TGC.Group.Model.Cameras;
 using TGC.Group.Model.Entities;
-using System.Drawing;
 using TGC.Group.Model.Collisions;
+
 
 namespace TGC.Group.Model
 {
@@ -112,7 +114,7 @@ namespace TGC.Group.Model
             }
             else{
                 // Antigua cámara en primera persona.
-                Camara = new FirstPersonCamera(new Vector3(400, 1500, 500), Input);
+                Camara = new FirstPersonCamera(new Vector3(4000, 1500, 500), Input);
             }   
         }
 
@@ -289,6 +291,9 @@ namespace TGC.Group.Model
         }
 
         private void initScene(){
+            // Variables auxiliares.
+            int ultimoElemento;
+
             // Ubicación de la casa.
             string casaDir = MediaDir + "Meshes\\Edificios\\Casa\\Casa-TgcScene.xml";
             casa = cargarScene(casaDir);
@@ -299,18 +304,7 @@ namespace TGC.Group.Model
                 mesh.AutoTransformEnable = false;
                 mesh.Transform = Matrix.Scaling(1.5f, 2f, 1.75f) * Matrix.RotationY(FastMath.PI_HALF + FastMath.PI) * Matrix.Translation(mesh.Position);
             }
-
-            // Creación de rocas en línea circular y escaladas.
-            string rocaDir = MediaDir + "Meshes\\Vegetation\\Roca\\Roca-TgcScene.xml";
-            rocaOriginal = cargarMesh(rocaDir);
-            Utils.disponerEnCirculoXZ(rocaOriginal, rocas, 4, 500 * FACTOR, FastMath.PI_HALF);
-            foreach (var roca in rocas)
-            {
-                roca.AutoTransformEnable = false;
-                roca.Scale = new Vector3(3 * FACTOR, 2 * FACTOR, 3 * FACTOR);
-
-                roca.Transform = Matrix.Scaling(roca.Scale) * roca.Transform;
-            }
+            corregirAltura(casa.Meshes);
 
             // Creación de palmeras dispuestas circularmente.
             string palmeraDir = MediaDir + "Meshes\\Vegetation\\Palmera\\Palmera-TgcScene.xml";
@@ -322,12 +316,13 @@ namespace TGC.Group.Model
                 palmera.Scale = new Vector3(1.5f, 1.5f, 1.5f);
                 palmera.Transform = Matrix.Scaling(palmera.Scale) * palmera.Transform;
             }
+            corregirAltura(palmeras);
 
             // Creación de pastitos.
             string pastitoDir = MediaDir + "Meshes\\Vegetation\\Pasto\\Pasto-TgcScene.xml";
             pastito = cargarMesh(pastitoDir);
             pastito.AlphaBlendEnable = true;
-            Utils.disponerEnRectanguloXZ(pastito, pastitos, 40,40, 50);
+            Utils.disponerEnRectanguloXZ(pastito, pastitos, 40, 40, 50);
 
             foreach(var pasto in pastitos)
             {
@@ -337,7 +332,7 @@ namespace TGC.Group.Model
                 pasto.AutoTransformEnable = false;
                 pasto.Transform = Matrix.Translation(pasto.Scale) * Matrix.Translation(pasto.Position);
             }
-
+            corregirAltura(pastitos);
 
             // Creación de faraón.
             string faraonDir = MediaDir + "Meshes\\Objetos\\EstatuaFaraon\\EstatuaFaraon-TgcScene.xml";
@@ -355,24 +350,71 @@ namespace TGC.Group.Model
                 cajita.Scale = new Vector3(-800 * FACTOR, 20 * FACTOR, 1400 * FACTOR);
                 cajita.Transform = Matrix.Scaling(0.25f,0.25f,0.25f) * Matrix.Translation(cajita.Scale) * cajita.Transform;
             }
+            corregirAltura(cajitas);
 
             //creacion de arboles selvaticos
             string arbolSelvaticoDir = MediaDir + "Meshes\\Vegetation\\ArbolSelvatico\\ArbolSelvatico-TgcScene.xml";
             arbolSelvatico = cargarMesh(arbolSelvaticoDir);
 
-            //TODO: ajustar posicion segun heightmap
-            arbolSelvatico.Position = new Vector3(-4228, 83, 15842);
-            arbolSelvatico.Scale = new Vector3(2f, 2f, 2f);
+            //TODO: ajustar posicion segun heightmap (Hecho, aunque funciona mal todavía)
+            // Frontera este de árboles
             arbolSelvatico.AutoTransformEnable = false;
-            arbolSelvatico.Transform = Matrix.Scaling(2f, 2f, 2f) * Matrix.Translation(arbolSelvatico.Position) * arbolSelvatico.Transform;
+            arbolSelvatico.Position = new Vector3(-6000, this.posicionEnTerreno(-6000,15200), 15200);
+            arbolSelvatico.Scale = new Vector3(3.0f, 3.0f, 3.0f);         
+            arbolSelvatico.Transform = Matrix.Scaling(arbolSelvatico.Scale) * Matrix.Translation(arbolSelvatico.Position) * arbolSelvatico.Transform;
 
-            Utils.disponerEnLineaX(arbolSelvatico, arbolesSelvaticos, 15, 700);
+            Utils.disponerEnLineaX(arbolSelvatico, arbolesSelvaticos, 49, 450);
 
-            //autitos!
+            // Frontera sur de árboles.
+            ultimoElemento = arbolesSelvaticos.Count - 1;
+            arbolSelvatico.Position = arbolesSelvaticos[ultimoElemento].Position;
+            arbolSelvatico.Transform = Matrix.Translation(arbolSelvatico.Position) * arbolSelvatico.Transform;
+            
+            Utils.disponerEnLineaZ(arbolSelvatico, arbolesSelvaticos, 68, -450);
+            for(int i = 1; i <= 68; i++)
+            {
+                arbolesSelvaticos[ultimoElemento + i].Scale = new Vector3(3.0f, 3.0f, 3.0f);
+                arbolesSelvaticos[ultimoElemento + i].AutoTransformEnable = false;
+                arbolesSelvaticos[ultimoElemento + i].Transform = Matrix.Scaling(arbolesSelvaticos[ultimoElemento + i].Scale) * arbolesSelvaticos[ultimoElemento + i].Transform;
+            }
+            
+            corregirAltura(arbolesSelvaticos);
+
+            // Creación de rocas.
+            string rocaDir = MediaDir + "Meshes\\Vegetation\\Roca\\Roca-TgcScene.xml";
+            rocaOriginal = cargarMesh(rocaDir);
+            
+            // Rocas en el agua.
+            Utils.disponerEnCirculoXZ(rocaOriginal, rocas, 4, 500 * FACTOR, FastMath.PI_HALF);
+            foreach (var roca in rocas)
+            {
+                roca.AutoTransformEnable = false;
+                roca.Scale = new Vector3(3 * FACTOR, 2 * FACTOR, 3 * FACTOR);
+                roca.Transform = Matrix.Scaling(roca.Scale) * roca.Transform;
+            }
+
+            // Frontera oeste de rocas.
+            rocaOriginal.AutoTransformEnable = false;
+            rocaOriginal.Position = new Vector3(1500, 0, -3000);
+            rocaOriginal.Scale = new Vector3(4.0f, 4.0f, 4.0f);
+            rocaOriginal.Transform = Matrix.Scaling(rocaOriginal.Scale) * Matrix.Translation(rocaOriginal.Position) * rocaOriginal.Transform;
+            ultimoElemento = rocas.Count - 1;
+            Utils.disponerEnLineaX(rocaOriginal, rocas, 49, -50);
+            for(int i = 1; i <= 49; i++)
+            {
+                rocas[ultimoElemento + i].AutoTransformEnable = false;
+                rocas[ultimoElemento + i].Scale = new Vector3(4.0f, 4.0f, 4.0f);
+                rocas[ultimoElemento + i].Transform = Matrix.Scaling(rocas[ultimoElemento + i].Scale) * Matrix.Translation(rocas[ultimoElemento + i].Position) * rocas[ultimoElemento + i].Transform;
+            }
+
+            corregirAltura(rocas);
+
+            // Autitos!
             hummer = cargarMesh(MediaDir + "Meshes\\Vehiculos\\Hummer\\Hummer-TgcScene.xml");
-            hummer.Position = new Vector3(1754, 0, 9723);
+            hummer.Position = new Vector3(1754, this.posicionEnTerreno(1754,9723), 9723);
+            hummer.Scale = new Vector3(2.1f, 2.08f, 2.25f);
             hummer.AutoTransformEnable = false;
-            hummer.Transform = Matrix.Scaling(1.1f, 1.08f, 1.25f) * Matrix.Translation(hummer.Position) * hummer.Transform;
+            hummer.Transform = Matrix.Scaling(hummer.Scale) * Matrix.Translation(hummer.Position) * hummer.Transform;
             hummer.createBoundingBox();
             hummer.updateBoundingBox();
         }
@@ -455,7 +497,7 @@ namespace TGC.Group.Model
 			texto.Text = "HEALTH: " + jugador.Health;
 			texto.Text += "\tBALAS: " + jugador.Arma.Balas;
 			texto.Text += "\tRECARGAS: " + jugador.Arma.Recargas;
-            texto.Text += " Position: " + jugador.Position;
+            texto.Text += "\nPosition\n" + jugador.Position;
 
             sombraTexto.Text = texto.Text;
 		}
@@ -469,12 +511,14 @@ namespace TGC.Group.Model
             obstaculos.ForEach(o => o.render());
 		}
 
-		public float posicionEnTerreno(float x, float z)
+        public float posicionEnTerreno(float x, float z)
         {
             // Da la posición del terreno en función del heightmap.
-            var largo = MAP_SCALE_XZ * 200;
-            var pos_i = 200f * (0.5f + x / largo);
-            var pos_j = 200f * (0.5f + z / largo);
+            int numeroMagico1 = 200;
+            int numeroMagico2 = numeroMagico1 - 1;
+            var largo = MAP_SCALE_XZ * numeroMagico1;
+            var pos_i = numeroMagico1 * (0.5f + x / largo);
+            var pos_j = numeroMagico1 * (0.5f + z / largo);
 
             var pi = (int)pos_i;
             var fracc_i = pos_i - pi;
@@ -483,20 +527,20 @@ namespace TGC.Group.Model
 
             if (pi < 0)
                 pi = 0;
-            else if (pi > 199)
-                pi = 199;
+            else if (pi > numeroMagico2)
+                pi = numeroMagico2;
 
             if (pj < 0)
                 pj = 0;
-            else if (pj > 199)
-                pj = 199;
+            else if (pj > numeroMagico2)
+                pj = numeroMagico2;
 
             var pi1 = pi + 1;
             var pj1 = pj + 1;
-            if (pi1 > 199)
-                pi1 = 199;
-            if (pj1 > 199)
-                pj1 = 199;
+            if (pi1 > numeroMagico2)
+                pi1 = numeroMagico2;
+            if (pj1 > numeroMagico2)
+                pj1 = numeroMagico2;
 
             var H0 = heightmap.HeightmapData[pi, pj] * MAP_SCALE_Y;
             var H1 = heightmap.HeightmapData[pi1, pj] * MAP_SCALE_Y;
@@ -505,6 +549,15 @@ namespace TGC.Group.Model
             var H = (H0 * (1 - fracc_i) + H1 * fracc_i) * (1 - fracc_j) +
                     (H2 * (1 - fracc_i) + H3 * fracc_i) * fracc_j;
             return H;
+        }
+
+        void corregirAltura(List<TgcMesh> meshes)
+        {
+            foreach (var mesh in meshes)
+            {
+                float posicionY = this.posicionEnTerreno(mesh.Position.X, mesh.Position.Z);
+                mesh.Transform = Matrix.Translation(1, posicionY, 1) * mesh.Transform;
+            }
         }
 
         TgcScene cargarScene(string unaDireccion)

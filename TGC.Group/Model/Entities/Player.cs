@@ -66,9 +66,9 @@ namespace TGC.Group.Model.Entities
             //Correr
             if (running = Input.keyDown(Key.LeftShift)){
 
-                setVelocidad(300f,300f); 
+                //setVelocidad(300f,300f); 
                 //es para que exploremos mas rapido el terreno
-                //setVelocidad(1700f, 1700f);
+                setVelocidad(1700f, 1700f);
 
             }
             else
