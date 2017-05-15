@@ -25,6 +25,26 @@ namespace TGC.Group.Model
         }
 
 
+        public static void disponerEnCirculoXZ(TgcMesh originalMesh, List<TgcMesh> lista, int veces, float radio,float angulo, float anguloFase, Vector3 center)
+        {
+            for (int i = 0; i < veces; i++)
+            {
+                //Crear instancia de modelo
+                var instance = originalMesh.createMeshInstance(originalMesh.Name + i);
+                instance.AutoTransformEnable = false;
+
+                var position = new Vector3(center.X + radio * FastMath.Cos((i * angulo) + anguloFase),
+                                           center.Y ,
+                                           center.Z + radio * FastMath.Sin((i * angulo) + anguloFase));
+                instance.Position = position;
+
+                instance.Transform = Matrix.Translation(instance.Position)
+                                    * instance.Transform;
+
+                lista.Add(instance);
+            }
+        }
+
         /// <summary>
         ///     Dispone un mesh en forma de circulo n veces dado un radio, el angulo de fase y un angulo de desplazamiento.
         /// </summary>

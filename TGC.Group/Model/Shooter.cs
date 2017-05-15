@@ -42,7 +42,14 @@ namespace TGC.Group.Model
         private TgcMesh faraon;
         private TgcMesh arbolSelvatico;
         private TgcMesh hummer;
+  
+        private TgcMesh ametralladora2;
+        private TgcMesh canoa;
+        private TgcMesh helicopter;
+        private TgcMesh camionCisterna;
+
         private TgcBox cajita;
+        private TgcMesh cajitaMuniciones;
 
         //objetos que se replican
         private List<TgcMesh> rocas = new List<TgcMesh>();
@@ -70,7 +77,7 @@ namespace TGC.Group.Model
 
         //otros
         private CollisionManager collisionManager;
-        private bool FPSCamera = false;
+        private bool FPSCamera = true;
 
         /// <summary>
         ///     Constructor del juego.
@@ -193,11 +200,15 @@ namespace TGC.Group.Model
             Utils.renderFromFrustum(palmeras, Frustum);
             Utils.renderFromFrustum(cajitas, Frustum);
             Utils.renderFromFrustum(arbolesSelvaticos, Frustum);
+            Utils.renderFromFrustum(pastitos, Frustum);
 
             faraon.render();
             hummer.render();
             arbolSelvatico.render();
-
+            canoa.render();
+            camionCisterna.render();
+            helicopter.render();
+            ametralladora2.render();
             // Render jugador
             jugador.render(ElapsedTime);
 
@@ -234,6 +245,10 @@ namespace TGC.Group.Model
             arbolSelvatico.dispose();
             cajita.dispose();
             hummer.dispose();
+            canoa.dispose();
+            ametralladora2.dispose();
+            camionCisterna.dispose();
+            helicopter.dispose();
             // Dispose bounding boxes
             obstaculos.ForEach(o => o.dispose());
 
@@ -343,7 +358,7 @@ namespace TGC.Group.Model
            
             // Creación de cajitas.
             cajita = TgcBox.fromSize(new Vector3(30 * FACTOR, 30 * FACTOR, 30 * FACTOR), TgcTexture.createTexture(MediaDir + "Texturas\\paja4.jpg"));
-            Utils.disponerEnRectanguloXZ(cajita.toMesh("cajita"), cajitas, 2, 2, 50);
+            Utils.disponerEnRectanguloXZ(cajita.toMesh("cajitaPaja"), cajitas, 2, 2, 50);
             foreach (var cajita in cajitas)
             {
                 cajita.AutoTransformEnable = false;
@@ -351,6 +366,21 @@ namespace TGC.Group.Model
                 cajita.Transform = Matrix.Scaling(0.25f,0.25f,0.25f) * Matrix.Translation(cajita.Scale) * cajita.Transform;
             }
             corregirAltura(cajitas);
+
+
+            //cajitas de municiones
+            var center = new Vector3(-12580, 1790, 9915);
+            cajitaMuniciones = cargarMesh(MediaDir + "Meshes\\Armas\\CajaMuniciones\\CajaMuniciones-TgcScene.xml");
+            cajitaMuniciones.AutoTransformEnable = false;
+            cajitaMuniciones.createBoundingBox();
+            cajitaMuniciones.updateBoundingBox();
+            Utils.disponerEnCirculoXZ(cajitaMuniciones, cajitas, 8, 400, FastMath.QUARTER_PI, 0, center);
+
+            //ametralladora
+            ametralladora2 = cargarMesh(MediaDir + "Meshes\\Armas\\MetralladoraFija2\\MetralladoraFija2-TgcScene.xml");
+            ametralladora2.AutoTransformEnable = false;
+            ametralladora2.Position = center;
+            ametralladora2.Transform = Matrix.Translation(ametralladora2.Position)* ametralladora2.Transform;
 
             //creacion de arboles selvaticos
             string arbolSelvaticoDir = MediaDir + "Meshes\\Vegetation\\ArbolSelvatico\\ArbolSelvatico-TgcScene.xml";
@@ -398,6 +428,8 @@ namespace TGC.Group.Model
             rocaOriginal.Position = new Vector3(1500, 0, -3000);
             rocaOriginal.Scale = new Vector3(4.0f, 4.0f, 4.0f);
             rocaOriginal.Transform = Matrix.Scaling(rocaOriginal.Scale) * Matrix.Translation(rocaOriginal.Position) * rocaOriginal.Transform;
+            rocaOriginal.createBoundingBox();
+            rocaOriginal.updateBoundingBox();            
             ultimoElemento = rocas.Count - 1;
             Utils.disponerEnLineaX(rocaOriginal, rocas, 49, -50);
             for(int i = 1; i <= 49; i++)
@@ -406,6 +438,7 @@ namespace TGC.Group.Model
                 rocas[ultimoElemento + i].Scale = new Vector3(4.0f, 4.0f, 4.0f);
                 rocas[ultimoElemento + i].Transform = Matrix.Scaling(rocas[ultimoElemento + i].Scale) * Matrix.Translation(rocas[ultimoElemento + i].Position) * rocas[ultimoElemento + i].Transform;
             }
+            foreach (var roca in rocas) roca.updateBoundingBox();
 
             corregirAltura(rocas);
 
@@ -417,6 +450,28 @@ namespace TGC.Group.Model
             hummer.Transform = Matrix.Scaling(hummer.Scale) * Matrix.Translation(hummer.Position) * hummer.Transform;
             hummer.createBoundingBox();
             hummer.updateBoundingBox();
+
+            //helicoptero
+            helicopter = cargarMesh(MediaDir + "Meshes\\Vehiculos\\HelicopteroMilitar\\HelicopteroMilitar-TgcScene.xml");
+            helicopter.Position = new Vector3(8308, 0, -4263);
+            helicopter.AutoTransformEnable = false;
+            helicopter.Scale = new Vector3(4f, 4f, 4f);
+            helicopter.Transform = Matrix.Scaling(helicopter.Scale) * Matrix.Translation(helicopter.Position) * helicopter.Transform;
+            helicopter.createBoundingBox();
+            helicopter.BoundingBox.transform(Matrix.Scaling(0.8f,2.25f,3.55f)* Matrix.Translation(helicopter.Position));
+            
+            //canoa
+            canoa = cargarMesh(MediaDir + "Meshes\\Vehiculos\\Canoa\\Canoa-TgcScene.xml");
+            canoa.Position = new Vector3(3423, 10, -3847);
+            canoa.updateBoundingBox();
+
+            //camionCisterna
+            camionCisterna = cargarMesh(MediaDir + "Meshes\\Vehiculos\\CamionCisterna\\CamionCisterna-TgcScene.xml");
+            helicopter.AutoTransformEnable = false;
+            camionCisterna.Position = new Vector3(227, 0, 10719);
+            camionCisterna.Scale = new Vector3(3.5f, 3.5f, 3.5f);
+            camionCisterna.Transform = camionCisterna.Transform = Matrix.Scaling(camionCisterna.Scale) * Matrix.Translation(camionCisterna.Position) * camionCisterna.Transform;
+            camionCisterna.updateBoundingBox();
         }
 
         private void initSkyBox(){
@@ -471,6 +526,10 @@ namespace TGC.Group.Model
                 var cilindro = new TgcBoundingCylinderFixedY(arbol.BoundingBox.calculateBoxCenter(), 120, 400);
                 collisionManager.agregarCylinder(cilindro);
             }
+
+            CollisionManager.Instance.agregarAABB(canoa.BoundingBox);
+            CollisionManager.Instance.agregarAABB(helicopter.BoundingBox);
+            CollisionManager.Instance.agregarAABB(camionCisterna.BoundingBox);
         }
 
 		private void initText() {
