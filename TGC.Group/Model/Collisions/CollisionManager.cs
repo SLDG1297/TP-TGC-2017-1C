@@ -48,46 +48,66 @@ namespace TGC.Group.Model.Collisions
         
         
         public void adjustPosition(Personaje personaje)
-        {
-            checkAABBCollisions(personaje);
+        {            
             checkCylinderCollisions(personaje);
             //checkSphereCollision(personaje);
         }
 
-
-        private void checkAABBCollisions(Personaje personaje)
+        public Vector3 adjustAABBCollisions(Personaje personaje, Vector3 desplazamiento)
         {
+            var res = new Vector3();
             var cylinder = personaje.BoundingCylinder;
+            var y = desplazamiento.Y;
+
             //objetos que colisionan con el cilindro del jugador
             var obs = boundingBoxes.FindAll(
                 boundingBox => TgcCollisionUtils.testAABBCylinder(boundingBox, cylinder));
 
-            if (obs.Count != 0)
-            {
+            var intersection = new Vector3();
+            var lista = boundingBoxes.FindAll(
+                bb => TgcCollisionUtils.intersectSegmentAABB(personaje.Position, desplazamiento, bb, out intersection));
+            intersection.Y = 0;
+
+            //si el cilindro esta colisionando con el aabb, rebotar
+            if (obs.Count > 0)
+            {                
+                var dif = new Vector3();
                 foreach (var aabb in obs)
                 {
-                    //TODO: POR AHORA SOLO RESUELVE COLISIONES EN EL EJE XZ
                     var centerAABB = aabb.calculateBoxCenter();
-                    aabb.setRenderColor(System.Drawing.Color.Red);
-
                     //determino el punto mas cercano del AABB al cilindro
                     var puntoqestorba = TgcCollisionUtils.closestPointCylinder(centerAABB, cylinder);
-                    
                     //distancia entre el punto del cilindro y su centro
-                    var dif = puntoqestorba - cylinder.Center;
-                    //desplazo al jugador y al cylindro EN EL EJE XZ
-                    personaje.moveCylindersXZ(-dif);
-                    Vector3 newPos = new Vector3(cylinder.Center.X, personaje.Esqueleto.Position.Y, cylinder.Center.Z);
-                    personaje.Esqueleto.Position = newPos;
+                    dif = puntoqestorba - cylinder.Center;
+                }
+
+                if (lista.Count == 0)
+                {
+                    //si iba en direccion opuesta al aabb, me muevo en la direccion normal
+                    res = -desplazamiento;
+                }
+                else
+                {
+                    res = -dif;
                 }
             }
             else
             {
-                //TODO: Borrar, esto es solo para testeo. Pinta los AABB de color amarillo cuando no colisionan
-                var a = boundingBoxes.FindAll(
-                 boundingBox => !TgcCollisionUtils.testAABBCylinder(boundingBox, cylinder));
-                foreach (var c in a) c.setRenderColor(System.Drawing.Color.Yellow);
+                cylinder.setRenderColor(Color.Yellow);
+                //si el vector desplazamiento resulta que intersecta con el aabb, rebotar
+                if (lista.Count > 0)
+                {
+                    res = desplazamiento - intersection;
+                }
+                else
+                {
+                    //si no hay choque, moverse libremente
+                    res = desplazamiento;
+                }
             }
+
+            res.Y = y;
+            return res;
         }
 
         public void checkCylinderCollisions(Personaje personaje)
@@ -213,6 +233,11 @@ namespace TGC.Group.Model.Collisions
             return jugadores.Find(
                 enemigo => TgcCollisionUtils.testAABBCylinder(aabb, enemigo.BoundingCylinder)
                 );
+        }
+
+        public List<Bala> getBalas()
+        {
+            return balas;
         }
 
         public bool debeDisparar(Enemy enemigo)

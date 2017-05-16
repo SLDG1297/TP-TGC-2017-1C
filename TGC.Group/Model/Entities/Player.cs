@@ -66,9 +66,9 @@ namespace TGC.Group.Model.Entities
             //Correr
             if (running = Input.keyDown(Key.LeftShift)){
 
-                //setVelocidad(300f,300f); 
+                setVelocidad(300f,300f); 
                 //es para que exploremos mas rapido el terreno
-                setVelocidad(1700f, 1700f);
+                //setVelocidad(1700f, 1700f);
 
             }
             else
@@ -149,27 +149,30 @@ namespace TGC.Group.Model.Entities
                 }
             }
 
-			var desplazamiento = new Vector3(moveLeftRight * ElapsedTime, jump + posicionY - lastPos.Y, moveForward * ElapsedTime);
-            desplazamiento.TransformCoordinate(Matrix.RotationY(Rotacion));
-            esqueleto.Position += desplazamiento;
-
-
-            esqueleto.Transform = Matrix.RotationY(Utils.DegreeToRadian(rotate))
-                                * Matrix.RotationY(Rotacion)
-                                * Matrix.Translation(esqueleto.Position);
             //Disparar
             if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT) || Input.buttonDown(TgcD3dInput.MouseButtons.BUTTON_LEFT))
             {
                 arma.dispara(ElapsedTime, this.Position, Rotacion);
             }
-            
-			var colliders = getColliderAABBList(obstaculos);
+
+            esqueleto.rotateY(rotate);
+            var desplazamiento = new Vector3(moveLeftRight * ElapsedTime,
+                                                jump + posicionY - lastPos.Y,
+                                                moveForward * ElapsedTime);
+            desplazamiento.TransformCoordinate(Matrix.RotationY(Rotacion));
+            // esqueleto.Position += desplazamiento;
+            var realmove = CollisionManager.Instance.adjustAABBCollisions(this, desplazamiento);
+            //realmove = CollisionManager.Instance.adjustCylinderCollisions(this, realmove);
+            esqueleto.Position += realmove;
             updateBoundingBoxes();
 
             //adjustPosition
-            CollisionManager.Instance.adjustPosition(this);
-            
+            //CollisionManager.Instance.adjustPosition(this);
             lastPos = esqueleto.Position;
+
+            esqueleto.Transform = Matrix.RotationY(Utils.DegreeToRadian(rotate))
+                                * Matrix.RotationY(Rotacion)
+                                * Matrix.Translation(esqueleto.Position);
         }
 
 		protected List<TgcBoundingAxisAlignBox> getColliderAABBList(List<TgcBoundingAxisAlignBox> obstaculos)

@@ -82,7 +82,7 @@ namespace TGC.Group.Model
 
         //otros
         private CollisionManager collisionManager;
-        private bool FPSCamera = true;
+        private bool FPSCamera = false;
         private Quadtree quadtree;
 
         /// <summary>
@@ -146,7 +146,7 @@ namespace TGC.Group.Model
             meshes.AddRange(rocas);
             meshes.AddRange(palmeras);
             meshes.AddRange(arbolesSelvaticos);
-
+           
             //quadtree = new Quadtree();
             //quadtree.create(meshes, limits);
             //quadtree.createDebugQuadtreeMeshes();
@@ -215,12 +215,12 @@ namespace TGC.Group.Model
             }
 
             Utils.renderFromFrustum(meshes, Frustum);
-            // Render jugador            
 
             //TODO: Con QuadTree los FPS bajan. Tal vez sea porque 
             //estan mas concentrados en una parte que en otra
             //quadtree.render(Frustum, true);
 
+            // Render jugador
             jugador.render(ElapsedTime);
             
             // Render enemigos
