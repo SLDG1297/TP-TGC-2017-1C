@@ -93,6 +93,9 @@
     <Compile Include="Model\Entities\Personaje.cs" />
     <Compile Include="Model\GameModel.cs" />
     <Compile Include="Model\Entities\Player.cs" />
+    <Compile Include="Model\Optimization\Quadtree\Quadtree.cs" />
+    <Compile Include="Model\Optimization\Quadtree\QuadtreeBuilder.cs" />
+    <Compile Include="Model\Optimization\Quadtree\QuadtreeNode.cs" />
     <Compile Include="Model\Shooter.cs" />
     <Compile Include="Model\Utils.cs" />
     <Compile Include="Program.cs" />
@@ -164,6 +167,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>

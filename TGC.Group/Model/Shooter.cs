@@ -17,7 +17,7 @@ using TGC.Core.BoundingVolumes;
 using TGC.Group.Model.Cameras;
 using TGC.Group.Model.Entities;
 using TGC.Group.Model.Collisions;
-
+using TGC.Group.Model.Optimization.Quadtree;
 
 namespace TGC.Group.Model
 {
@@ -60,9 +60,12 @@ namespace TGC.Group.Model
         private List<TgcMesh> cajitas = new List<TgcMesh>();
         private List<TgcMesh> arbolesSelvaticos = new List<TgcMesh>();
 
+        //lista de objetos totales
+        private List<TgcMesh> meshes = new List<TgcMesh>();
+
         // Bounding boxes del escenario
         private List<TgcBoundingAxisAlignBox> obstaculos = new List<TgcBoundingAxisAlignBox>();
-
+        private TgcBoundingAxisAlignBox limits;
         // Cámara
         private ThirdPersonCamera camaraInterna;
 
@@ -80,6 +83,7 @@ namespace TGC.Group.Model
         //otros
         private CollisionManager collisionManager;
         private bool FPSCamera = true;
+        private Quadtree quadtree;
 
         /// <summary>
         ///     Constructor del juego.
@@ -99,7 +103,6 @@ namespace TGC.Group.Model
         {
             // Iniciar jugador
             initJugador();
-
             // Iniciar HUD
             initText();
 
@@ -108,6 +111,10 @@ namespace TGC.Group.Model
 
             initSkyBox();
             initScene();
+
+            var pmin = new Vector3(-16893, -2000, 17112);
+            var pmax = new Vector3(18240, 8884, -18876);
+            limits = new TgcBoundingAxisAlignBox(pmin, pmax);
 
             // Iniciar enemigos
             initEnemigos();
@@ -124,7 +131,25 @@ namespace TGC.Group.Model
             else{
                 // Antigua cámara en primera persona.
                 Camara = new FirstPersonCamera(new Vector3(4000, 1500, 500), Input);
-            }   
+            }           
+            
+            meshes.Add(arbolSelvatico);
+            meshes.Add(hummer);
+            meshes.Add(ametralladora2);
+            meshes.Add(canoa);
+            meshes.Add(helicopter);
+            meshes.Add(camionCisterna);
+            meshes.Add(tractor);
+            meshes.Add(barril);
+            meshes.Add(faraon);
+            meshes.AddRange(pastitos);
+            meshes.AddRange(rocas);
+            meshes.AddRange(palmeras);
+            meshes.AddRange(arbolesSelvaticos);
+
+            //quadtree = new Quadtree();
+            //quadtree.create(meshes, limits);
+            //quadtree.createDebugQuadtreeMeshes();
         }
 
         public override void Update()
@@ -178,7 +203,7 @@ namespace TGC.Group.Model
 
             // Render escenario
             heightmap.render();
-
+            limits.render();
             if (!FPSCamera)
             {
                 skyBox.render();
@@ -189,38 +214,17 @@ namespace TGC.Group.Model
                 DrawText.drawText(Convert.ToString(Camara.Position), 10, 1000, Color.OrangeRed);
             }
 
-            
-            casa.renderAll();
+            Utils.renderFromFrustum(meshes, Frustum);
+            // Render jugador            
 
-            /* con esto bajan mucho los FPS. Aplico Frustum Culling con fuerza bruta para aumentar un poco la performance
-             * Utils.renderMeshes(rocas);
-             * Utils.renderMeshes(palmeras);
-             *  Utils.renderMeshes(cajitas);
-             * Utils.renderMeshes(arbolesSelvaticos);
-            */
-            Utils.renderFromFrustum(rocas, Frustum);
-            Utils.renderFromFrustum(palmeras, Frustum);
-            Utils.renderFromFrustum(cajitas, Frustum);
-            Utils.renderFromFrustum(arbolesSelvaticos, Frustum);
-            Utils.renderFromFrustum(pastitos, Frustum);
+            //TODO: Con QuadTree los FPS bajan. Tal vez sea porque 
+            //estan mas concentrados en una parte que en otra
+            //quadtree.render(Frustum, true);
 
-            faraon.render();
-            hummer.render();
-            arbolSelvatico.render();
-            canoa.render();
-            camionCisterna.render();
-            helicopter.render();
-            ametralladora2.render();
-            tractor.render();
-            barril.render();
-            // Render jugador
             jugador.render(ElapsedTime);
-
+            
             // Render enemigos
-            enemigos.ForEach(e => e.render(ElapsedTime));
-
-            // Render bounding boxes
-            //renderAABB();            
+            enemigos.ForEach(e => e.render(ElapsedTime));            
 
             //renderizar balas y jugadores
             collisionManager.renderAll(ElapsedTime);
@@ -254,10 +258,11 @@ namespace TGC.Group.Model
             camionCisterna.dispose();
             helicopter.dispose();
             tractor.dispose();
-            barril.render();
+            barril.dispose();
             // Dispose bounding boxes
             obstaculos.ForEach(o => o.dispose());
 
+            limits.dispose();
             // Dispose jugador
             //jugador.dispose();
 
@@ -269,6 +274,12 @@ namespace TGC.Group.Model
 			texto.Dispose();
 			sombraTexto.Dispose();
 
+            meshes.Clear();
+            rocas.Clear();
+            pastitos.Clear();
+            arbolesSelvaticos.Clear();
+            palmeras.Clear();
+            cajitas.Clear();
         }
 
 #region Métodos Auxiliares
@@ -513,7 +524,7 @@ namespace TGC.Group.Model
 
 		private void initObstaculos() {
             //Añadir escenario.
-            aniadirObstaculoAABB(casa.Meshes);
+            //aniadirObstaculoAABB(casa.Meshes);
 
             aniadirObstaculoAABB(rocas);
             //aniadirObstaculoAABB(palmeras);
