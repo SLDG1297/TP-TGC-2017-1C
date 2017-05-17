@@ -371,8 +371,9 @@ namespace TGC.Group.Model
             string faraonDir = MediaDir + "Meshes\\Objetos\\EstatuaFaraon\\EstatuaFaraon-TgcScene.xml";
             faraon = cargarMesh(faraonDir);
             faraon.AutoTransformEnable = false;
-            //faraon.Scale = new Vector3(FACTOR, FACTOR, FACTOR);
-            faraon.Transform = Matrix.Scaling(FACTOR, FACTOR, FACTOR) * faraon.Transform;
+            faraon.Scale = new Vector3(FACTOR, FACTOR, FACTOR);
+            faraon.Transform = Matrix.Scaling(faraon.Scale) * faraon.Transform;
+            faraon.updateBoundingBox();
            
             // Creación de cajitas.
             cajita = TgcBox.fromSize(new Vector3(30 * FACTOR, 30 * FACTOR, 30 * FACTOR), TgcTexture.createTexture(MediaDir + "Texturas\\paja4.jpg"));
@@ -561,6 +562,9 @@ namespace TGC.Group.Model
             //bounding cylinder del barril
             var barrilCylinder = new TgcBoundingCylinderFixedY(barril.BoundingBox.calculateBoxCenter(), barril.BoundingBox.calculateBoxRadius() - 18, 24);
             collisionManager.agregarCylinder(barrilCylinder);
+
+            var faraonCylinder = new TgcBoundingCylinderFixedY(faraon.BoundingBox.calculateBoxCenter(), faraon.BoundingBox.calculateBoxRadius() * 0.15f, 1500);
+            collisionManager.agregarCylinder(faraonCylinder);
 
             collisionManager.agregarAABB(canoa.BoundingBox);
             collisionManager.agregarAABB(helicopter.BoundingBox);

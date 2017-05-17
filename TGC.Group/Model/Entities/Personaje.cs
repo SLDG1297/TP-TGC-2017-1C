@@ -47,7 +47,6 @@ namespace TGC.Group.Model.Entities
             health = maxHealth;
             loadSkeleton(mediaDir, skin);
 
-
             esqueleto.AutoTransformEnable = false;
             esqueleto.Position = initPosition;
             esqueleto.Transform = Matrix.Translation(esqueleto.Position);
@@ -55,15 +54,7 @@ namespace TGC.Group.Model.Entities
             resetBooleans();
 
             lastPos = initPosition;
-            cylinderBB = new TgcBoundingCylinderFixedY(esqueleto.BoundingBox.calculateBoxCenter(), 8, 25);
-
-            var x = esqueleto.BoundingBox.calculateBoxCenter().X;
-            var y = esqueleto.BoundingBox.calculateBoxCenter().Y + 20;
-            var z = esqueleto.BoundingBox.calculateBoxCenter().Z;
-
-            Vector3 center = new Vector3(x,y,z);
-
-            cylinderHead = new TgcBoundingCylinderFixedY(center, 3, 3);                  
+            resetCylinderValues();            
         }
 
         public Personaje(string mediaDir, string skin, Vector3 initPosition, Arma arma) :this(mediaDir, skin, initPosition)
@@ -167,6 +158,25 @@ namespace TGC.Group.Model.Entities
 
             BoundingCylinder.updateValues();
             cylinderHead.updateValues();
+            
+
+            if (crouching)
+            {//25
+                var y = esqueleto.BoundingBox.calculateBoxCenter().Y  + 15;
+                var cylinderY = esqueleto.BoundingBox.calculateBoxCenter().Y;
+
+                cylinderBB.HalfLength = 17;
+
+                var crouchingHeadCenter = new Vector3(HeadCylinder.Center.X, y, HeadCylinder.Center.Z);
+                HeadCylinder.Center = crouchingHeadCenter;
+
+                var crouchingCylinderCenter = new Vector3(cylinderBB.Center.X, cylinderY, cylinderBB.Center.Z);
+                cylinderBB.Center = crouchingCylinderCenter;
+            }
+            else
+            {
+                resetCylinderValues();
+            }
         }
 
 
@@ -185,6 +195,20 @@ namespace TGC.Group.Model.Entities
         {
             arma.dispose();
             //esqueleto.dispose();            
+        }
+
+
+        public void resetCylinderValues()
+        {
+            cylinderBB = new TgcBoundingCylinderFixedY(esqueleto.BoundingBox.calculateBoxCenter(), 8, 25);
+
+            var x = esqueleto.BoundingBox.calculateBoxCenter().X;
+            var y = esqueleto.BoundingBox.calculateBoxCenter().Y + 20;
+            var z = esqueleto.BoundingBox.calculateBoxCenter().Z;
+
+            Vector3 center = new Vector3(x, y, z);
+
+            cylinderHead = new TgcBoundingCylinderFixedY(center, 3, 3);
         }
 
         protected void setVelocidad(float caminar, float izqDer)
