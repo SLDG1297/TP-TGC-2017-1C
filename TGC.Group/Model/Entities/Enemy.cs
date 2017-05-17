@@ -124,7 +124,9 @@ namespace TGC.Group.Model.Entities
 
 			desplazamiento.Y = posicionY - esqueleto.Position.Y;
             desplazamiento.TransformCoordinate(Matrix.RotationY(esqueleto.Rotation.Y));
-            esqueleto.Position += desplazamiento;
+
+            var realmovement = CollisionManager.Instance.adjustPosition(this, desplazamiento);
+            esqueleto.Position += realmovement;
 
             updateBoundingBoxes();
 
@@ -134,7 +136,7 @@ namespace TGC.Group.Model.Entities
             //con esto determino el largo y la direccion del rayo
             ray.Direction = direccion;
             
-            CollisionManager.Instance.adjustPosition(this);
+            //CollisionManager.Instance.adjustPosition(this);
             ray.Origin = esqueleto.Position;
             //me fijo si el rayo colisiona con el jugador para ver si puedo disparar
             if (CollisionManager.Instance.debeDisparar(this))

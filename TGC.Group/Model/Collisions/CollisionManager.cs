@@ -47,10 +47,12 @@ namespace TGC.Group.Model.Collisions
         }
         
         
-        public void adjustPosition(Personaje personaje)
-        {            
-            checkCylinderCollisions(personaje);
-            //checkSphereCollision(personaje);
+        public Vector3 adjustPosition(Personaje personaje, Vector3 desplazamiento)
+        {
+            var res1 = adjustAABBCollisions(personaje, desplazamiento);
+            var res2 = adjustCylinderCollisions(personaje, res1);
+
+            return res2;
         }
 
         public Vector3 adjustAABBCollisions(Personaje personaje, Vector3 desplazamiento)
@@ -110,30 +112,51 @@ namespace TGC.Group.Model.Collisions
             return res;
         }
 
-        public void checkCylinderCollisions(Personaje personaje)
+        public Vector3 adjustCylinderCollisions(Personaje personaje, Vector3 desplazamiento)
         {
+            var res = desplazamiento;
             var cylinder = personaje.BoundingCylinder;
 
             //objetos que colisionan con el cilindro del jugador
             var obs = boundingCylinders.FindAll(
                 boundingCylinder => TgcCollisionUtils.testCylinderCylinder(boundingCylinder, cylinder));
 
-            foreach (var cilindro in obs)
+            if (obs.Count > 0)
             {
-                //TODO: POR AHORA SOLO RESUELVE COLISIONES EN EL EJE XZ
-                var center = cilindro.Center;
+                cylinder.setRenderColor(Color.Red);
 
-                //determino el punto mas cercano del AABB al cilindro
-                var puntoqestorba = TgcCollisionUtils.closestPointCylinder(center, cylinder);
-                
-                //distancia entre el punto del cilindro y su centro
-                var dif = puntoqestorba - cylinder.Center;
+                foreach (var cilindro in obs)
+                {
+                    var center = cilindro.Center;
+                    //determino el punto mas cercano del AABB al cilindro
+                    var puntoqestorba = TgcCollisionUtils.closestPointCylinder(center, cylinder);
+                    //distancia entre el punto del cilindro y su centro
+                    var distance = puntoqestorba - cylinder.Center;
 
-                //desplazo al jugador y al cylindro EN EL EJE XZ
-                personaje.moveCylindersXZ(-dif);
-                Vector3 newPos = new Vector3(cylinder.Center.X, personaje.Esqueleto.Position.Y, cylinder.Center.Z);
-                personaje.Esqueleto.Position = newPos;
+                    res -= distance;
+                }
             }
+            else
+            {
+                cylinder.setRenderColor(Color.Yellow);
+
+                float time;
+                Vector3 intersection = new Vector3();
+                TgcBoundingCylinder cil = new TgcBoundingCylinder(cylinder.Center,cylinder.Radius,cylinder.HalfLength);
+                cil.Rotation = new Vector3(0, 0, 0);
+
+                var intersectCylinders = boundingCylinders.FindAll(
+                    bb => TgcCollisionUtils.intersectSegmentCylinder(personaje.Position,desplazamiento, cil, out time, out intersection)
+                    );
+
+                if(intersectCylinders.Count > 0)
+                {
+                    res = desplazamiento - intersection;
+                }
+            }
+
+            res.Y = desplazamiento.Y;
+            return res;
         }
 
         //METODOS ASOCIADOS A LAS COLISIONES CON BALAS
