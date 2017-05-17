@@ -149,6 +149,7 @@ namespace TGC.Group.Model
                 instance.AlphaBlendEnable = true;
 
                 instance.Position = new Vector3(x, 0, y);
+                instance.Scale = originalMesh.Scale;
                 instance.Transform = Matrix.Translation(instance.Position) * instance.Transform;
                 meshes.Add(instance);
             }

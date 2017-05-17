@@ -51,8 +51,8 @@ namespace TGC.Group.Model.Collisions
         {
             var res1 = adjustAABBCollisions(personaje, desplazamiento);
             var res2 = adjustCylinderCollisions(personaje, res1);
-
-            return res2;
+            var res3 = adjustSphereCollisions(personaje,res2);
+            return res3;
         }
 
         public Vector3 adjustAABBCollisions(Personaje personaje, Vector3 desplazamiento)
@@ -156,6 +156,14 @@ namespace TGC.Group.Model.Collisions
             }
 
             res.Y = desplazamiento.Y;
+            return res;
+        }
+
+
+        //TODO: Implementar!!
+        public Vector3 adjustSphereCollisions(Personaje personaje, Vector3 desplazamiento)
+        {
+            Vector3 res = desplazamiento;
             return res;
         }
 

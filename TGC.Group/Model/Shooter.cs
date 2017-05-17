@@ -354,13 +354,14 @@ namespace TGC.Group.Model
             string pastitoDir = MediaDir + "Meshes\\Vegetation\\Pasto\\Pasto-TgcScene.xml";
             pastito = cargarMesh(pastitoDir);
             pastito.AlphaBlendEnable = true;
+            pastito.Scale = new Vector3(0.05f, 0.05f, 0.05f);
+            pastito.AutoTransformEnable = false;
             Utils.disponerEnRectanguloXZ(pastito, pastitos, 40, 40, 50);       
             foreach(var pasto in pastitos)
             {
                 var despl = new Vector3(0, 0, 8000);
                 pasto.Position += despl;
-                pasto.Scale = new Vector3(0.15f, 0.15f, 0.15f);
-                pasto.AutoTransformEnable = false;
+
                 pasto.Transform = Matrix.Translation(pasto.Scale) * Matrix.Translation(pasto.Position);
             }
             Utils.disponerAleatorioXZ(pastito, pastitos, 80);
@@ -459,16 +460,15 @@ namespace TGC.Group.Model
 
             corregirAltura(rocas);
 
-
             //barril
             barril = cargarMesh(MediaDir + "Meshes\\Objetos\\BarrilPolvora\\BarrilPolvora-TgcScene.xml");
-            barril.Position = new Vector3(-6802, 0, 10985);
+            barril.Position = new Vector3(-6802, 8, 10985);
             barril.updateBoundingBox();
 
             // Autitos!
             hummer = cargarMesh(MediaDir + "Meshes\\Vehiculos\\Hummer\\Hummer-TgcScene.xml");
             hummer.Position = new Vector3(1754, this.posicionEnTerreno(1754,9723), 9723);
-            hummer.Scale = new Vector3(2.1f, 2.08f, 2.25f);
+            hummer.Scale = new Vector3(1.1f, 1.08f, 1.25f);
             hummer.AutoTransformEnable = false;
             hummer.Transform = Matrix.Scaling(hummer.Scale) * Matrix.Translation(hummer.Position) * hummer.Transform;
             hummer.createBoundingBox();
@@ -486,7 +486,7 @@ namespace TGC.Group.Model
             //tractor
             tractor = cargarMesh(MediaDir + "Meshes\\Vehiculos\\Tractor\\Tractor-TgcScene.xml");
             tractor.Position = new Vector3(-6802,0, 10385);
-            tractor.Scale = new Vector3(2f, 2f, 2f);
+            tractor.Scale = new Vector3(1.5f, 1f, 1.25f);
             helicopter.AutoTransformEnable = false;
             tractor.Transform = Matrix.Translation(tractor.Position) * tractor.Transform;
             tractor.updateBoundingBox();
@@ -500,7 +500,7 @@ namespace TGC.Group.Model
             camionCisterna = cargarMesh(MediaDir + "Meshes\\Vehiculos\\CamionCisterna\\CamionCisterna-TgcScene.xml");
             helicopter.AutoTransformEnable = false;
             camionCisterna.Position = new Vector3(227, 0, 10719);
-            camionCisterna.Scale = new Vector3(3.5f, 3.5f, 3.5f);
+            camionCisterna.Scale = new Vector3(2f, 2f, 2f);
             camionCisterna.Transform = camionCisterna.Transform = Matrix.Scaling(camionCisterna.Scale) * Matrix.Translation(camionCisterna.Position) * camionCisterna.Transform;
             camionCisterna.updateBoundingBox();
         }
@@ -540,13 +540,12 @@ namespace TGC.Group.Model
 
             //aniadirObstaculoAABB(pastitos);
             aniadirObstaculoAABB(cajitas);
-            collisionManager.agregarAABB(hummer.BoundingBox);
             // Añadir enemigos.
             //aniadirObstaculoAABB(enemigos);
 
             //bounding cyilinder del arbol
             var adjustPos =new Vector3(0, 0, 44);                
-            var cylinder = new TgcBoundingCylinderFixedY(arbolSelvatico.BoundingBox.calculateBoxCenter()+ adjustPos, 60, 200);
+            var cylinder = new TgcBoundingCylinderFixedY(arbolSelvatico.BoundingBox.calculateBoxCenter(), 60, 200);
             CollisionManager.Instance.agregarCylinder(cylinder);            
             CollisionManager.Instance.setPlayer(jugador);
 
@@ -554,13 +553,20 @@ namespace TGC.Group.Model
             {
                 arbol.createBoundingBox();
                 arbol.updateBoundingBox();
+
                 var cilindro = new TgcBoundingCylinderFixedY(arbol.BoundingBox.calculateBoxCenter(), 120, 400);
                 collisionManager.agregarCylinder(cilindro);
             }
 
-            CollisionManager.Instance.agregarAABB(canoa.BoundingBox);
-            CollisionManager.Instance.agregarAABB(helicopter.BoundingBox);
-            CollisionManager.Instance.agregarAABB(camionCisterna.BoundingBox);
+            //bounding cylinder del barril
+            var barrilCylinder = new TgcBoundingCylinderFixedY(barril.BoundingBox.calculateBoxCenter(), barril.BoundingBox.calculateBoxRadius() - 18, 24);
+            collisionManager.agregarCylinder(barrilCylinder);
+
+            collisionManager.agregarAABB(canoa.BoundingBox);
+            collisionManager.agregarAABB(helicopter.BoundingBox);
+            collisionManager.agregarAABB(camionCisterna.BoundingBox);
+            collisionManager.agregarAABB(hummer.BoundingBox);
+            collisionManager.agregarAABB(tractor.BoundingBox);
         }
 
 		private void initText() {

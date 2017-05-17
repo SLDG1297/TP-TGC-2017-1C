@@ -34,8 +34,7 @@ namespace TGC.Group.Model.Entities
             velocidadRotacion = 20f;
             tiempoSalto = 10f;
             velocidadSalto = 0.5f;
-            resetBooleans();
-			
+            resetBooleans();			
         }
 
         public void recuperaSalud(int salud){
