@@ -138,22 +138,57 @@ namespace TGC.Group.Model
 
         public static void disponerAleatorioXZ(TgcMesh originalMesh, List<TgcMesh> meshes, int veces)
         {
+
+            //-16893, -2000, 17112
             var n = new Random();
             for (var i = 0; i < veces; i++)
             {
-                var x = n.Next(-160*8, 160*8);
-                var y = n.Next(-160*8, 160*8);
+                //var x = n.Next(-160*8, 160*8);
+                //var y = n.Next(-160*8, 160*8);
+                var x = n.Next(-16890, 16890);
+                var z = n.Next(-17112, 17112);
+
                 var instance = originalMesh.createMeshInstance(originalMesh.Name + meshes.Count + 1);
 
                 instance.AutoTransformEnable = false;
                 instance.AlphaBlendEnable = true;
 
-                instance.Position = new Vector3(x, 0, y);
+                instance.Position = new Vector3(x, 0, z);
                 instance.Scale = originalMesh.Scale;
                 instance.Transform = Matrix.Translation(instance.Position) * instance.Transform;
                 meshes.Add(instance);
             }
         } 
+
+
+        public static void aleatorioXZExceptoRadioInicial(TgcMesh originalMesh, List<TgcMesh> meshes, int veces)
+        {
+            int radioCentro = 900 * 8;
+
+            var n = new Random();
+            for (var i = 0; i < veces; i++)
+            {
+                var x = n.Next(-16890, 16890);
+                var z = n.Next(-17112, 17112);
+
+                //desplazo los objetos que se encuentran en el circulo del medio del mapa
+                if (FastMath.Pow2(x) + FastMath.Pow2(z) < FastMath.Pow2(radioCentro))
+                {
+                    x = x * radioCentro;
+                    z = z * radioCentro;
+                }
+
+                var instance = originalMesh.createMeshInstance(originalMesh.Name + meshes.Count + 1);
+
+                instance.AutoTransformEnable = false;
+                instance.AlphaBlendEnable = true;
+
+                instance.Position = new Vector3(x, 0, z);
+                instance.Scale = originalMesh.Scale;
+                instance.Transform = Matrix.Scaling(instance.Scale) *  Matrix.Translation(instance.Position) * instance.Transform;
+                meshes.Add(instance);
+            }
+        }
 
         /// <summary>
         ///     Renderiza todos los elementos de una lista de meshes.
