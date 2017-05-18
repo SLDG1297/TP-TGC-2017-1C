@@ -168,13 +168,13 @@ namespace TGC.Group.Model
 
         public static void aleatorioXZExceptoRadioInicial(TgcMesh originalMesh, List<TgcMesh> meshes, int veces)
         {
-            int radioCentro = 900 * 8;
+            int radioCentro = 8000;
 
             var n = new Random();
             for (var i = 0; i < veces; i++)
             {
-                var x = n.Next(-16890, 16890);
-                var z = n.Next(-17112, 17112);
+                var x = n.Next(-15927, 15927);
+                var z = n.Next(-15112, 15112);
 
                 //desplazo los objetos que se encuentran en el circulo del medio del mapa
                 if (FastMath.Pow2(x) + FastMath.Pow2(z) < FastMath.Pow2(radioCentro))
@@ -189,8 +189,7 @@ namespace TGC.Group.Model
                 instance.AlphaBlendEnable = true;
 
                 instance.Position = new Vector3(x, 0, z);
-                instance.Scale = originalMesh.Scale;
-                instance.Transform = Matrix.Scaling(instance.Scale) *  Matrix.Translation(instance.Position) * instance.Transform;
+                instance.Transform = Matrix.Translation(instance.Position) * instance.Transform;
                 meshes.Add(instance);
             }
         }

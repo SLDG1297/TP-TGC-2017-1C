@@ -424,21 +424,37 @@ namespace TGC.Group.Model
 
             //TODO: ajustar posicion segun heightmap (Hecho, aunque funciona mal todavía)
             // Frontera este de árboles
-            Utils.disponerEnLineaX(arbolSelvatico, arbolesSelvaticos, 49, 450, new Vector3(-6000, posicionEnTerreno(-6000, 15200), 15200));
+            Utils.disponerEnLineaX(arbolSelvatico, arbolesSelvaticos, 50, 450, new Vector3(-6000, posicionEnTerreno(-6000, 15200), 15200));
 
             //frontera sur de arboles
             var pos = arbolesSelvaticos.Last().Position;
-            Utils.disponerEnLineaZ(arbolSelvatico, arbolesSelvaticos, 68, -450, arbolesSelvaticos.Last().Position);
+            Utils.disponerEnLineaZ(arbolSelvatico, arbolesSelvaticos, 70, -450, arbolesSelvaticos.Last().Position);
+            
+            //frontera oeste
+            Utils.disponerEnLineaX(arbolSelvatico, arbolesSelvaticos, 72, -450, arbolesSelvaticos.Last().Position);
 
-            foreach(var arbol in arbolesSelvaticos)
+            //frontera norte
+            Utils.disponerEnLineaZ(arbolSelvatico, arbolesSelvaticos, 68, 450, arbolesSelvaticos.Last().Position);
+            foreach (var arbol in arbolesSelvaticos)
             {
                 arbol.Scale = new Vector3(3.0f, 3.0f, 3.0f);
                 arbol.AutoTransformEnable = false;
                 arbol.Transform = Matrix.Scaling(arbol.Scale) * arbol.Transform;
             }
 
-            corregirAltura(arbolesSelvaticos);
+            var rndm = new Random();
+            var countArboles = arbolesSelvaticos.Count;
+            Utils.aleatorioXZExceptoRadioInicial(arbolSelvatico, arbolesSelvaticos, 20);
+            for (int i = countArboles; i <= arbolesSelvaticos.Count - 1; i++)
+            {                
+                var s= rndm.Next(1, 6);
+                var arbol = arbolesSelvaticos[i];
 
+                arbol.AutoTransformEnable = false;
+                arbol.Scale = new Vector3(s, s, s);
+                arbol.Transform = Matrix.Scaling(arbol.Scale) * arbol.Transform;
+            }
+            corregirAltura(arbolesSelvaticos);
 
             // Creación de rocas.
             string rocaDir = MediaDir + "Meshes\\Vegetation\\Roca\\Roca-TgcScene.xml";
@@ -454,22 +470,22 @@ namespace TGC.Group.Model
             }
 
             // Frontera oeste de rocas.
-            rocaOriginal.AutoTransformEnable = false;
             rocaOriginal.Position = new Vector3(1500, 0, -3000);
             rocaOriginal.Scale = new Vector3(4.0f, 4.0f, 4.0f);
+            rocaOriginal.AutoTransformEnable = false;
             rocaOriginal.Transform = Matrix.Scaling(rocaOriginal.Scale) * Matrix.Translation(rocaOriginal.Position) * rocaOriginal.Transform;
-            rocaOriginal.createBoundingBox();
-            rocaOriginal.updateBoundingBox();            
-            ultimoElemento = rocas.Count - 1;
-            Utils.disponerEnLineaX(rocaOriginal, rocas, 49, -50 , rocaOriginal.Position);
-            for(int i = 1; i <= 49; i++)
-            {
-                rocas[ultimoElemento + i].AutoTransformEnable = false;
-                rocas[ultimoElemento + i].Scale = new Vector3(4.0f, 4.0f, 4.0f);
-                rocas[ultimoElemento + i].Transform = Matrix.Scaling(rocas[ultimoElemento + i].Scale) * Matrix.Translation(rocas[ultimoElemento + i].Position) * rocas[ultimoElemento + i].Transform;
-            }
-            foreach (var roca in rocas) roca.updateBoundingBox();
 
+            rocaOriginal.createBoundingBox();
+            rocaOriginal.updateBoundingBox();
+
+            var count = rocas.Count;
+            Utils.disponerEnLineaX(rocaOriginal, rocas, 49, -100, new Vector3(1500, 0, -3000));
+            for (int i = count; i <= rocas.Count - 1; i++)
+            {
+                rocas[i].AutoTransformEnable = false;
+                rocas[i].Scale = new Vector3(4.0f, 4.0f, 4.0f);
+                rocas[i].Transform = Matrix.Scaling(rocas[i].Scale) * rocas[i].Transform;
+            }
             corregirAltura(rocas);
 
             //barril
@@ -574,10 +590,17 @@ namespace TGC.Group.Model
 
                 //collisionManager.agregarAABB(arbol.BoundingBox);
                 collisionManager.agregarCylinder(cilindro);
-            }
+           }
 
-            //bounding cylinder del barril
-            var barrilCylinder = new TgcBoundingCylinderFixedY(barril.BoundingBox.calculateBoxCenter(), barril.BoundingBox.calculateBoxRadius() - 18, 24);
+            foreach (var roca in rocas)
+            {
+                roca.Transform = Matrix.Scaling(roca.Scale) * Matrix.Translation(roca.Position);
+                roca.createBoundingBox();
+                roca.updateBoundingBox();
+                collisionManager.agregarAABB(roca.BoundingBox);
+            }
+                //bounding cylinder del barril
+                var barrilCylinder = new TgcBoundingCylinderFixedY(barril.BoundingBox.calculateBoxCenter(), barril.BoundingBox.calculateBoxRadius() - 18, 24);
             collisionManager.agregarCylinder(barrilCylinder);
 
             var faraonCylinder = new TgcBoundingCylinderFixedY(faraon.BoundingBox.calculateBoxCenter(), faraon.BoundingBox.calculateBoxRadius() * 0.15f, 1500);
