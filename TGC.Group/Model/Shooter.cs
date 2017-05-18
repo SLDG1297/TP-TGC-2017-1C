@@ -44,12 +44,16 @@ namespace TGC.Group.Model
         private TgcMesh arbolSelvatico;
         private TgcMesh hummer;
 
+        private TgcMesh ametralladora;
         private TgcMesh ametralladora2;
         private TgcMesh canoa;
         private TgcMesh helicopter;
         private TgcMesh camionCisterna;
         private TgcMesh tractor;
         private TgcMesh barril;
+        private TgcMesh cajaFuturistica;
+        private TgcMesh avionMilitar;
+        private TgcMesh tanqueFuturista;
 
         private TgcBox cajita;
         private TgcMesh cajitaMuniciones;
@@ -137,6 +141,7 @@ namespace TGC.Group.Model
 
             meshes.Add(arbolSelvatico);
             meshes.Add(hummer);
+            meshes.Add(ametralladora);
             meshes.Add(ametralladora2);
             meshes.Add(canoa);
             meshes.Add(helicopter);
@@ -144,11 +149,17 @@ namespace TGC.Group.Model
             meshes.Add(tractor);
             meshes.Add(barril);
             meshes.Add(faraon);
+            meshes.Add(avionMilitar);
+            meshes.Add(tanqueFuturista);
+
             meshes.AddRange(pastitos);
             meshes.AddRange(rocas);
             meshes.AddRange(palmeras);
             meshes.AddRange(arbolesSelvaticos);
             meshes.AddRange(arbustitos);
+            meshes.AddRange(cajitas);
+
+
             //quadtree = new Quadtree();
             //quadtree.create(meshes, limits);
             //quadtree.createDebugQuadtreeMeshes();
@@ -202,7 +213,6 @@ namespace TGC.Group.Model
             // Inicio el render de la escena, para ejemplos simples.
             // Cuando tenemos postprocesado o shaders es mejor realizar las operaciones según nuestra conveniencia.
             PreRender();
-            
             // Render escenario
             heightmap.render();
             limits.render();
@@ -259,9 +269,13 @@ namespace TGC.Group.Model
             ametralladora2.dispose();
             camionCisterna.dispose();
             helicopter.dispose();
+            avionMilitar.dispose();
             tractor.dispose();
             barril.dispose();
             arbusto.dispose();
+            ametralladora.dispose();
+            tanqueFuturista.dispose();
+
             // Dispose bounding boxes
             obstaculos.ForEach(o => o.dispose());
 
@@ -359,7 +373,7 @@ namespace TGC.Group.Model
             pastito.AlphaBlendEnable = true;
             pastito.Scale = new Vector3(0.5f, 0.5f, 0.5f);
             pastito.AutoTransformEnable = false;
-            Utils.disponerEnRectanguloXZ(pastito, pastitos, 40, 40, 50);
+            Utils.disponerEnRectanguloXZ(pastito, pastitos, 20, 20, 50);
             foreach (var pasto in pastitos)
             {
                 var despl = new Vector3(0, 0, 8000);
@@ -367,9 +381,8 @@ namespace TGC.Group.Model
 
                 pasto.Transform = Matrix.Translation(pasto.Scale) * Matrix.Translation(pasto.Position);
             }
-            //Utils.disponerAleatorioXZ(pastito, pastitos, 2000);
             //pongo los pastitos en aleatorio, pero los saco del circulo celeste del medio
-            Utils.aleatorioXZExceptoRadioInicial(pastito, pastitos, 2000);
+            Utils.aleatorioXZExceptoRadioInicial(pastito, pastitos, 4500);
 
             corregirAltura(pastitos);
 
@@ -378,7 +391,7 @@ namespace TGC.Group.Model
             arbusto.AlphaBlendEnable = true;
             arbusto.Scale = new Vector3(0.5f, 0.5f, 0.5f);
             pastito.AutoTransformEnable = false;
-            Utils.aleatorioXZExceptoRadioInicial(arbusto, arbustitos, 1000);
+            Utils.aleatorioXZExceptoRadioInicial(arbusto, arbustitos, 2000);
             corregirAltura(arbustitos);
 
             // Creación de faraón.
@@ -391,14 +404,14 @@ namespace TGC.Group.Model
            
             // Creación de cajitas.
             cajita = TgcBox.fromSize(new Vector3(30 * FACTOR, 30 * FACTOR, 30 * FACTOR), TgcTexture.createTexture(MediaDir + "Texturas\\paja4.jpg"));
-            Utils.disponerEnRectanguloXZ(cajita.toMesh("cajitaPaja"), cajitas, 2, 2, 50);
+            Utils.disponerEnRectanguloXZ(cajita.toMesh("cajitaPaja"), cajitas, 2, 2, 250);
             foreach (var cajita in cajitas)
             {
                 cajita.AutoTransformEnable = false;
-                cajita.Scale = new Vector3(-800 * FACTOR, 20 * FACTOR, 1400 * FACTOR);
-                cajita.Transform = Matrix.Scaling(0.25f,0.25f,0.25f) * Matrix.Translation(cajita.Scale) * cajita.Transform;
+                cajita.Position += new Vector3(-800 * FACTOR, 50, 1400 * FACTOR);
+                cajita.Scale = new Vector3(0.25f, 0.25f, 0.25f);
+                //cajita.Transform = Matrix.Scaling(cajita.Scale) * Matrix.Translation(cajita.Position) * cajita.Transform;
             }
-            corregirAltura(cajitas);
 
             //cajitas de municiones
             var center = new Vector3(-12580, 1790, 9915);
@@ -407,16 +420,37 @@ namespace TGC.Group.Model
             cajitaMuniciones.createBoundingBox();
             cajitaMuniciones.updateBoundingBox();
             Utils.disponerEnCirculoXZ(cajitaMuniciones, cajitas, 8, 400, FastMath.QUARTER_PI, 0, center);
+            Utils.aleatorioXZExceptoRadioInicial(cajitaMuniciones, cajitas, 25);
+
+            //cajas futuristicas    
+            cajaFuturistica = cargarMesh(MediaDir + "Meshes\\Objetos\\CajaMetalFuturistica2\\CajaMetalFuturistica2-TgcScene.xml");
+            var cantCajitas = cajitas.Count;
+            Utils.aleatorioXZExceptoRadioInicial(cajaFuturistica, cajitas, 25);
+            corregirAltura(cajitas);
+
+            for(int i = cantCajitas; i< cajitas.Count; i++)
+            {
+                var mesh = cajitas[i];
+                mesh.Position += new Vector3(0, 50f, 0);
+            }
 
             //ametralladora
             ametralladora2 = cargarMesh(MediaDir + "Meshes\\Armas\\MetralladoraFija2\\MetralladoraFija2-TgcScene.xml");
             ametralladora2.AutoTransformEnable = false;
             ametralladora2.Position = center;
             ametralladora2.Transform = Matrix.Translation(ametralladora2.Position)* ametralladora2.Transform;
+            ametralladora2.createBoundingBox();
+            ametralladora2.updateBoundingBox();
+
+            //ametralladora
+            ametralladora = cargarMesh(MediaDir + "Meshes\\Armas\\MetralladoraFija\\MetralladoraFija-TgcScene.xml");
+            ametralladora.AutoTransformEnable = false;
+            ametralladora.Position = new Vector3(1894, this.posicionEnTerreno(1894, 10793), 10793);
+            ametralladora.Transform = Matrix.Translation(ametralladora.Position);
 
             //creacion de arboles selvaticos
             arbolSelvatico = cargarMesh(MediaDir + "Meshes\\Vegetation\\ArbolSelvatico\\ArbolSelvatico-TgcScene.xml");
-            arbolSelvatico.Position = new Vector3(800, 0, 200);
+            arbolSelvatico.Position = new Vector3(1000, 0, 400);
             arbolSelvatico.AutoTransformEnable = false;
             arbolSelvatico.Transform = Matrix.Translation(arbolSelvatico.Position) * arbolSelvatico.Transform;
             arbolSelvatico.createBoundingBox();
@@ -444,7 +478,7 @@ namespace TGC.Group.Model
 
             var rndm = new Random();
             var countArboles = arbolesSelvaticos.Count;
-            Utils.aleatorioXZExceptoRadioInicial(arbolSelvatico, arbolesSelvaticos, 20);
+            Utils.aleatorioXZExceptoRadioInicial(arbolSelvatico, arbolesSelvaticos, 40);
             for (int i = countArboles; i <= arbolesSelvaticos.Count - 1; i++)
             {                
                 var s= rndm.Next(3, 6);
@@ -502,9 +536,8 @@ namespace TGC.Group.Model
             hummer.createBoundingBox();
             hummer.updateBoundingBox();
 
-
             var anotherHummer = hummer.createMeshInstance(hummer.Name + "1");
-            anotherHummer.Position = new Vector3(hummer.Position.X + 250, hummer.Position.Y, hummer.Position.Z);
+            anotherHummer.Position = new Vector3(hummer.Position.X + 350, hummer.Position.Y, hummer.Position.Z - 150);
             anotherHummer.Scale = hummer.Scale;
             anotherHummer.rotateY(FastMath.QUARTER_PI);
             anotherHummer.AutoTransformEnable = false;
@@ -524,13 +557,49 @@ namespace TGC.Group.Model
             helicopter.Scale = new Vector3(4f, 4f, 4f);
             helicopter.Transform = Matrix.Scaling(helicopter.Scale) * Matrix.Translation(helicopter.Position) * helicopter.Transform;
             helicopter.createBoundingBox();
-            helicopter.BoundingBox.transform(Matrix.Scaling(0.8f,2.25f,3.55f)* Matrix.Translation(helicopter.Position));
+            helicopter.BoundingBox.transform(Matrix.Scaling(0.8f, 2.25f, 3.55f) * Matrix.Translation(helicopter.Position));
+
+            //tanque
+            tanqueFuturista = cargarMesh(MediaDir + "Meshes\\Vehiculos\\TanqueFuturistaRuedas\\TanqueFuturistaRuedas-TgcScene.xml");
+            tanqueFuturista.Position = new Vector3(11000, posicionEnTerreno(11000,6295), 6295);
+            tanqueFuturista.Scale = new Vector3(3f, 3f, 3f);
+            tanqueFuturista.updateBoundingBox();
+
+            //agrego otra instancia del tanque, la desplazo, roto y ajusto su posicion en Y
+            var anotherTank = tanqueFuturista.createMeshInstance(tanqueFuturista.Name + "1");
+            var posTanque2 = tanqueFuturista.Position + new Vector3(650, 0, -450);
+            anotherTank.Position = new Vector3(posTanque2.X, posicionEnTerreno(posTanque2.X, posTanque2.Z), posTanque2.Z);
+            anotherTank.Scale = tanqueFuturista.Scale;
+            anotherTank.rotateY(FastMath.PI_HALF);
             
+            anotherTank.AutoTransformEnable = false;
+            anotherTank.Transform = Matrix.RotationY(anotherTank.Rotation.Y)
+                                       * Matrix.Scaling(anotherTank.Scale)
+                                       * Matrix.Translation(anotherTank.Position);
+            anotherTank.createBoundingBox();
+            //acutalizo el bounding box
+            anotherTank.BoundingBox.transform(anotherTank.Transform);            
+            meshes.Add(anotherTank);
+
+            //avion militar
+            avionMilitar = cargarMesh(MediaDir + "Meshes\\Vehiculos\\AvionMilitar\\AvionMilitar-TgcScene.xml");
+            avionMilitar.Position = hummer.Position + new Vector3(1050, 50, 250);
+            helicopter.AutoTransformEnable = false;
+             //escalo,roto y traslado
+            avionMilitar.Scale = new Vector3(2f, 2f, 2f);
+            avionMilitar.rotateY(FastMath.PI_HALF);
+            avionMilitar.Transform = Matrix.RotationY(avionMilitar.Rotation.Y) * Matrix.Scaling(avionMilitar.Scale) * Matrix.Translation(avionMilitar.Position);
+            avionMilitar.createBoundingBox();
+
+            avionMilitar.BoundingBox.transform(Matrix.RotationY(avionMilitar.Rotation.Y)
+                                            * Matrix.Scaling(2f, 1.2f, 0.3f)
+                                            * Matrix.Translation(avionMilitar.Position));
+
             //tractor
             tractor = cargarMesh(MediaDir + "Meshes\\Vehiculos\\Tractor\\Tractor-TgcScene.xml");
             tractor.Position = new Vector3(-6802,0, 10385);
             tractor.Scale = new Vector3(1.5f, 1f, 1.25f);
-            helicopter.AutoTransformEnable = false;
+            tractor.AutoTransformEnable = false;
             tractor.Transform = Matrix.Translation(tractor.Position) * tractor.Transform;
             tractor.updateBoundingBox();
 
@@ -544,7 +613,7 @@ namespace TGC.Group.Model
             helicopter.AutoTransformEnable = false;
             camionCisterna.Position = new Vector3(227, 0, 10719);
             camionCisterna.Scale = new Vector3(2f, 2f, 2f);
-            camionCisterna.Transform = camionCisterna.Transform = Matrix.Scaling(camionCisterna.Scale) * Matrix.Translation(camionCisterna.Position) * camionCisterna.Transform;
+            camionCisterna.Transform = Matrix.Scaling(camionCisterna.Scale) * Matrix.Translation(camionCisterna.Position) * camionCisterna.Transform;
             camionCisterna.updateBoundingBox();
         }
 
@@ -572,6 +641,7 @@ namespace TGC.Group.Model
             aniadirObstaculoAABB(rocas);
             //aniadirObstaculoAABB(palmeras);
 
+            //bounging cilinders de las palmeras
             foreach (var palmera in palmeras)
             {
                 var despl = new Vector3(0, 100, 0);
@@ -581,7 +651,7 @@ namespace TGC.Group.Model
                 collisionManager.agregarCylinder(cilindro);
             }
             
-            aniadirObstaculoAABB(cajitas);
+            //aniadirObstaculoAABB(cajitas);
             CollisionManager.Instance.setPlayer(jugador);
 
             //bounding cyilinder del arbol
@@ -590,7 +660,7 @@ namespace TGC.Group.Model
             var cylinder = new TgcBoundingCylinderFixedY(arbolSelvatico.BoundingBox.calculateBoxCenter(), 60, 200);
             CollisionManager.Instance.agregarCylinder(cylinder);
             
-
+           //bounding cilinders de los arbolesSelvaticos
            foreach (var arbol in arbolesSelvaticos)
            {
                 var despl = new Vector3(0,400, 0);
@@ -607,6 +677,7 @@ namespace TGC.Group.Model
                 collisionManager.agregarCylinder(cilindro);
            }
 
+           //bounding box de las rocas
             foreach (var roca in rocas)
             {
                 roca.Transform = Matrix.Scaling(roca.Scale) * Matrix.Translation(roca.Position);
@@ -614,20 +685,30 @@ namespace TGC.Group.Model
                 roca.updateBoundingBox();
                 collisionManager.agregarAABB(roca.BoundingBox);
             }
-                //bounding cylinder del barril
-                var barrilCylinder = new TgcBoundingCylinderFixedY(barril.BoundingBox.calculateBoxCenter(), barril.BoundingBox.calculateBoxRadius() - 18, 24);
+             
+            //bounding cylinder del barril
+            var barrilCylinder = new TgcBoundingCylinderFixedY(barril.BoundingBox.calculateBoxCenter(), barril.BoundingBox.calculateBoxRadius() - 18, 24);
             collisionManager.agregarCylinder(barrilCylinder);
 
+            //cilindro del faraon del mesio
             var faraonCylinder = new TgcBoundingCylinderFixedY(faraon.BoundingBox.calculateBoxCenter(), faraon.BoundingBox.calculateBoxRadius() * 0.15f, 1500);
             collisionManager.agregarCylinder(faraonCylinder);
 
             collisionManager.agregarAABB(canoa.BoundingBox);
             collisionManager.agregarAABB(helicopter.BoundingBox);
             collisionManager.agregarAABB(camionCisterna.BoundingBox);
-            
             collisionManager.agregarAABB(tractor.BoundingBox);
             collisionManager.agregarAABB(arbolSelvatico.BoundingBox);
 
+            collisionManager.agregarAABB(tanqueFuturista.BoundingBox);
+            foreach (var mesh in tanqueFuturista.MeshInstances)
+            {               
+                collisionManager.agregarAABB(mesh.BoundingBox);
+            }
+
+
+
+            //bounding box de las hummer
             collisionManager.agregarAABB(hummer.BoundingBox);
             foreach (var mesh in hummer.MeshInstances)
             {
@@ -640,6 +721,25 @@ namespace TGC.Group.Model
                 collisionManager.agregarAABB(mesh.BoundingBox);
                 collisionManager.agregarOBB(obb);
             }
+            
+            //bounding box del avion militar
+            collisionManager.agregarAABB(avionMilitar.BoundingBox);
+            //este seria el bb de las alas
+            var otroBoundingBox = helicopter.BoundingBox.clone();
+            otroBoundingBox.transform(Matrix.RotationY(avionMilitar.Rotation.Y)
+                                             * Matrix.Scaling(0.3f, 1f, 2.3f)
+                                             * Matrix.Translation(avionMilitar.Position - new Vector3(52, 0, 0)));
+            collisionManager.agregarAABB(otroBoundingBox);
+
+            //bounding box de las cajas
+            foreach (var caja in cajitas)
+            {
+                caja.Transform = Matrix.Scaling(caja.Scale) * Matrix.Translation(caja.Position);
+                caja.createBoundingBox();
+                caja.updateBoundingBox();
+                collisionManager.agregarAABB(caja.BoundingBox);
+            }
+
         }
 
 		private void initText() {
