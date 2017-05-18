@@ -21,7 +21,7 @@ using TGC.Group.Model.Optimization.Quadtree;
 
 namespace TGC.Group.Model
 {
-    public  class Shooter : TgcExample
+    public class Shooter : TgcExample
     {
         // Constantes de escenario
         private const float MAP_SCALE_XZ = 160.0f; // Original = 20
@@ -29,20 +29,21 @@ namespace TGC.Group.Model
         private const int FACTOR = 8; // Significa las veces que se agrandó según el MAP_SCALE original.
         // Esto se hace así porque ya hay valores hardcodeados de posiciones que no quiero cambiar.
         // Habría que ver una forma de ubicar meshes en posición relativa en el espacio.
-        private Vector3 CENTRO = new Vector3(0, 0, 0);        
+        private Vector3 CENTRO = new Vector3(0, 0, 0);
 
         // Escenario
         private TgcSimpleTerrain heightmap;
-		private TgcSkyBox skyBox;
+        private TgcSkyBox skyBox;
 
         private TgcScene casa;
         private TgcMesh rocaOriginal;
         private TgcMesh palmeraOriginal;
         private TgcMesh pastito;
+        private TgcMesh arbusto;
         private TgcMesh faraon;
         private TgcMesh arbolSelvatico;
         private TgcMesh hummer;
-  
+
         private TgcMesh ametralladora2;
         private TgcMesh canoa;
         private TgcMesh helicopter;
@@ -59,6 +60,7 @@ namespace TGC.Group.Model
         private List<TgcMesh> pastitos = new List<TgcMesh>();
         private List<TgcMesh> cajitas = new List<TgcMesh>();
         private List<TgcMesh> arbolesSelvaticos = new List<TgcMesh>();
+        private List<TgcMesh> arbustitos = new List<TgcMesh>();
 
         //lista de objetos totales
         private List<TgcMesh> meshes = new List<TgcMesh>();
@@ -82,7 +84,7 @@ namespace TGC.Group.Model
 
         //otros
         private CollisionManager collisionManager;
-        private bool FPSCamera = false;
+        private bool FPSCamera = true;
         private Quadtree quadtree;
 
         /// <summary>
@@ -146,7 +148,7 @@ namespace TGC.Group.Model
             meshes.AddRange(rocas);
             meshes.AddRange(palmeras);
             meshes.AddRange(arbolesSelvaticos);
-           
+            meshes.AddRange(arbustitos);
             //quadtree = new Quadtree();
             //quadtree.create(meshes, limits);
             //quadtree.createDebugQuadtreeMeshes();
@@ -259,6 +261,7 @@ namespace TGC.Group.Model
             helicopter.dispose();
             tractor.dispose();
             barril.dispose();
+            arbusto.dispose();
             // Dispose bounding boxes
             obstaculos.ForEach(o => o.dispose());
 
@@ -322,7 +325,7 @@ namespace TGC.Group.Model
             heightmap.loadTexture(textureDir);
         }
 
-        private void initScene(){
+        private void initScene() {
             // Variables auxiliares.
             int ultimoElemento;
 
@@ -354,10 +357,10 @@ namespace TGC.Group.Model
             string pastitoDir = MediaDir + "Meshes\\Vegetation\\Pasto\\Pasto-TgcScene.xml";
             pastito = cargarMesh(pastitoDir);
             pastito.AlphaBlendEnable = true;
-            pastito.Scale = new Vector3(0.05f, 0.05f, 0.05f);
+            pastito.Scale = new Vector3(0.5f, 0.5f, 0.5f);
             pastito.AutoTransformEnable = false;
-            Utils.disponerEnRectanguloXZ(pastito, pastitos, 40, 40, 50);       
-            foreach(var pasto in pastitos)
+            Utils.disponerEnRectanguloXZ(pastito, pastitos, 40, 40, 50);
+            foreach (var pasto in pastitos)
             {
                 var despl = new Vector3(0, 0, 8000);
                 pasto.Position += despl;
@@ -369,6 +372,14 @@ namespace TGC.Group.Model
             Utils.aleatorioXZExceptoRadioInicial(pastito, pastitos, 2000);
 
             corregirAltura(pastitos);
+
+            //arbustitos
+            arbusto = cargarMesh(MediaDir + "Meshes\\Vegetation\\Arbusto\\Arbusto-TgcScene.xml");
+            arbusto.AlphaBlendEnable = true;
+            arbusto.Scale = new Vector3(0.5f, 0.5f, 0.5f);
+            pastito.AutoTransformEnable = false;
+            Utils.aleatorioXZExceptoRadioInicial(arbusto, arbustitos, 1000);
+            corregirAltura(arbustitos);
 
             // Creación de faraón.
             string faraonDir = MediaDir + "Meshes\\Objetos\\EstatuaFaraon\\EstatuaFaraon-TgcScene.xml";
@@ -389,7 +400,6 @@ namespace TGC.Group.Model
             }
             corregirAltura(cajitas);
 
-
             //cajitas de municiones
             var center = new Vector3(-12580, 1790, 9915);
             cajitaMuniciones = cargarMesh(MediaDir + "Meshes\\Armas\\CajaMuniciones\\CajaMuniciones-TgcScene.xml");
@@ -405,35 +415,28 @@ namespace TGC.Group.Model
             ametralladora2.Transform = Matrix.Translation(ametralladora2.Position)* ametralladora2.Transform;
 
             //creacion de arboles selvaticos
-            string arbolSelvaticoDir = MediaDir + "Meshes\\Vegetation\\ArbolSelvatico\\ArbolSelvatico-TgcScene.xml";
-            arbolSelvatico = cargarMesh(arbolSelvaticoDir);
-
-            //TODO: ajustar posicion segun heightmap (Hecho, aunque funciona mal todavía)
-            // Frontera este de árboles
+            arbolSelvatico = cargarMesh(MediaDir + "Meshes\\Vegetation\\ArbolSelvatico\\ArbolSelvatico-TgcScene.xml");
+            arbolSelvatico.Position = new Vector3(800, 0, 200);
             arbolSelvatico.AutoTransformEnable = false;
-            arbolSelvatico.Position = new Vector3(-6000, posicionEnTerreno(-6000,15200), 15200);
-            arbolSelvatico.Scale = new Vector3(3.0f, 3.0f, 3.0f);         
-            arbolSelvatico.Transform = Matrix.Scaling(arbolSelvatico.Scale) * Matrix.Translation(arbolSelvatico.Position) * arbolSelvatico.Transform;
+            arbolSelvatico.Transform = Matrix.Translation(arbolSelvatico.Position) * arbolSelvatico.Transform;
             arbolSelvatico.createBoundingBox();
             arbolSelvatico.updateBoundingBox();
 
-            //linea 420
-            Utils.aleatorioXZExceptoRadioInicial(arbolSelvatico, arbolesSelvaticos, 40);
+            //TODO: ajustar posicion segun heightmap (Hecho, aunque funciona mal todavía)
+            // Frontera este de árboles
+            Utils.disponerEnLineaX(arbolSelvatico, arbolesSelvaticos, 49, 450, new Vector3(-6000, posicionEnTerreno(-6000, 15200), 15200));
 
-            Utils.disponerEnLineaX(arbolSelvatico, arbolesSelvaticos, 49, 450);
+            //frontera sur de arboles
+            var pos = arbolesSelvaticos.Last().Position;
+            Utils.disponerEnLineaZ(arbolSelvatico, arbolesSelvaticos, 68, -450, arbolesSelvaticos.Last().Position);
 
-            // Frontera sur de árboles.
-            ultimoElemento = arbolesSelvaticos.Count - 1;
-            arbolSelvatico.Position = arbolesSelvaticos[ultimoElemento].Position;
-            arbolSelvatico.Transform = Matrix.Translation(arbolSelvatico.Position) * arbolSelvatico.Transform;
-
-            Utils.disponerEnLineaZ(arbolSelvatico, arbolesSelvaticos, 68, -450);
-            for (int i = 1; i <= 68; i++)
+            foreach(var arbol in arbolesSelvaticos)
             {
-                arbolesSelvaticos[ultimoElemento + i].Scale = new Vector3(3.0f, 3.0f, 3.0f);
-                arbolesSelvaticos[ultimoElemento + i].AutoTransformEnable = false;
-                arbolesSelvaticos[ultimoElemento + i].Transform = Matrix.Scaling(arbolesSelvaticos[ultimoElemento + i].Scale) * arbolesSelvaticos[ultimoElemento + i].Transform;
+                arbol.Scale = new Vector3(3.0f, 3.0f, 3.0f);
+                arbol.AutoTransformEnable = false;
+                arbol.Transform = Matrix.Scaling(arbol.Scale) * arbol.Transform;
             }
+
             corregirAltura(arbolesSelvaticos);
 
 
@@ -458,7 +461,7 @@ namespace TGC.Group.Model
             rocaOriginal.createBoundingBox();
             rocaOriginal.updateBoundingBox();            
             ultimoElemento = rocas.Count - 1;
-            Utils.disponerEnLineaX(rocaOriginal, rocas, 49, -50);
+            Utils.disponerEnLineaX(rocaOriginal, rocas, 49, -50 , rocaOriginal.Position);
             for(int i = 1; i <= 49; i++)
             {
                 rocas[ultimoElemento + i].AutoTransformEnable = false;
@@ -546,28 +549,30 @@ namespace TGC.Group.Model
 
                 collisionManager.agregarCylinder(cilindro);
             }
-
-            //aniadirObstaculoAABB(pastitos);
+            
             aniadirObstaculoAABB(cajitas);
-            // Añadir enemigos.
-            //aniadirObstaculoAABB(enemigos);
+            CollisionManager.Instance.setPlayer(jugador);
 
             //bounding cyilinder del arbol
             var adjustPos =new Vector3(0, 0, 44);
             //var cylinder = new TgcBoundingCylinderFixedY(arbolSelvatico.BoundingBox.calculateBoxCenter(), 60, 200);
             var cylinder = new TgcBoundingCylinderFixedY(arbolSelvatico.BoundingBox.calculateBoxCenter(), 60, 200);
             CollisionManager.Instance.agregarCylinder(cylinder);
-            CollisionManager.Instance.setPlayer(jugador);
+            
 
            foreach (var arbol in arbolesSelvaticos)
-            {
+           {
                 var despl = new Vector3(0,400, 0);
+
+                arbol.Transform = Matrix.Scaling(arbol.Scale) * Matrix.Translation(arbol.Position);
                 arbol.createBoundingBox();
                 arbol.updateBoundingBox();
+                
+                var radio = 60 * arbol.Scale.X;
+                var height = 200 * arbol.Scale.Y;
+                var cilindro = new TgcBoundingCylinderFixedY(arbol.BoundingBox.calculateBoxCenter(), radio, height);
 
-                var scale = arbol.Scale.X;
-                var cilindro = new TgcBoundingCylinderFixedY(arbol.Position + despl, 120, 400);
-                collisionManager.agregarAABB(arbol.BoundingBox);
+                //collisionManager.agregarAABB(arbol.BoundingBox);
                 collisionManager.agregarCylinder(cilindro);
             }
 
@@ -583,7 +588,7 @@ namespace TGC.Group.Model
             collisionManager.agregarAABB(camionCisterna.BoundingBox);
             collisionManager.agregarAABB(hummer.BoundingBox);
             collisionManager.agregarAABB(tractor.BoundingBox);
-            
+            collisionManager.agregarAABB(arbolSelvatico.BoundingBox);
         }
 
 		private void initText() {

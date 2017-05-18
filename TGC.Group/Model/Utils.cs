@@ -93,37 +93,42 @@ namespace TGC.Group.Model
                 }
             }
         }
-
-        public static void disponerEnLineaX(TgcMesh originalMesh, List<TgcMesh> meshes, int veces, float offset)
+        
+        /// <summary>
+        ///     Dispone un mesh en forma de linea recta n veces por el eje X
+        /// </summary>
+        /// <param name="orginalMesh">Mesh a disponer</param>
+        /// <param name="lista">Lista del elemento a replicar. Debe estar instanciada</param>
+        /// <param name="veces">Cantidad de veces/param>
+        /// <param name="offset">Distancia entre los meshes/param>
+        /// <param name="initPos">Posicion inicial de partida/param>
+        public static void disponerEnLineaX(TgcMesh originalMesh, List<TgcMesh> meshes, int veces, float offset, Vector3 initPos)
         {
             for (var i = 0; i < veces; i++)
             {
                 //Crear instancia de modelo
-                var instance = originalMesh.createMeshInstance(originalMesh.Name + i);
-
-                var position = new Vector3(originalMesh.Position.X + i * offset, originalMesh.Position.Y, originalMesh.Position.Z);
-
+                var instance = originalMesh.createMeshInstance(originalMesh.Name  + meshes .Count + i);
                 instance.AutoTransformEnable = false;
-                instance.Position = position;
-                instance.Scale = originalMesh.Scale;
 
+                var position = new Vector3(initPos.X + i * offset, initPos.Y, initPos.Z);
+                instance.Position = position;
+                //instance.Scale = originalMesh.Scale;
                 instance.AlphaBlendEnable = true;
                 //Desplazarlo
-                instance.Transform = Matrix.Scaling(instance.Scale) * Matrix.Translation(instance.Position) * instance.Transform;
-                
+                instance.Transform = Matrix.Translation(instance.Position) * instance.Transform;
+
                 meshes.Add(instance);
             }
-        }
+        }        
 
-
-        public static void disponerEnLineaZ(TgcMesh originalMesh, List<TgcMesh> meshes, int veces, float offset)
+        public static void disponerEnLineaZ(TgcMesh originalMesh, List<TgcMesh> meshes, int veces, float offset, Vector3 initPos)
         {
             for (var i = 0; i < veces; i++)
             {
                 //Crear instancia de modelo
-                var instance = originalMesh.createMeshInstance(originalMesh.Name + i);
+                var instance = originalMesh.createMeshInstance(originalMesh.Name + meshes.Count + i);
 
-                var position = new Vector3(originalMesh.Position.X, originalMesh.Position.Y, originalMesh.Position.Z + i * offset);
+                var position = new Vector3(initPos.X, initPos.Y, initPos.Z + i * offset);
 
                 instance.AutoTransformEnable = false;
                 instance.Position = position;
@@ -154,7 +159,7 @@ namespace TGC.Group.Model
                 instance.AlphaBlendEnable = true;
 
                 instance.Position = new Vector3(x, 0, z);
-                instance.Scale = originalMesh.Scale;
+                //instance.Scale = originalMesh.Scale;
                 instance.Transform = Matrix.Translation(instance.Position) * instance.Transform;
                 meshes.Add(instance);
             }
