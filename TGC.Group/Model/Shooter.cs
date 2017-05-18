@@ -689,10 +689,7 @@ namespace TGC.Group.Model
 
 		private void initObstaculos() {
             //Añadir escenario.
-            //aniadirObstaculoAABB(casa.Meshes);
-
-            aniadirObstaculoAABB(rocas);
-            //aniadirObstaculoAABB(palmeras);
+            //aniadirObstaculoAABB(casa.Meshes);            
 
             //bounging cilinders de las palmeras
             foreach (var palmera in palmeras)
@@ -729,16 +726,17 @@ namespace TGC.Group.Model
                 //collisionManager.agregarAABB(arbol.BoundingBox);
                 collisionManager.agregarCylinder(cilindro);
            }
-
-           //bounding box de las rocas
+            //bounding box de las rocas
             foreach (var roca in rocas)
             {
-                roca.Transform = Matrix.Scaling(roca.Scale) * Matrix.Translation(roca.Position);
-                roca.createBoundingBox();
-                roca.updateBoundingBox();
-                collisionManager.agregarAABB(roca.BoundingBox);
+                var center = roca.BoundingBox.calculateBoxCenter();
+                var radio = roca.BoundingBox.calculateAxisRadius();
+
+                var cilindro = new TgcBoundingCylinderFixedY(center, radio.X * 0.95f, radio.Y);
+
+                collisionManager.agregarCylinder(cilindro);
             }
-             
+
             //bounding cylinder del barril
             var barrilCylinder = new TgcBoundingCylinderFixedY(barril.BoundingBox.calculateBoxCenter(), barril.BoundingBox.calculateBoxRadius() - 18, 24);
             collisionManager.agregarCylinder(barrilCylinder);
@@ -751,15 +749,12 @@ namespace TGC.Group.Model
             collisionManager.agregarAABB(helicopter.BoundingBox);
             collisionManager.agregarAABB(camionCisterna.BoundingBox);
             collisionManager.agregarAABB(tractor.BoundingBox);
-            collisionManager.agregarAABB(arbolSelvatico.BoundingBox);
 
             collisionManager.agregarAABB(tanqueFuturista.BoundingBox);
             foreach (var mesh in tanqueFuturista.MeshInstances)
             {               
                 collisionManager.agregarAABB(mesh.BoundingBox);
             }
-
-
 
             //bounding box de las hummer
             collisionManager.agregarAABB(hummer.BoundingBox);
@@ -792,7 +787,6 @@ namespace TGC.Group.Model
                 caja.updateBoundingBox();
                 collisionManager.agregarAABB(caja.BoundingBox);
             }
-
         }
 
 		private void initText() {
