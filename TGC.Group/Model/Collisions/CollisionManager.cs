@@ -18,6 +18,8 @@ namespace TGC.Group.Model.Collisions
         private List<TgcBoundingAxisAlignBox> boundingBoxes = new List<TgcBoundingAxisAlignBox>();
         private List<TgcBoundingCylinderFixedY> boundingCylinders = new List<TgcBoundingCylinderFixedY>();
         private List<TgcBoundingSphere> boundingSpheres = new List<TgcBoundingSphere>();
+        private List<TgcBoundingOrientedBox> orientedBoxes = new List<TgcBoundingOrientedBox>();
+
         //objetos que cambian su posicion
         private List<Bala> balas = new List<Bala>();
         Player player;
@@ -208,6 +210,8 @@ namespace TGC.Group.Model.Collisions
         {
             foreach (var bb in boundingBoxes) bb.render();
             foreach (var bb in boundingCylinders) bb.render();
+            foreach (var bb in orientedBoxes) bb.render();
+
             foreach(var bb in jugadores)
             {
                 bb.BoundingCylinder.render();
@@ -277,7 +281,6 @@ namespace TGC.Group.Model.Collisions
             return TgcCollisionUtils.testRayCylinder(enemigo.Ray,cilindro);
         }
 
-
         public void agregarAABB(TgcBoundingAxisAlignBox a)
         {
             boundingBoxes.Add(a);
@@ -286,6 +289,11 @@ namespace TGC.Group.Model.Collisions
         public void agregarCylinder(TgcBoundingCylinderFixedY c)
         {
             boundingCylinders.Add(c);
+        }
+
+        public void agregarOBB(TgcBoundingOrientedBox obb)
+        {
+            orientedBoxes.Add(obb);
         }
 
 
