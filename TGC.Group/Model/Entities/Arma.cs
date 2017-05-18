@@ -60,7 +60,7 @@ namespace TGC.Group.Model.Entities
 
         public void dispose()
         {
-            attachment.Mesh.dispose();
+           	attachment.Mesh.dispose();
         }
 
         //aniado un mesh a la lista de proyectiles para  luego calcular su posicion

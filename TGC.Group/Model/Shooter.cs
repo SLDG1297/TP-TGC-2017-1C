@@ -12,6 +12,7 @@ using TGC.Core.Text;
 using TGC.Core.Utils;
 using TGC.Core.Geometry;
 using TGC.Core.Textures;
+using TGC.Core.Camara;
 using TGC.Core.Collision;
 using TGC.Core.BoundingVolumes;
 using TGC.Group.Model.Cameras;
@@ -29,7 +30,15 @@ namespace TGC.Group.Model
         private const int FACTOR = 8; // Significa las veces que se agrandó según el MAP_SCALE original.
         // Esto se hace así porque ya hay valores hardcodeados de posiciones que no quiero cambiar.
         // Habría que ver una forma de ubicar meshes en posición relativa en el espacio.
-        private Vector3 CENTRO = new Vector3(0, 0, 0);        
+        private Vector3 CENTRO = new Vector3(0, 0, 0);
+
+		// Menu		private Menu menu;
+
+		// Para saber si el juego esta inicializado
+		private bool gameLoaded;
+
+		// Tamanio de pantalla
+		private Size windowSize;
 
         // Escenario
         private TgcSimpleTerrain heightmap;
@@ -90,109 +99,136 @@ namespace TGC.Group.Model
         /// </summary>
         /// <param name="mediaDir">Ruta donde esta la carpeta con los assets</param>
         /// <param name="shadersDir">Ruta donde esta la carpeta con los shaders</param>
-        public Shooter(string mediaDir, string shadersDir) : base(mediaDir, shadersDir)
+		public Shooter(string mediaDir, string shadersDir, Size windowSize) : base(mediaDir, shadersDir)
         {
             Category = Game.Default.Category;
             Name = Game.Default.Name;
             Description = Game.Default.Description;
 
-            collisionManager = CollisionManager.Instance;
+			this.windowSize = windowSize;
+
+			collisionManager = CollisionManager.Instance;
+			menu = new Menu(MediaDir, windowSize);
         }
 
         public override void Init()
         {
-            // Iniciar jugador
-            initJugador();
-            // Iniciar HUD
-            initText();
-
-            // Iniciar escenario
-            initHeightmap();
-
-            initSkyBox();
-            initScene();
-
-            var pmin = new Vector3(-16893, -2000, 17112);
-            var pmax = new Vector3(18240, 8884, -18876);
-            limits = new TgcBoundingAxisAlignBox(pmin, pmax);
-
-            // Iniciar enemigos
-            initEnemigos();
-
-            // Iniciar bounding boxes
-            initObstaculos();
-
-            // Iniciar cámara
-            if (!FPSCamera){ 
-                // Configurar cámara en Tercera Persona y la asigno al TGC.
-                camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40, 50, -50), 100, 150, Input);
-                Camara = camaraInterna;
-            }
-            else{
-                // Antigua cámara en primera persona.
-                Camara = new FirstPersonCamera(new Vector3(4000, 1500, 500), Input);
-            }           
-            
-            meshes.Add(arbolSelvatico);
-            meshes.Add(hummer);
-            meshes.Add(ametralladora2);
-            meshes.Add(canoa);
-            meshes.Add(helicopter);
-            meshes.Add(camionCisterna);
-            meshes.Add(tractor);
-            meshes.Add(barril);
-            meshes.Add(faraon);
-            meshes.AddRange(pastitos);
-            meshes.AddRange(rocas);
-            meshes.AddRange(palmeras);
-            meshes.AddRange(arbolesSelvaticos);
-           
-            //quadtree = new Quadtree();
-            //quadtree.create(meshes, limits);
-            //quadtree.createDebugQuadtreeMeshes();
+			menu.Init();
+			initHeightmap();
+			Camara = new MenuCamera(windowSize);
         }
+
+		public void InitGame()
+		{
+			// Iniciar jugador
+			initJugador();
+			// Iniciar HUD
+			initText();
+
+			// Iniciar escenario
+			//initHeightmap();
+
+			initSkyBox();
+			initScene();
+
+
+			var pmin = new Vector3(-16893, -2000, 17112);
+			var pmax = new Vector3(18240, 8884, -18876);
+			limits = new TgcBoundingAxisAlignBox(pmin, pmax);
+
+			// Iniciar enemigos
+			initEnemigos();
+
+			// Iniciar bounding boxes
+			initObstaculos();
+
+			// Iniciar cámara
+			if (!FPSCamera)
+			{
+				// Configurar cámara en Tercera Persona y la asigno al TGC.
+				camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40, 50, -50), 100, 150, Input);
+				Camara = camaraInterna;
+			}
+			else
+			{
+				// Antigua cámara en primera persona.
+				Camara = new FirstPersonCamera(new Vector3(4000, 1500, 500), Input);
+			}
+
+			meshes.Add(arbolSelvatico);
+			meshes.Add(hummer);
+			meshes.Add(ametralladora2);
+			meshes.Add(canoa);
+			meshes.Add(helicopter);
+			meshes.Add(camionCisterna);
+			meshes.Add(tractor);
+			meshes.Add(barril);
+			meshes.Add(faraon);
+			meshes.AddRange(pastitos);
+			meshes.AddRange(rocas);
+			meshes.AddRange(palmeras);
+			meshes.AddRange(arbolesSelvaticos);
+
+			//quadtree = new Quadtree();
+			//quadtree.create(meshes, limits);
+			//quadtree.createDebugQuadtreeMeshes();
+
+			gameLoaded = true;
+		}
 
         public override void Update()
         {
-            PreUpdate();
-
-            if (!FPSCamera)
-            {
-                // Update jugador
-                jugador.mover(Input, posicionEnTerreno(jugador.Position.X, jugador.Position.Z), ElapsedTime, obstaculos);
-
-                // updownRot -= Input.YposRelative * 0.05f;
-                camaraInterna.OffsetHeight += Input.YposRelative;
-                camaraInterna.rotateY(Input.XposRelative * 0.05f);
-                camaraInterna.TargetDisplacement *= camaraInterna.RotationY * ElapsedTime;
-                // Hacer que la camara siga al personaje en su nueva posicion
-                camaraInterna.Target = jugador.Position;
-
-                var forward = camaraInterna.OffsetForward - Input.WheelPos * 10;
-                if (forward > 10)
-                {
-                    camaraInterna.OffsetForward -= Input.WheelPos * 10;
-                }
-
-                // Update SkyBox
-                // Cuando se quiera probar cámara en tercera persona
-                skyBox.Center = jugador.Position;
-            }
-            else
-            {
-                skyBox.Center = Camara.Position;
-            }          
-
-			// Update enemigos.
-			foreach (var enemy in enemigos)
+			PreUpdate();
+			if (!menu.GameStarted)
 			{
-				enemy.updateStatus(jugador.Position, ElapsedTime, obstaculos, posicionEnTerreno(enemy.Position.X, enemy.Position.Z));
-			}     
+				menu.Update(ElapsedTime, Input);
+			}
 
-            //chequear colisiones con balas
-            collisionManager.checkCollisions(ElapsedTime);
-            // Update HUD
-            updateText();
+			else if (!gameLoaded)
+			{
+                InitGame();
+			}
+
+			else
+			{
+				if (!FPSCamera)
+				{
+					// Update jugador
+					jugador.mover(Input, posicionEnTerreno(jugador.Position.X, jugador.Position.Z), ElapsedTime, obstaculos);
+
+					// updownRot -= Input.YposRelative * 0.05f;
+					camaraInterna.OffsetHeight += Input.YposRelative;
+					camaraInterna.rotateY(Input.XposRelative * 0.05f);
+					camaraInterna.TargetDisplacement *= camaraInterna.RotationY * ElapsedTime;
+					// Hacer que la camara siga al personaje en su nueva posicion
+					camaraInterna.Target = jugador.Position;
+
+					var forward = camaraInterna.OffsetForward - Input.WheelPos * 10;
+					if (forward > 10)
+					{
+						camaraInterna.OffsetForward -= Input.WheelPos * 10;
+					}
+
+					// Update SkyBox
+					// Cuando se quiera probar cámara en tercera persona
+					skyBox.Center = jugador.Position;
+				}
+				else
+				{
+					skyBox.Center = Camara.Position;
+				}
+
+				// Update enemigos.
+				foreach (var enemy in enemigos)
+				{
+					enemy.updateStatus(jugador.Position, ElapsedTime, obstaculos, posicionEnTerreno(enemy.Position.X, enemy.Position.Z));
+				}
+
+				//chequear colisiones con balas
+				collisionManager.checkCollisions(ElapsedTime);
+				// Update HUD
+				updateText();
+			}
         }
 
         public override void Render()
@@ -201,38 +237,45 @@ namespace TGC.Group.Model
             // Cuando tenemos postprocesado o shaders es mejor realizar las operaciones según nuestra conveniencia.
             PreRender();
 
-            // Render escenario
-            heightmap.render();
-            limits.render();
-            if (!FPSCamera)
-            {
-                skyBox.render();
+			if (!gameLoaded)
+			{
+				menu.Render();
+			}
 
-            }
-            else
-            {
-                DrawText.drawText(Convert.ToString(Camara.Position), 10, 1000, Color.OrangeRed);
-            }
+			else
+			{
+				// Render escenario
+				heightmap.render();
+				limits.render();
+				if (!FPSCamera)
+				{
+					skyBox.render();
 
-            Utils.renderFromFrustum(meshes, Frustum);
+				}
+				else
+				{
+					DrawText.drawText(Convert.ToString(Camara.Position), 10, 1000, Color.OrangeRed);
+				}
 
-            //TODO: Con QuadTree los FPS bajan. Tal vez sea porque 
-            //estan mas concentrados en una parte que en otra
-            //quadtree.render(Frustum, true);
+				Utils.renderFromFrustum(meshes, Frustum);
 
-            // Render jugador
-            jugador.render(ElapsedTime);
-            
-            // Render enemigos
-            enemigos.ForEach(e => e.render(ElapsedTime));            
+				//TODO: Con QuadTree los FPS bajan. Tal vez sea porque 
+				//estan mas concentrados en una parte que en otra
+				//quadtree.render(Frustum, true);
 
-            //renderizar balas y jugadores
-            collisionManager.renderAll(ElapsedTime);
+				// Render jugador
+				jugador.render(ElapsedTime);
 
-            // Render HUD
-            // DrawText.drawText("HEALTH: " + jugador.Health + "; BALAS: " + jugador.Arma.Balas + "; RECARGAS: " + jugador.Arma.Recargas, 50, 1000, Color.OrangeRed);
-            sombraTexto.render();
-			texto.render();       
+				// Render enemigos
+				enemigos.ForEach(e => e.render(ElapsedTime));
+
+				//renderizar balas y jugadores
+				collisionManager.renderAll(ElapsedTime);
+
+				// Render HUD
+				// DrawText.drawText("HEALTH: " + jugador.Health + "; BALAS: " + jugador.Arma.Balas + "; RECARGAS: " + jugador.Arma.Recargas, 50, 1000, Color.OrangeRed);
+				sombraTexto.render();
+				texto.render();			}
 
             // Finaliza el render y presenta en pantalla, al igual que el preRender se debe para casos puntuales es mejor utilizar a mano las operaciones de EndScene y PresentScene
             PostRender();
@@ -240,46 +283,55 @@ namespace TGC.Group.Model
 
         public override void Dispose()
         {
-            // Dispose escenario
-            heightmap.dispose();
-            skyBox.dispose();
+			if (!menu.GameStarted)
+			{
+				menu.Dispose();
+				heightmap.dispose();
+			}
 
-            casa.disposeAll();
+			else
+			{
+				// Dispose escenario
+				heightmap.dispose();
+				skyBox.dispose();
 
-            rocaOriginal.dispose();
-            palmeraOriginal.dispose();
-            pastito.dispose();
-            faraon.dispose();
-            arbolSelvatico.dispose();
-            cajita.dispose();
-            hummer.dispose();
-            canoa.dispose();
-            ametralladora2.dispose();
-            camionCisterna.dispose();
-            helicopter.dispose();
-            tractor.dispose();
-            barril.dispose();
-            // Dispose bounding boxes
-            obstaculos.ForEach(o => o.dispose());
+				casa.disposeAll();
 
-            limits.dispose();
-            // Dispose jugador
-            //jugador.dispose();
+				rocaOriginal.dispose();
+				palmeraOriginal.dispose();
+				pastito.dispose();
+				faraon.dispose();
+				arbolSelvatico.dispose();
+				cajita.dispose();
+				hummer.dispose();
+				canoa.dispose();
+				ametralladora2.dispose();
+				camionCisterna.dispose();
+				helicopter.dispose();
+				tractor.dispose();
+				barril.dispose();
+				// Dispose bounding boxes
+				obstaculos.ForEach(o => o.dispose());
 
-            // Dispose enemigos
-            //enemigos.ForEach(e => e.dispose());
-            collisionManager.disposeAll();
+				limits.dispose();
+				// Dispose jugador
+				//jugador.dispose();
 
-            // Dispose HUD
-			texto.Dispose();
-			sombraTexto.Dispose();
+				// Dispose enemigos
+				//enemigos.ForEach(e => e.dispose());
+				collisionManager.disposeAll();
 
-            meshes.Clear();
-            rocas.Clear();
-            pastitos.Clear();
-            arbolesSelvaticos.Clear();
-            palmeras.Clear();
-            cajitas.Clear();
+				// Dispose HUD
+				texto.Dispose();
+				sombraTexto.Dispose();
+
+				meshes.Clear();
+				rocas.Clear();
+				pastitos.Clear();
+				arbolesSelvaticos.Clear();
+				palmeras.Clear();
+				cajitas.Clear();
+			}
         }
 
 #region Métodos Auxiliares

@@ -95,7 +95,7 @@ namespace TGC.Group.Form
 
             //Juego a ejecutar, si quisiéramos tener diferentes modelos aquí podemos cambiar la instancia e invocar a otra clase.
             Modelo = new Shooter(currentDirectory + Game.Default.MediaDirectory,
-                currentDirectory + Game.Default.ShadersDirectory);
+			                     currentDirectory + Game.Default.ShadersDirectory, ClientSize);
 
             //Cargar juego.
             ExecuteModel();

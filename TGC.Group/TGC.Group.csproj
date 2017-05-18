@@ -151,6 +151,8 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
+    <Compile Include="Model\Menu.cs" />
+    <Compile Include="Model\Cameras\MenuCamera.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
