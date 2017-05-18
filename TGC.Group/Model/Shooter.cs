@@ -125,16 +125,16 @@ namespace TGC.Group.Model
             initObstaculos();
 
             // Iniciar cámara
-            if (!FPSCamera){ 
+            if (!FPSCamera) {
                 // Configurar cámara en Tercera Persona y la asigno al TGC.
                 camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40, 50, -50), 100, 150, Input);
                 Camara = camaraInterna;
             }
-            else{
+            else {
                 // Antigua cámara en primera persona.
                 Camara = new FirstPersonCamera(new Vector3(4000, 1500, 500), Input);
-            }           
-            
+            }
+
             meshes.Add(arbolSelvatico);
             meshes.Add(hummer);
             meshes.Add(ametralladora2);
@@ -202,7 +202,7 @@ namespace TGC.Group.Model
             // Inicio el render de la escena, para ejemplos simples.
             // Cuando tenemos postprocesado o shaders es mejor realizar las operaciones según nuestra conveniencia.
             PreRender();
-
+            
             // Render escenario
             heightmap.render();
             limits.render();
@@ -447,7 +447,7 @@ namespace TGC.Group.Model
             Utils.aleatorioXZExceptoRadioInicial(arbolSelvatico, arbolesSelvaticos, 20);
             for (int i = countArboles; i <= arbolesSelvaticos.Count - 1; i++)
             {                
-                var s= rndm.Next(1, 6);
+                var s= rndm.Next(3, 6);
                 var arbol = arbolesSelvaticos[i];
 
                 arbol.AutoTransformEnable = false;
@@ -501,6 +501,21 @@ namespace TGC.Group.Model
             hummer.Transform = Matrix.Scaling(hummer.Scale) * Matrix.Translation(hummer.Position) * hummer.Transform;
             hummer.createBoundingBox();
             hummer.updateBoundingBox();
+
+
+            var anotherHummer = hummer.createMeshInstance(hummer.Name + "1");
+            anotherHummer.Position = new Vector3(hummer.Position.X + 250, hummer.Position.Y, hummer.Position.Z);
+            anotherHummer.Scale = hummer.Scale;
+            anotherHummer.rotateY(FastMath.QUARTER_PI);
+            anotherHummer.AutoTransformEnable = false;
+            anotherHummer.Transform = Matrix.RotationY(anotherHummer.Rotation.Y)
+                                       * Matrix.Scaling(anotherHummer.Scale)
+                                       * Matrix.Translation(anotherHummer.Position)
+                                       * anotherHummer.Transform;
+            anotherHummer.createBoundingBox();
+            anotherHummer.updateBoundingBox();
+
+            meshes.Add(anotherHummer);
 
             //helicoptero
             helicopter = cargarMesh(MediaDir + "Meshes\\Vehiculos\\HelicopteroMilitar\\HelicopteroMilitar-TgcScene.xml");
@@ -609,9 +624,22 @@ namespace TGC.Group.Model
             collisionManager.agregarAABB(canoa.BoundingBox);
             collisionManager.agregarAABB(helicopter.BoundingBox);
             collisionManager.agregarAABB(camionCisterna.BoundingBox);
-            collisionManager.agregarAABB(hummer.BoundingBox);
+            
             collisionManager.agregarAABB(tractor.BoundingBox);
             collisionManager.agregarAABB(arbolSelvatico.BoundingBox);
+
+            collisionManager.agregarAABB(hummer.BoundingBox);
+            foreach (var mesh in hummer.MeshInstances)
+            {
+                var obb = new TgcBoundingOrientedBox();
+
+                obb.Center = mesh.BoundingBox.calculateBoxCenter();
+                obb.Extents = mesh.BoundingBox.calculateAxisRadius();
+
+                obb.setRotation(new Vector3(0, mesh.Rotation.Y, 0));
+                collisionManager.agregarAABB(mesh.BoundingBox);
+                collisionManager.agregarOBB(obb);
+            }
         }
 
 		private void initText() {
