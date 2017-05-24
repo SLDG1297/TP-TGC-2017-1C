@@ -88,7 +88,7 @@ namespace TGC.Group.Model.Collisions
                 if (lista.Count == 0)
                 {
                     //si iba en direccion opuesta al aabb, me muevo en la direccion normal
-                    res = -desplazamiento;
+                    res = -desplazamiento - dif;
                 }
                 else
                 {
