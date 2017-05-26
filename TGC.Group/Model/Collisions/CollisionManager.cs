@@ -67,6 +67,7 @@ namespace TGC.Group.Model.Collisions
             var obs = boundingBoxes.FindAll(
                 boundingBox => TgcCollisionUtils.testAABBCylinder(boundingBox, cylinder));
 
+            //interseccion de la direccion de movimiento del jugador con el cilindro
             var intersection = new Vector3();
             var lista = boundingBoxes.FindAll(
                 bb => TgcCollisionUtils.intersectSegmentAABB(personaje.Position, desplazamiento, bb, out intersection));
@@ -123,9 +124,19 @@ namespace TGC.Group.Model.Collisions
             var obs = boundingCylinders.FindAll(
                 boundingCylinder => TgcCollisionUtils.testCylinderCylinder(boundingCylinder, cylinder));
 
+
+            Vector3 intersection = new Vector3();
+
+            var intersectCylinders = boundingCylinders.FindAll(
+                boundingCylinder => intersectSegmentCylinder(desplazamiento,personaje.Position,  boundingCylinder, out intersection)
+                );
+            intersection.Y = 0;
+
+
             if (obs.Count > 0)
             {
                 cylinder.setRenderColor(Color.Red);
+                var dif = new Vector3();
 
                 foreach (var cilindro in obs)
                 {
@@ -134,25 +145,27 @@ namespace TGC.Group.Model.Collisions
                     var puntoqestorba = TgcCollisionUtils.closestPointCylinder(center, cylinder);
                     //distancia entre el punto del cilindro y su centro
                     var distance = puntoqestorba - cylinder.Center;
+                    dif = puntoqestorba - cylinder.Center;
+                    //res -= distance;
+                }
 
-                    res -= distance;
+                if(intersectCylinders.Count == 0)
+                {
+                    //si iba en direccion opuesta al cilindro, me muevo en la direccion normal
+                    res = -desplazamiento - dif;
+                }
+                else
+                {
+                    res = -dif;
                 }
             }
             else
             {
                 cylinder.setRenderColor(Color.Yellow);
 
-                float time;
-                Vector3 intersection = new Vector3();
-                TgcBoundingCylinder cil = new TgcBoundingCylinder(cylinder.Center,cylinder.Radius,cylinder.HalfLength);
-                cil.Rotation = new Vector3(0, 0, 0);
-
-                var intersectCylinders = boundingCylinders.FindAll(
-                    bb => TgcCollisionUtils.intersectSegmentCylinder(personaje.Position,desplazamiento, cil, out time, out intersection)
-                    );
-
                 if(intersectCylinders.Count > 0)
                 {
+                    //si el vector desplazamiento resulta que intersecta con el cilindro, rebotar
                     res = desplazamiento - intersection;
                 }
             }
@@ -161,6 +174,20 @@ namespace TGC.Group.Model.Collisions
             return res;
         }
 
+        public bool intersectSegmentCylinder(Vector3 segmentInit, Vector3 segmentEnd, TgcBoundingCylinderFixedY cilindro, out Vector3 intersection)
+        {
+            float time;
+            Vector3 interseccion = new Vector3();
+            //cilindro auxiliar con los mismos valores que el cilindro recibido como parametro
+            //porque el framework no tiene un metodo que trabaje con cilindros orientados en Y
+            TgcBoundingCylinder cil = new TgcBoundingCylinder(cilindro.Center, cilindro.Radius, cilindro.HalfLength);
+            cil.Rotation = new Vector3(0, 0, 0);
+
+            bool resultado = TgcCollisionUtils.intersectSegmentCylinder(segmentInit, segmentEnd, cil, out time, out interseccion);
+
+            intersection = interseccion;
+            return resultado;
+        }
 
         //TODO: Implementar!!
         public Vector3 adjustSphereCollisions(Personaje personaje, Vector3 desplazamiento)
