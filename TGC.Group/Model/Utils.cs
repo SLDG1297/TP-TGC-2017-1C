@@ -8,6 +8,7 @@ using TGC.Core.BoundingVolumes;
 using TGC.Core.Collision;
 using TGC.Core.Geometry;
 using TGC.Core.SceneLoader;
+using TGC.Core.Terrain;
 using TGC.Core.Utils;
 
 namespace TGC.Group.Model

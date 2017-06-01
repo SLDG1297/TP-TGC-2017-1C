@@ -98,6 +98,7 @@
     <Compile Include="Model\Optimization\Quadtree\QuadtreeNode.cs" />
     <Compile Include="Model\Shooter.cs" />
     <Compile Include="Model\Utils.cs" />
+    <Compile Include="Model\World.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form\GameForm.resx">

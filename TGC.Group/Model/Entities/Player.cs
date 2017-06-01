@@ -48,7 +48,7 @@ namespace TGC.Group.Model.Entities
             }
         }        
 
-		public void mover(TgcD3dInput Input, float posicionY, float ElapsedTime, List<TgcBoundingAxisAlignBox> obstaculos) {
+		public void mover(TgcD3dInput Input, float posicionY, float ElapsedTime) {
             //Calcular proxima posicion de personaje segun Input
             var moveForward = 0f;
             var moveLeftRight = 0f;
