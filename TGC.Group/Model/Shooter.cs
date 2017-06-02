@@ -20,6 +20,7 @@ using TGC.Group.Model.Collisions;
 using TGC.Group.Model.Optimization.Quadtree;
 using TGC.Core.Shaders;
 using Microsoft.DirectX.Direct3D;
+using TGC.Core.Interpolation;
 
 namespace TGC.Group.Model
 {
@@ -66,13 +67,27 @@ namespace TGC.Group.Model
 
         //otros
         private CollisionManager collisionManager;
-		private bool FPSCamera = true;
+		private bool FPSCamera = false;
         private Quadtree quadtree;
 
         //efectos
-        private Surface g_pDepthStencil; // Depth-stencil buffer
-        private Texture g_pRenderTarget, g_pRenderTarget4, g_pRenderTarget4Aux;
-        private VertexBuffer g_pVBV3D;
+        private TgcTexture alarmTexture;
+        private Effect gaussianBlur;
+        private Effect alarmaEffect;
+
+        private Surface depthStencil; // Depth-stencil buffer
+        private Surface depthStencilOld;
+
+        private Surface pOldRT;
+        private Surface pOldDS;
+
+        //vertex buffer de los triangulos
+        private VertexBuffer screenQuadVB;
+        //Render Targer sobre el cual se va a dibujar la pantalla
+        private Texture renderTarget2D, g_pRenderTarget4, g_pRenderTarget4Aux;
+        private InterpoladorVaiven intVaivenAlarm;
+
+        private bool efecto = false;
 
         /// <summary>
         ///     Constructor del juego.
@@ -97,6 +112,8 @@ namespace TGC.Group.Model
             world = new World();
 			initHeightmap();
 			Camara = new MenuCamera(windowSize);
+
+            loadPostProcessShaders();
         }
 
 		public void InitGame()
@@ -136,7 +153,73 @@ namespace TGC.Group.Model
             //quadtree.create(world.Meshes, limits);
             //quadtree.createDebugQuadtreeMeshes();
             gameLoaded = true;
+            loadPostProcessShaders();
 		}
+
+        public void loadPostProcessShaders()
+        {
+            var device = D3DDevice.Instance.Device;
+            //Se crean 2 triangulos (o Quad) con las dimensiones de la pantalla con sus posiciones ya transformadas
+            // x = -1 es el extremo izquiedo de la pantalla, x = 1 es el extremo derecho
+            // Lo mismo para la Y con arriba y abajo
+            // la Z en 1 simpre
+            CustomVertex.PositionTextured[] screenQuadVertices =
+            {
+                new CustomVertex.PositionTextured(-1, 1, 1, 0, 0),
+                new CustomVertex.PositionTextured(1, 1, 1, 1, 0),
+                new CustomVertex.PositionTextured(-1, -1, 1, 0, 1),
+                new CustomVertex.PositionTextured(1, -1, 1, 1, 1)
+            };
+
+            //vertex buffer de los triangulos
+            screenQuadVB = new VertexBuffer(typeof(CustomVertex.PositionTextured),
+                4, D3DDevice.Instance.Device, Usage.Dynamic | Usage.WriteOnly,
+                CustomVertex.PositionTextured.Format, Pool.Default);
+            screenQuadVB.SetData(screenQuadVertices, 0, LockFlags.None);
+
+            //inicializo render target
+            renderTarget2D = new Texture(device,
+                device.PresentationParameters.BackBufferWidth, 
+                device.PresentationParameters.BackBufferHeight, 1, Usage.RenderTarget,
+                Format.X8R8G8B8, Pool.Default);
+
+            g_pRenderTarget4 = new Texture(device, device.PresentationParameters.BackBufferWidth / 4, 
+                                           device.PresentationParameters.BackBufferHeight / 4, 1, Usage.RenderTarget,
+                                           Format.X8R8G8B8, Pool.Default);
+
+            g_pRenderTarget4Aux = new Texture(device, device.PresentationParameters.BackBufferWidth / 4,
+                                             device.PresentationParameters.BackBufferHeight / 4, 1, Usage.RenderTarget,
+                                             Format.X8R8G8B8, Pool.Default);
+
+            //Creamos un DepthStencil que debe ser compatible con nuestra definicion de renderTarget2D.
+            depthStencil =
+                device.CreateDepthStencilSurface(
+                    device.PresentationParameters.BackBufferWidth,
+                    device.PresentationParameters.BackBufferHeight,
+                    DepthFormat.D24S8, MultiSampleType.None, 0, true);
+            depthStencilOld = device.DepthStencilSurface;
+
+            //cargo los shaders
+            alarmaEffect = TgcShaders.loadEffect(ShadersDir + "PostProcess.fx");
+            alarmaEffect.Technique = "AlarmaTechnique";
+
+            gaussianBlur = TgcShaders.loadEffect(ShadersDir + "GaussianBlur.fx");
+            gaussianBlur.Technique = "DefaultTechnique";
+            gaussianBlur.SetValue("g_RenderTarget", renderTarget2D);
+            // Resolucion de pantalla
+            gaussianBlur.SetValue("screen_dx", device.PresentationParameters.BackBufferWidth);
+            gaussianBlur.SetValue("screen_dy", device.PresentationParameters.BackBufferHeight);
+
+            //Cargar textura que se va a dibujar arriba de la escena del Render Target
+            alarmTexture = TgcTexture.createTexture(D3DDevice.Instance.Device, MediaDir + "Texturas\\efecto_alarma.png");
+
+            //Interpolador para efecto de variar la intensidad de la textura de alarma
+            intVaivenAlarm = new InterpoladorVaiven();
+            intVaivenAlarm.Min = 0;
+            intVaivenAlarm.Max = 1;
+            intVaivenAlarm.Speed = 5;
+            intVaivenAlarm.reset();
+        }
 
         public override void Update()
         {
@@ -190,55 +273,209 @@ namespace TGC.Group.Model
 				// Update HUD
 				updateText();
 			}
-        }
 
+            
+        }
+        
         public override void Render()
         {
-            // Inicio el render de la escena, para ejemplos simples.
-            // Cuando tenemos postprocesado o shaders es mejor realizar las operaciones según nuestra conveniencia.
-            PreRender();            
+            ClearTextures();
+            var device = D3DDevice.Instance.Device;
 
+            //esto es renderizar todo como viene, sin efectos
+            gaussianBlur.Technique = "DefaultTechnique";
+            alarmaEffect.Technique = "DefaultTechnique";
+
+            //Cargamos el Render Targer al cual se va a dibujar la escena 3D. Antes nos guardamos el surface original 
+            //En vez de dibujar a la pantalla, dibujamos a un buffer auxiliar, nuestro Render Target.
+            //p0ldRT : antiguo render target
+            pOldRT = device.GetRenderTarget(0);
+            var pSurf = renderTarget2D.GetSurfaceLevel(0);
+            if (seDebeActivarEfecto())
+            {
+                device.SetRenderTarget(0, pSurf);
+            }
+            //poldDs : old depthstencil
+            pOldDS = device.DepthStencilSurface;
+
+            if (seDebeActivarEfecto()) device.DepthStencilSurface = depthStencilOld;
+
+            device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
+
+            //Dibujamos la escena comun, pero en vez de a la pantalla al Render Target
+            drawScene(device, ElapsedTime);
+
+            //Liberar memoria de surface de Render Target
+            pSurf.Dispose();
+
+            if (seDebeActivarEfecto())
+            {
+                drawGaussianBlur(device);
+                //if(jugador.Health < 20) drawAlarm(device, ElapsedTime);
+            }
+
+            device.BeginScene();
+            RenderFPS();
+            if (gameLoaded)
+            {
+                RenderAxis();
+                sombraTexto.render();
+                texto.render();
+
+                if(FPSCamera) DrawText.drawText(Convert.ToString(Camara.Position), 10, 1000, Color.OrangeRed);
+            }
+            device.EndScene();
+            device.Present();
+        }
+
+
+        private bool seDebeActivarEfecto()
+        {
+            return gameLoaded && efecto ;
+        }
+
+        public void drawScene(Device device, float ElapsedTime)
+        {
+            //dibujo la escena al render target
+            device.BeginScene();
             if (!gameLoaded)
-			{
-				menu.Render();
-			}
-			else
-			{
-	            // Render escenario
-	            heightmap.render();
-	            //limits.render();
-	            if (!FPSCamera)
-	            {
-	                skyBox.render();
+            {
+                menu.Render();
+            }
+            else
+            {
+                var lista = world.Meshes;
 
-	            }
-	            else
-	            {
-	                DrawText.drawText(Convert.ToString(Camara.Position), 10, 1000, Color.OrangeRed);
-	            }
+                // Render escenario
+                heightmap.render();
+                //limits.render();
+                if (!FPSCamera) skyBox.render();         
 
-	            Utils.renderFromFrustum(world.Meshes, Frustum);
+                Utils.renderFromFrustum(world.Meshes, Frustum);
+                Utils.renderFromFrustum(enemigos, Frustum,ElapsedTime);
+                //TODO: Con QuadTree los FPS bajan. Tal vez sea porque 
+                //estan mas concentrados en una parte que en otra
+                //quadtree.render(Frustum, true);
 
-	            //TODO: Con QuadTree los FPS bajan. Tal vez sea porque 
-	            //estan mas concentrados en una parte que en otra
-	            //quadtree.render(Frustum, true);
+                // Render jugador
+                jugador.render(ElapsedTime);               
 
-	            // Render jugador
-	            jugador.render(ElapsedTime);
-	            
-	            // Render enemigos
-	            enemigos.ForEach(e => e.render(ElapsedTime));            
+                //renderizar balas
+                collisionManager.renderAll(ElapsedTime);
+            }
+            device.EndScene();
+        }
 
-	            //renderizar balas y jugadores
-	            collisionManager.renderAll(ElapsedTime);
+        public void drawGaussianBlur(Device device)
+        {
+            int pasadas = 2;
+            
+            var pSurf = g_pRenderTarget4.GetSurfaceLevel(0);
+            device.SetRenderTarget(0, pSurf);
+            device.BeginScene();
 
-	            // Render HUD
-	            // DrawText.drawText("HEALTH: " + jugador.Health + "; BALAS: " + jugador.Arma.Balas + "; RECARGAS: " + jugador.Arma.Recargas, 50, 1000, Color.OrangeRed);
-	            sombraTexto.render();
-				texto.render();
-			}
-            // Finaliza el render y presenta en pantalla, al igual que el preRender se debe para casos puntuales es mejor utilizar a mano las operaciones de EndScene y PresentScene
-            PostRender();
+            gaussianBlur.Technique = "DownFilter4";
+            device.VertexFormat = CustomVertex.PositionTextured.Format;
+            device.SetStreamSource(0, screenQuadVB, 0);
+            gaussianBlur.SetValue("g_RenderTarget", renderTarget2D);
+
+            device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
+            gaussianBlur.Begin(FX.None);
+            gaussianBlur.BeginPass(0);
+            device.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+            gaussianBlur.EndPass();
+            gaussianBlur.End();
+            pSurf.Dispose();
+            device.DepthStencilSurface = pOldDS;
+            device.EndScene();
+
+            device.DepthStencilSurface = pOldDS;
+
+            //pasadas de blur
+            for (var P = 0; P < pasadas ; ++P)
+            {
+
+              // Gaussian blur Horizontal
+              // -----------------------------------------------------
+              pSurf = g_pRenderTarget4Aux.GetSurfaceLevel(0);
+              device.SetRenderTarget(0, pSurf);
+             // dibujo el quad pp dicho :
+              device.BeginScene();
+
+               gaussianBlur.Technique = "GaussianBlurSeparable";
+               device.VertexFormat = CustomVertex.PositionTextured.Format;
+               device.SetStreamSource(0, screenQuadVB, 0);
+               gaussianBlur.SetValue("g_RenderTarget", g_pRenderTarget4);
+
+               device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
+               gaussianBlur.Begin(FX.None);
+               gaussianBlur.BeginPass(0);
+               device.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+               gaussianBlur.EndPass();
+               gaussianBlur.End();
+               pSurf.Dispose();
+
+               device.EndScene();
+
+                if (P < pasadas - 1)
+                {
+                    pSurf = g_pRenderTarget4.GetSurfaceLevel(0);
+                    device.SetRenderTarget(0, pSurf);
+                    pSurf.Dispose();
+                    device.BeginScene();
+                }
+                else
+                    // Ultima pasada vertical va sobre la pantalla pp dicha
+                    device.SetRenderTarget(0, pOldRT);
+
+                    //  Gaussian blur Vertical
+                    // ----
+                    gaussianBlur.Technique = "GaussianBlurSeparable";
+                    device.VertexFormat = CustomVertex.PositionTextured.Format;
+                    device.SetStreamSource(0, screenQuadVB, 0);
+                    gaussianBlur.SetValue("g_RenderTarget", g_pRenderTarget4Aux);
+
+                    device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
+                    gaussianBlur.Begin(FX.None);
+                    gaussianBlur.BeginPass(1);
+                    device.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+                    gaussianBlur.EndPass();
+                    gaussianBlur.End();
+
+                    if (P < pasadas - 1)
+                    {
+                        device.EndScene();
+                    }
+                }       
+        }
+
+
+        public void drawAlarm(Device device, float elapsedTime)
+        {
+            device.SetRenderTarget(0, pOldRT);
+            device.DepthStencilSurface = depthStencilOld;
+            //Arrancamos la escena
+            device.BeginScene();
+            device.VertexFormat = CustomVertex.PositionTextured.Format;
+            device.SetStreamSource(0, screenQuadVB, 0);
+
+
+            alarmaEffect.Technique = "AlarmaTechnique";
+
+            //Cargamos parametros en el shader de Post-Procesado
+            alarmaEffect.SetValue("render_target2D", renderTarget2D);
+            alarmaEffect.SetValue("textura_alarma", alarmTexture.D3dTexture);
+            alarmaEffect.SetValue("alarmaScaleFactor", intVaivenAlarm.update(elapsedTime));
+
+            //Limiamos la pantalla y ejecutamos el render del shader
+            device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
+            alarmaEffect.Begin(FX.None);
+            alarmaEffect.BeginPass(0);
+            device.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+            alarmaEffect.EndPass();
+            alarmaEffect.End();
+
+            device.EndScene();
         }
 
         public override void Dispose()
@@ -268,6 +505,15 @@ namespace TGC.Group.Model
 				texto.Dispose();
 				sombraTexto.Dispose();
 			}
+
+            gaussianBlur.Dispose();
+            alarmaEffect.Dispose();
+            renderTarget2D.Dispose();
+            g_pRenderTarget4Aux.Dispose();
+            g_pRenderTarget4.Dispose();
+            screenQuadVB.Dispose();
+            depthStencil.Dispose();
+            depthStencilOld.Dispose();
         }
 
 #region Métodos Auxiliares

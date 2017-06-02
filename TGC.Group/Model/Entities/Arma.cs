@@ -131,8 +131,11 @@ namespace TGC.Group.Model.Entities
 
             bala.Position += desplazamiento;
             bala.AutoTransformEnable = false;
+            
             bala.Transform = Matrix.RotationX(-FastMath.PI_HALF) * Matrix.Scaling(0.005f, 0.005f, 0.005f) * Matrix.Translation(bala.Position);
+            bala.updateBoundingBox();
             bala.BoundingBox.transform(bala.Transform);
+            
         }
 
         public void dispose()

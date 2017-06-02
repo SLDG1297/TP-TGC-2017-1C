@@ -10,6 +10,7 @@ using TGC.Core.Geometry;
 using TGC.Core.SceneLoader;
 using TGC.Core.Terrain;
 using TGC.Core.Utils;
+using TGC.Group.Model.Entities;
 
 namespace TGC.Group.Model
 {
@@ -212,6 +213,18 @@ namespace TGC.Group.Model
                 if (r != TgcCollisionUtils.FrustumResult.OUTSIDE)
                 {
                     mesh.render();
+                }
+            }
+        }
+
+        public static void renderFromFrustum(List<Enemy> enemigos, TgcFrustum frustum, float elapsedTime)
+        {
+            foreach (var enemigo in enemigos)
+            {
+                var r = TgcCollisionUtils.classifyFrustumAABB(frustum, enemigo.Esqueleto.BoundingBox);
+                if (r != TgcCollisionUtils.FrustumResult.OUTSIDE)
+                {
+                    enemigo.render(elapsedTime);
                 }
             }
         }
