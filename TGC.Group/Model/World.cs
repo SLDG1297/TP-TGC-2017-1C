@@ -27,7 +27,7 @@ namespace TGC.Group.Model
         private Vector3 CENTRO = new Vector3(0, 0, 0);
 
         // Escenario
-        private TgcSimpleTerrain heightmap;
+        private Terreno terreno;
 
         private TgcScene casa;
         private TgcMesh rocaOriginal;
@@ -64,16 +64,16 @@ namespace TGC.Group.Model
         private List<TgcMesh> meshes = new List<TgcMesh>();
 
         private CollisionManager collisionManager;
-
-
-        public void initWorld(string MediaDir, TgcSimpleTerrain heightmap)
+        
+        public void initWorld(string MediaDir, Terreno terreno)
         {
-            this.heightmap = heightmap;
+            this.terreno = terreno;
             collisionManager = CollisionManager.Instance;
 
             initObjects(MediaDir);
             initializeList();
         }
+
 
         public void initObjects(string MediaDir)
         {
@@ -90,7 +90,7 @@ namespace TGC.Group.Model
                 mesh.AutoTransformEnable = false;
                 mesh.Transform = Matrix.Scaling(1.5f, 2f, 1.75f) * Matrix.RotationY(FastMath.PI_HALF + FastMath.PI) * Matrix.Translation(mesh.Position);
             }
-            corregirAltura(casa.Meshes);
+            terreno.corregirAltura(casa.Meshes);
 
             // Creación de palmeras dispuestas circularmente.
             string palmeraDir = MediaDir + "Meshes\\Vegetation\\Palmera\\Palmera-TgcScene.xml";
@@ -102,7 +102,7 @@ namespace TGC.Group.Model
                 palmera.Scale = new Vector3(1.5f, 1.5f, 1.5f);
                 palmera.Transform = Matrix.Scaling(palmera.Scale) * palmera.Transform;
             }
-            corregirAltura(palmeras);
+            terreno.corregirAltura(palmeras);
 
             // Creación de pastitos.
             string pastitoDir = MediaDir + "Meshes\\Vegetation\\Pasto\\Pasto-TgcScene.xml";
@@ -121,7 +121,7 @@ namespace TGC.Group.Model
             //pongo los pastitos en aleatorio, pero los saco del circulo celeste del medio
             Utils.aleatorioXZExceptoRadioInicial(pastito, pastitos, 2500);
 
-            corregirAltura(pastitos);
+            terreno.corregirAltura(pastitos);
 
             //arbustitos
             arbusto = cargarMesh(MediaDir + "Meshes\\Vegetation\\Arbusto\\Arbusto-TgcScene.xml");
@@ -129,7 +129,7 @@ namespace TGC.Group.Model
             arbusto.Scale = new Vector3(0.5f, 0.5f, 0.5f);
             pastito.AutoTransformEnable = false;
             Utils.aleatorioXZExceptoRadioInicial(arbusto, arbustitos, 2000);
-            corregirAltura(arbustitos);
+            terreno.corregirAltura(arbustitos);
 
             // Creación de faraón.
             string faraonDir = MediaDir + "Meshes\\Objetos\\EstatuaFaraon\\EstatuaFaraon-TgcScene.xml";
@@ -163,7 +163,7 @@ namespace TGC.Group.Model
             cajaFuturistica = cargarMesh(MediaDir + "Meshes\\Objetos\\CajaMetalFuturistica2\\CajaMetalFuturistica2-TgcScene.xml");
             var cantCajitas = cajitas.Count;
             Utils.aleatorioXZExceptoRadioInicial(cajaFuturistica, cajitas, 25);
-            corregirAltura(cajitas);
+            terreno.corregirAltura(cajitas);
 
             for (int i = cantCajitas; i < cajitas.Count; i++)
             {
@@ -182,7 +182,7 @@ namespace TGC.Group.Model
             //ametralladora
             ametralladora = cargarMesh(MediaDir + "Meshes\\Armas\\MetralladoraFija\\MetralladoraFija-TgcScene.xml");
             ametralladora.AutoTransformEnable = false;
-            ametralladora.Position = new Vector3(1894, this.posicionEnTerreno(1894, 10793), 10793);
+            ametralladora.Position = new Vector3(1894, terreno.posicionEnTerreno(1894, 10793), 10793);
             ametralladora.Transform = Matrix.Translation(ametralladora.Position);
 
             //creacion de arboles selvaticos
@@ -195,7 +195,7 @@ namespace TGC.Group.Model
 
             //TODO: ajustar posicion segun heightmap (Hecho, aunque funciona mal todavía)
             // Frontera este de árboles
-            Utils.disponerEnLineaX(arbolSelvatico, arbolesSelvaticos, 50, 450, new Vector3(-6000, posicionEnTerreno(-6000, 15200), 15200));
+            Utils.disponerEnLineaX(arbolSelvatico, arbolesSelvaticos, 50, 450, new Vector3(-6000, terreno.posicionEnTerreno(-6000, 15200), 15200));
 
             //frontera sur de arboles
             var pos = arbolesSelvaticos.Last().Position;
@@ -225,7 +225,7 @@ namespace TGC.Group.Model
                 arbol.Scale = new Vector3(s, s, s);
                 arbol.Transform = Matrix.Scaling(arbol.Scale) * arbol.Transform;
             }
-            corregirAltura(arbolesSelvaticos);
+            terreno.corregirAltura(arbolesSelvaticos);
 
             // Creación de rocas.
             string rocaDir = MediaDir + "Meshes\\Vegetation\\Roca\\Roca-TgcScene.xml";
@@ -257,7 +257,7 @@ namespace TGC.Group.Model
                 rocas[i].Scale = new Vector3(4.0f, 4.0f, 4.0f);
                 rocas[i].Transform = Matrix.Scaling(rocas[i].Scale) * rocas[i].Transform;
             }
-            corregirAltura(rocas);
+            terreno.corregirAltura(rocas);
 
             //barril
             barril = cargarMesh(MediaDir + "Meshes\\Objetos\\BarrilPolvora\\BarrilPolvora-TgcScene.xml");
@@ -266,7 +266,7 @@ namespace TGC.Group.Model
 
             // Autitos!
             hummer = cargarMesh(MediaDir + "Meshes\\Vehiculos\\Hummer\\Hummer-TgcScene.xml");
-            hummer.Position = new Vector3(1754, this.posicionEnTerreno(1754, 9723), 9723);
+            hummer.Position = new Vector3(1754, terreno.posicionEnTerreno(1754, 9723), 9723);
             hummer.Scale = new Vector3(1.1f, 1.08f, 1.25f);
             hummer.AutoTransformEnable = false;
             hummer.Transform = Matrix.Scaling(hummer.Scale) * Matrix.Translation(hummer.Position) * hummer.Transform;
@@ -298,14 +298,14 @@ namespace TGC.Group.Model
 
             //tanque
             tanqueFuturista = cargarMesh(MediaDir + "Meshes\\Vehiculos\\TanqueFuturistaRuedas\\TanqueFuturistaRuedas-TgcScene.xml");
-            tanqueFuturista.Position = new Vector3(11000, posicionEnTerreno(11000, 6295), 6295);
+            tanqueFuturista.Position = new Vector3(11000, terreno.posicionEnTerreno(11000, 6295), 6295);
             tanqueFuturista.Scale = new Vector3(3f, 3f, 3f);
             tanqueFuturista.updateBoundingBox();
 
             //agrego otra instancia del tanque, la desplazo, roto y ajusto su posicion en Y
             var anotherTank = tanqueFuturista.createMeshInstance(tanqueFuturista.Name + "1");
             var posTanque2 = tanqueFuturista.Position + new Vector3(650, 0, -450);
-            anotherTank.Position = new Vector3(posTanque2.X, posicionEnTerreno(posTanque2.X, posTanque2.Z), posTanque2.Z);
+            anotherTank.Position = new Vector3(posTanque2.X, terreno.posicionEnTerreno(posTanque2.X, posTanque2.Z), posTanque2.Z);
             anotherTank.Scale = tanqueFuturista.Scale;
             anotherTank.rotateY(FastMath.PI_HALF);
 
@@ -515,67 +515,12 @@ namespace TGC.Group.Model
         TgcScene cargarScene(string unaDireccion)
         {
             return new TgcSceneLoader().loadSceneFromFile(unaDireccion);
-        }
-
-
-        void corregirAltura(List<TgcMesh> meshes)
-        {
-            foreach (var mesh in meshes)
-            {
-                float posicionY = this.posicionEnTerreno(mesh.Position.X, mesh.Position.Z);
-                mesh.Position = new Vector3(mesh.Position.X, posicionY, mesh.Position.Z);
-                mesh.Transform = Matrix.Translation(0, posicionY, 0) * mesh.Transform;
-            }
-        }
-
-        public float posicionEnTerreno(float x, float z)
-        {
-            // Da la posición del terreno en función del heightmap.
-            int numeroMagico1 = 200;
-            int numeroMagico2 = numeroMagico1 - 1;
-            var largo = MAP_SCALE_XZ * numeroMagico1;
-            var pos_i = numeroMagico1 * (0.5f + x / largo);
-            var pos_j = numeroMagico1 * (0.5f + z / largo);
-
-            var pi = (int)pos_i;
-            var fracc_i = pos_i - pi;
-            var pj = (int)pos_j;
-            var fracc_j = pos_j - pj;
-
-            if (pi < 0)
-                pi = 0;
-            else if (pi > numeroMagico2)
-                pi = numeroMagico2;
-
-            if (pj < 0)
-                pj = 0;
-            else if (pj > numeroMagico2)
-                pj = numeroMagico2;
-
-            var pi1 = pi + 1;
-            var pj1 = pj + 1;
-            if (pi1 > numeroMagico2)
-                pi1 = numeroMagico2;
-            if (pj1 > numeroMagico2)
-                pj1 = numeroMagico2;
-
-            var H0 = heightmap.HeightmapData[pi, pj] * MAP_SCALE_Y;
-            var H1 = heightmap.HeightmapData[pi1, pj] * MAP_SCALE_Y;
-            var H2 = heightmap.HeightmapData[pi, pj1] * MAP_SCALE_Y;
-            var H3 = heightmap.HeightmapData[pi1, pj1] * MAP_SCALE_Y;
-            var H = (H0 * (1 - fracc_i) + H1 * fracc_i) * (1 - fracc_j) +
-                    (H2 * (1 - fracc_i) + H3 * fracc_i) * fracc_j;
-            return H;
-        }
-
+        }        
+        
         public List<TgcMesh> Meshes
         {
             get { return meshes; }
         }
-
-        public TgcSimpleTerrain Heightmap
-        {
-            get { return heightmap;  }
-        }
+        
     }
 }

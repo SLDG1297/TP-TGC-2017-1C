@@ -47,8 +47,7 @@ namespace TGC.Group.Model.Collisions
             //calculos de choque de balas, muerte de jugadores
             checkBulletCollisions(ElapsedTime);
         }
-        
-        
+
         public Vector3 adjustPosition(Personaje personaje, Vector3 desplazamiento)
         {
             var res1 = adjustAABBCollisions(personaje, desplazamiento);

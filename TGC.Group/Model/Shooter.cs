@@ -42,7 +42,7 @@ namespace TGC.Group.Model
      
         //skybox
         private TgcSkyBox skyBox;
-        private TgcSimpleTerrain heightmap;
+        private Terreno terreno;
 
         //mundo con objetos
         private World world;
@@ -94,7 +94,7 @@ namespace TGC.Group.Model
         /// </summary>
         /// <param name="mediaDir">Ruta donde esta la carpeta con los assets</param>
         /// <param name="shadersDir">Ruta donde esta la carpeta con los shaders</param>
-		public Shooter(string mediaDir, string shadersDir, Size windowSize) : base(mediaDir, shadersDir)
+        public Shooter(string mediaDir, string shadersDir, Size windowSize) : base(mediaDir, shadersDir)
         {
             Category = Game.Default.Category;
             Name = Game.Default.Name;
@@ -125,7 +125,7 @@ namespace TGC.Group.Model
 
             // Iniciar escenario
             //initHeightmap();
-            world.initWorld(MediaDir, heightmap);
+            world.initWorld(MediaDir, terreno);
 			initSkyBox();
 
 			var pmin = new Vector3(-16893, -2000, 17112);
@@ -142,7 +142,7 @@ namespace TGC.Group.Model
             // Iniciar cámara
             if (!FPSCamera) {
                 // Configurar cámara en Tercera Persona y la asigno al TGC.
-                camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40, 50, -50), 100, 150, Input);
+                camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40, 50, -50), 50, 150, Input);
                 Camara = camaraInterna;
             }
             else {
@@ -238,7 +238,7 @@ namespace TGC.Group.Model
 				if (!FPSCamera)
 				{
 					// Update jugador
-					jugador.mover(Input, posicionEnTerreno(jugador.Position.X, jugador.Position.Z), ElapsedTime);
+					jugador.mover(Input, terreno.posicionEnTerreno(jugador.Position.X, jugador.Position.Z), ElapsedTime);
 
 					// updownRot -= Input.YposRelative * 0.05f;
 					camaraInterna.OffsetHeight += Input.YposRelative;
@@ -265,7 +265,7 @@ namespace TGC.Group.Model
 				// Update enemigos.
 				foreach (var enemy in enemigos)
 				{
-					enemy.updateStatus(jugador.Position, ElapsedTime, obstaculos, posicionEnTerreno(enemy.Position.X, enemy.Position.Z));
+					enemy.updateStatus(jugador.Position, ElapsedTime, obstaculos, terreno.posicionEnTerreno(enemy.Position.X, enemy.Position.Z));
 				}
 
 				//chequear colisiones con balas
@@ -347,7 +347,7 @@ namespace TGC.Group.Model
                 var lista = world.Meshes;
 
                 // Render escenario
-                heightmap.render();
+                terreno.render();
                 //limits.render();
                 if (!FPSCamera) skyBox.render();         
 
@@ -480,15 +480,15 @@ namespace TGC.Group.Model
 
         public override void Dispose()
         {
+            terreno.dispose();
+
 			if (!menu.GameStarted)
 			{
-				menu.Dispose();
-				heightmap.dispose();
+				menu.Dispose();				
 			}
 
 			else
-			{
-                heightmap.dispose();
+			{                
                 world.disposeWorld();
 	            // Dispose bounding boxes
 	            obstaculos.ForEach(o => o.dispose());
@@ -529,7 +529,7 @@ namespace TGC.Group.Model
             {
                 var enemy_position_X = -rndm.Next(-1500 * FACTOR, 1500 * FACTOR);
                 var enemy_position_Z = -rndm.Next(-1500 * FACTOR, 1500 * FACTOR);
-                var enemy_position_Y = posicionEnTerreno(enemy_position_X, enemy_position_Z);
+                var enemy_position_Y = terreno.posicionEnTerreno(enemy_position_X, enemy_position_Z);
                 var enemy_position = new Vector3(enemy_position_X, enemy_position_Y, enemy_position_Z);
                 enemy_position = Vector3.TransformCoordinate(enemy_position, Matrix.RotationY(Utils.DegreeToRadian(rndm.Next(0, 360))));
                 var enemigo = new Enemy(MediaDir, "CS_Arctic", enemy_position, Arma.AK47(MediaDir));
@@ -548,13 +548,7 @@ namespace TGC.Group.Model
 
         private void initHeightmap()
         {
-            string heightmapDir = MediaDir + "Heightmaps\\heightmap.jpg";
-            string textureDir = MediaDir + "Texturas\\map_v2.jpg";
-
-            heightmap = new TgcSimpleTerrain();
-
-            heightmap.loadHeightmap(heightmapDir, MAP_SCALE_XZ, MAP_SCALE_Y, Camara.LookAt);
-            heightmap.loadTexture(textureDir);
+            terreno = new Terreno(MediaDir, Camara.LookAt);
         }
 
         private void initSkyBox(){
@@ -610,57 +604,7 @@ namespace TGC.Group.Model
 
             // De todos los obstáculos
             obstaculos.ForEach(o => o.render());
-		}
-
-        public float posicionEnTerreno(float x, float z)
-        {
-            // Da la posición del terreno en función del heightmap.
-            int numeroMagico1 = 200;
-            int numeroMagico2 = numeroMagico1 - 1;
-            var largo = MAP_SCALE_XZ * numeroMagico1;
-            var pos_i = numeroMagico1 * (0.5f + x / largo);
-            var pos_j = numeroMagico1 * (0.5f + z / largo);
-
-            var pi = (int)pos_i;
-            var fracc_i = pos_i - pi;
-            var pj = (int)pos_j;
-            var fracc_j = pos_j - pj;
-
-            if (pi < 0)
-                pi = 0;
-            else if (pi > numeroMagico2)
-                pi = numeroMagico2;
-
-            if (pj < 0)
-                pj = 0;
-            else if (pj > numeroMagico2)
-                pj = numeroMagico2;
-
-            var pi1 = pi + 1;
-            var pj1 = pj + 1;
-            if (pi1 > numeroMagico2)
-                pi1 = numeroMagico2;
-            if (pj1 > numeroMagico2)
-                pj1 = numeroMagico2;
-
-            var H0 = heightmap.HeightmapData[pi, pj] * MAP_SCALE_Y;
-            var H1 = heightmap.HeightmapData[pi1, pj] * MAP_SCALE_Y;
-            var H2 = heightmap.HeightmapData[pi, pj1] * MAP_SCALE_Y;
-            var H3 = heightmap.HeightmapData[pi1, pj1] * MAP_SCALE_Y;
-            var H = (H0 * (1 - fracc_i) + H1 * fracc_i) * (1 - fracc_j) +
-                    (H2 * (1 - fracc_i) + H3 * fracc_i) * fracc_j;
-            return H;
-        }
-
-        void corregirAltura(List<TgcMesh> meshes)
-        {
-            foreach (var mesh in meshes)
-            {
-                float posicionY = this.posicionEnTerreno(mesh.Position.X, mesh.Position.Z);
-                mesh.Position = new Vector3(mesh.Position.X, posicionY, mesh.Position.Z);
-                mesh.Transform = Matrix.Translation(0, posicionY, 0) * mesh.Transform;
-            }
-        }
+		}       
 
         TgcScene cargarScene(string unaDireccion)
         {
