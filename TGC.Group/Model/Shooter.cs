@@ -549,6 +549,7 @@ namespace TGC.Group.Model
         private void initHeightmap()
         {
             terreno = new Terreno(MediaDir, Camara.LookAt);
+            collisionManager.setTerrain(terreno);
         }
 
         private void initSkyBox(){

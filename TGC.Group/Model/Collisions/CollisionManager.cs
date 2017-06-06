@@ -25,6 +25,8 @@ namespace TGC.Group.Model.Collisions
         Player player;
         List<Personaje> jugadores = new List<Personaje>();
 
+        private Terreno terreno;
+
         /* Utilizamos el patron singleton, para que cada objeto pueda llamar al colisionador,
          * sin tener que pasarlo por atributo.
          * Se lo llama asi: CollisionManager.Instance.'metodo()'
@@ -46,6 +48,27 @@ namespace TGC.Group.Model.Collisions
         {
             //calculos de choque de balas, muerte de jugadores
             checkBulletCollisions(ElapsedTime);
+        }
+
+        public void applyGravity(float ElapsedTime)
+        {
+            var epsilon = 3.5f;
+            var movY = new Vector3(0, -5, 0);
+            var posicion = player.Position;
+            var adjustedPosY = terreno.posicionEnTerreno(posicion.X, posicion.Z);
+
+            if (player.Esqueleto.Position.Y + movY.Y < adjustedPosY) Vector3.Multiply(movY, 0.001f);
+            if (posicion.Y > adjustedPosY)
+            {
+                player.Esqueleto.Position += movY;
+
+                //esto es porque cuando baja las colinas hay como un vaiven de arriba a abajo feisimo
+                if (Math.Abs(posicion.Y - adjustedPosY) < epsilon) player.adjustYPos(adjustedPosY);
+            }
+            else
+            {
+               player.adjustYPos(adjustedPosY);
+            }
         }
 
         public Vector3 adjustPosition(Personaje personaje, Vector3 desplazamiento)
@@ -345,6 +368,11 @@ namespace TGC.Group.Model.Collisions
         public void addEnemy(Enemy enemy)
         {
             jugadores.Add(enemy);
+        }
+
+        public void setTerrain(Terreno terreno)
+        {
+            this.terreno = terreno;
         }
 
 #endregion

@@ -19,6 +19,7 @@ namespace TGC.Group.Model.Entities
     {
         
 		private float Rotacion = 0f;
+        private float jumpingElapsedTime = 0f;
 
         /// <summary>
         ///     Construye un jugador manejado por el usuario (WASD).
@@ -32,8 +33,8 @@ namespace TGC.Group.Model.Entities
             velocidadCaminar = 100f;
             velocidadIzqDer = 100f;
             velocidadRotacion = 20f;
-            tiempoSalto = 10f;
-            velocidadSalto = 0.5f;
+            tiempoSalto = 0.6f;
+            velocidadSalto = 10f;
             resetBooleans();			
         }
 
@@ -54,7 +55,7 @@ namespace TGC.Group.Model.Entities
             var moveLeftRight = 0f;
 
             float jump = 0;
-			float jumpingElapsedTime = 0f;
+			//float jumpingElapsedTime = 0f;
             float rotate = 0;
 
             resetBooleans();
@@ -141,6 +142,7 @@ namespace TGC.Group.Model.Entities
                 if (jumpingElapsedTime > tiempoSalto)
                 {
                     jumping = false;
+                    jumpingElapsedTime = 0f;
                 }
                 else
                 {
@@ -156,13 +158,15 @@ namespace TGC.Group.Model.Entities
 
             esqueleto.rotateY(rotate);
             var desplazamiento = new Vector3(moveLeftRight * ElapsedTime,
-                                                jump + posicionY - lastPos.Y,
+                                                jump,// + posicionY - lastPos.Y,
                                                 moveForward * ElapsedTime);
             desplazamiento.TransformCoordinate(Matrix.RotationY(Rotacion));
             // esqueleto.Position += desplazamiento;
             var realmove = CollisionManager.Instance.adjustPosition(this, desplazamiento);
             esqueleto.Position += realmove;
             updateBoundingBoxes();
+
+            if(!jumping) CollisionManager.Instance.applyGravity(ElapsedTime);
 
             //adjustPosition
             //CollisionManager.Instance.adjustPosition(this);
@@ -171,6 +175,7 @@ namespace TGC.Group.Model.Entities
             esqueleto.Transform = Matrix.RotationY(Utils.DegreeToRadian(rotate))
                                 * Matrix.RotationY(Rotacion)
                                 * Matrix.Translation(esqueleto.Position);
+
         }
 
 		protected List<TgcBoundingAxisAlignBox> getColliderAABBList(List<TgcBoundingAxisAlignBox> obstaculos)
@@ -191,6 +196,17 @@ namespace TGC.Group.Model.Entities
         public Arma Arma
         {
             get { return arma; }
+        }
+
+        public bool Jumping{
+            get { return jumping; }
+        }
+
+
+
+        public void adjustYPos(float y)
+        {
+            esqueleto.Position= new Vector3(esqueleto.Position.X, y ,esqueleto.Position.Z);
         }
     }
 }
