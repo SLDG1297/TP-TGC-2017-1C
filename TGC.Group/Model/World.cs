@@ -48,6 +48,7 @@ namespace TGC.Group.Model
         private TgcMesh cajaFuturistica;
         private TgcMesh avionMilitar;
         private TgcMesh tanqueFuturista;
+        private TgcMesh avionCaza;
 
         private TgcBox cajita;
         private TgcMesh cajitaMuniciones;
@@ -332,6 +333,12 @@ namespace TGC.Group.Model
                                             * Matrix.Scaling(2f, 1.2f, 0.3f)
                                             * Matrix.Translation(avionMilitar.Position));
 
+
+            //avion de caza
+            avionCaza = cargarMesh(MediaDir + "Meshes\\Vehiculos\\AvionCaza\\AvionCaza-TgcScene.xml");
+            avionCaza.Position = new Vector3(3423, 3000, -3847);
+            avionCaza.updateBoundingBox();
+
             //tractor
             tractor = cargarMesh(MediaDir + "Meshes\\Vehiculos\\Tractor\\Tractor-TgcScene.xml");
             tractor.Position = new Vector3(-6802, 0, 10385);
@@ -368,6 +375,7 @@ namespace TGC.Group.Model
             meshes.Add(faraon);
             meshes.Add(avionMilitar);
             meshes.Add(tanqueFuturista);
+            meshes.Add(avionCaza);
 
             meshes.AddRange(pastitos);
             meshes.AddRange(rocas);
@@ -398,6 +406,7 @@ namespace TGC.Group.Model
             arbusto.dispose();
             ametralladora.dispose();
             tanqueFuturista.dispose();
+            avionCaza.dispose();
 
             meshes.Clear();
             rocas.Clear();

@@ -217,11 +217,11 @@ namespace TGC.Group.Model
             }
         }
 
-        public static void renderFromFrustum(List<Enemy> enemigos, TgcFrustum frustum, float elapsedTime)
+        public static void renderFromFrustum(List<Personaje> enemigos, TgcFrustum frustum, float elapsedTime)
         {
             foreach (var enemigo in enemigos)
             {
-                var r = TgcCollisionUtils.classifyFrustumAABB(frustum, enemigo.Esqueleto.BoundingBox);
+                var r = TgcCollisionUtils.classifyFrustumAABB(frustum, enemigo.BoundingBox);
                 if (r != TgcCollisionUtils.FrustumResult.OUTSIDE)
                 {
                     enemigo.render(elapsedTime);

@@ -272,6 +272,11 @@ namespace TGC.Group.Model.Entities
             crouching = false;
         }
 
+        public TgcBoundingAxisAlignBox BoundingBox
+        {
+            get { return esqueleto.BoundingBox;  }
+        }
+
 
     }
 }

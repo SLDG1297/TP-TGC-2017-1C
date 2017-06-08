@@ -203,7 +203,6 @@ namespace TGC.Group.Model.Entities
         }
 
 
-
         public void adjustYPos(float y)
         {
             esqueleto.Position= new Vector3(esqueleto.Position.X, y ,esqueleto.Position.Z);

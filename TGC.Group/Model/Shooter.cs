@@ -28,9 +28,6 @@ namespace TGC.Group.Model
     {
         private const int FACTOR = 8;
         // Constantes de escenario
-        private const float MAP_SCALE_XZ = 160.0f; // Original = 20
-        private const float MAP_SCALE_Y = 10.4f; // Original = 1.3
-
         // Menu
         private Menu menu;
 
@@ -149,6 +146,7 @@ namespace TGC.Group.Model
                 // Antigua cámara en primera persona.
                 Camara = new FirstPersonCamera(new Vector3(4000, 1500, 500), Input);
             }
+
             //quadtree = new Quadtree();
             //quadtree.create(world.Meshes, limits);
             //quadtree.createDebugQuadtreeMeshes();
@@ -352,13 +350,10 @@ namespace TGC.Group.Model
                 if (!FPSCamera) skyBox.render();         
 
                 Utils.renderFromFrustum(world.Meshes, Frustum);
-                Utils.renderFromFrustum(enemigos, Frustum,ElapsedTime);
+                Utils.renderFromFrustum(collisionManager.getPlayers(), Frustum,ElapsedTime);
                 //TODO: Con QuadTree los FPS bajan. Tal vez sea porque 
                 //estan mas concentrados en una parte que en otra
-                //quadtree.render(Frustum, true);
-
-                // Render jugador
-                jugador.render(ElapsedTime);               
+                //quadtree.render(Frustum, true);    
 
                 //renderizar balas
                 collisionManager.renderAll(ElapsedTime);

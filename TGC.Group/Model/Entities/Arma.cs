@@ -32,7 +32,7 @@ namespace TGC.Group.Model.Entities
 
             arma.balas = 35;
             arma.recargas = 3;
-            arma.danioBala = 3;
+            arma.danioBala = 15;
 
             return arma;
         }
@@ -130,12 +130,10 @@ namespace TGC.Group.Model.Entities
             var desplazamiento = direccion * ElapsedTime;
 
             bala.Position += desplazamiento;
-            bala.AutoTransformEnable = false;
-            
-            bala.Transform = Matrix.RotationX(-FastMath.PI_HALF) * Matrix.Scaling(0.005f, 0.005f, 0.005f) * Matrix.Translation(bala.Position);
             bala.updateBoundingBox();
-            bala.BoundingBox.transform(bala.Transform);
-            
+            bala.AutoTransformEnable = false;
+            bala.Transform = Matrix.RotationX(bala.Rotation.X) * Matrix.Scaling(bala.Scale) * Matrix.Translation(bala.Position);
+            bala.BoundingBox.transform(bala.Transform);            
         }
 
         public void dispose()
@@ -145,7 +143,11 @@ namespace TGC.Group.Model.Entities
 
         public void render()
         {
-            bala.render();
+            if (!impacto)
+            {
+                bala.render();
+                bala.BoundingBox.render();
+            }
         }
 
         //GETTERS Y SETTERS
