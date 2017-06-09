@@ -277,15 +277,15 @@ namespace TGC.Group.Model.Collisions
         
         public void renderAll(float elapsedTime)
         {
-            foreach (var bb in boundingBoxes) bb.render();
-            foreach (var bb in boundingCylinders) bb.render();
+            //foreach (var bb in boundingBoxes) bb.render();
+            //foreach (var bb in boundingCylinders) bb.render();
             //foreach (var bb in orientedBoxes) bb.render();
 
-            foreach (var bb in jugadores)
-            {
-                bb.BoundingCylinder.render();
-                bb.HeadCylinder.render();
-            }
+            //foreach (var bb in jugadores)
+            //{
+              //  bb.BoundingCylinder.render();
+                //bb.HeadCylinder.render();
+            //}
             //renderizar balas
             //remuevo primero las que impactaron
             //balas.FindAll(bala => bala.Impacto == true).ForEach(bala => bala.dispose());

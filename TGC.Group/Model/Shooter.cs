@@ -88,7 +88,7 @@ namespace TGC.Group.Model
         private Texture renderTarget2D, g_pRenderTarget4, g_pRenderTarget4Aux;
         private InterpoladorVaiven intVaivenAlarm;
 
-        private bool efecto = false;
+        private bool efecto = true;
 
         //variables para esconder el mouse
         public Point mouseCenter;
@@ -319,16 +319,14 @@ namespace TGC.Group.Model
                 {
                     if(mouseEscondido) Cursor.Show();
                     mouseEscondido = false;
-                }
-
+                }                
 
                 //TODO: Cambiar segun el arma!
                 if (Input.keyPressed(Microsoft.DirectX.DirectInput.Key.R))
                 {
                     loadSounds(MediaDir, "Sound\\weapons\\ak47_clipin.wav");
                     sound.play();
-
-                    sound.stop();
+                   
                     loadSounds(MediaDir, "Sound\\weapons\\ak47_clipout.wav");
                     sound.play();
                 }
@@ -378,8 +376,10 @@ namespace TGC.Group.Model
 
             if (seDebeActivarEfecto())
             {
-                drawGaussianBlur(device);
+                darkening(device);
+                //drawGaussianBlur(device);
                 //if(jugador.Health < 20) drawAlarm(device, ElapsedTime);
+
             }
 
             device.BeginScene();
@@ -526,7 +526,6 @@ namespace TGC.Group.Model
 
 
             alarmaEffect.Technique = "AlarmaTechnique";
-
             //Cargamos parametros en el shader de Post-Procesado
             alarmaEffect.SetValue("render_target2D", renderTarget2D);
             alarmaEffect.SetValue("textura_alarma", alarmTexture.D3dTexture);
@@ -542,6 +541,31 @@ namespace TGC.Group.Model
 
             device.EndScene();
         }
+
+        public void darkening(Device device) {
+            device.SetRenderTarget(0, pOldRT);
+            device.DepthStencilSurface = depthStencilOld;
+            //Arrancamos la escena
+            device.BeginScene();
+            device.VertexFormat = CustomVertex.PositionTextured.Format;
+            device.SetStreamSource(0, screenQuadVB, 0);
+
+
+            //alarmaEffect.Technique = "AlarmaTechnique";
+            alarmaEffect.Technique = "OscurecerTechnique";
+            //Cargamos parametros en el shader de Post-Procesado
+            alarmaEffect.SetValue("render_target2D", renderTarget2D);
+            //Limiamos la pantalla y ejecutamos el render del shader
+            device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
+            alarmaEffect.Begin(FX.None);
+            alarmaEffect.BeginPass(0);
+            device.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+            alarmaEffect.EndPass();
+            alarmaEffect.End();
+
+            device.EndScene();
+        }
+
 
         public override void Dispose()
         {

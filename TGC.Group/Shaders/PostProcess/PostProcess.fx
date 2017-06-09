@@ -73,7 +73,7 @@ technique DefaultTechnique
 float scaleFactor = 1;
 
 //Pixel Shader de Oscurecer
-float4 ps_oscurecer(PS_INPUT_DEFAULT Input) : COLOR0
+float4 ps_blanco_negro(PS_INPUT_DEFAULT Input) : COLOR0
 {
 	//Obtener color segun textura
 	float4 color = tex2D(RenderTarget, Input.Texcoord);
@@ -83,6 +83,19 @@ float4 ps_oscurecer(PS_INPUT_DEFAULT Input) : COLOR0
 	color.rgb = color.rgb * (1 - scaleFactor) + value * scaleFactor;
 
 	return color;
+}
+
+float darkeningFactor;
+float4 ps_oscurecer(PS_INPUT_DEFAULT Input) : COLOR0
+{
+	//Obtener color segun textura
+	float4 color = tex2D(RenderTarget, Input.Texcoord);
+
+	//Escalar el color para oscurecerlo
+	//float value = ((color.r + color.g + color.b) / 3) * scaleFactor;
+	//color.rgb = color.rgb * (1 - scaleFactor) + value * scaleFactor;
+
+	return 0.8 * color;
 }
 
 technique OscurecerTechnique
