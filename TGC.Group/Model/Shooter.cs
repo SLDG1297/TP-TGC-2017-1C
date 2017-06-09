@@ -21,6 +21,7 @@ using TGC.Group.Model.Optimization.Quadtree;
 using TGC.Core.Shaders;
 using Microsoft.DirectX.Direct3D;
 using TGC.Core.Interpolation;
+using System.Windows.Forms;
 
 namespace TGC.Group.Model
 {
@@ -64,7 +65,7 @@ namespace TGC.Group.Model
 
         //otros
         private CollisionManager collisionManager;
-		private bool FPSCamera = true;
+		private bool FPSCamera = false;
         private Quadtree quadtree;
 
         //efectos
@@ -86,6 +87,9 @@ namespace TGC.Group.Model
 
         private bool efecto = false;
 
+        //variables para esconder el mouse
+        public Point mouseCenter;
+        public bool mouseEscondido;
         /// <summary>
         ///     Constructor del juego.
         /// </summary>
@@ -115,8 +119,11 @@ namespace TGC.Group.Model
 
 		public void InitGame()
 		{
-			//Iniciar jugador
-			initJugador();
+            var focusWindows = D3DDevice.Instance.Device.CreationParameters.FocusWindow;
+            mouseCenter = focusWindows.PointToScreen(new Point(focusWindows.Width / 2, focusWindows.Height / 2));
+
+            //Iniciar jugador
+            initJugador();
 			//Iniciar HUD
 			initText();
 
@@ -139,7 +146,7 @@ namespace TGC.Group.Model
             // Iniciar cámara
             if (!FPSCamera) {
                 // Configurar cámara en Tercera Persona y la asigno al TGC.
-                camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40, 50, -50), 50, 150, Input);
+                camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40, 50, -50), 60, 180, Input);
                 Camara = camaraInterna;
             }
             else {
@@ -152,6 +159,9 @@ namespace TGC.Group.Model
             //quadtree.createDebugQuadtreeMeshes();
             gameLoaded = true;
             loadPostProcessShaders();
+
+            mouseEscondido = true;
+            Cursor.Hide();
 		}
 
         public void loadPostProcessShaders()
@@ -271,7 +281,16 @@ namespace TGC.Group.Model
 				collisionManager.checkCollisions(ElapsedTime);
 				// Update HUD
 				updateText();
-			}            
+                
+                //TODO: hacer que ESC sea pausar! u otro!
+                if (Input.keyPressed(Microsoft.DirectX.DirectInput.Key.Escape))
+                {
+                    if(mouseEscondido) Cursor.Show();
+                    mouseEscondido = false;
+                }
+
+                if(mouseEscondido) Cursor.Position = mouseCenter;
+            }            
         }
         
         public override void Render()
