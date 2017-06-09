@@ -64,7 +64,7 @@ namespace TGC.Group.Model
 
         //otros
         private CollisionManager collisionManager;
-		private bool FPSCamera = false;
+		private bool FPSCamera = true;
         private Quadtree quadtree;
 
         //efectos

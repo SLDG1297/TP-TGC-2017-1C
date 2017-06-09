@@ -67,17 +67,9 @@ namespace TGC.Group.Model
         private List<TgcMesh> meshes = new List<TgcMesh>();
 
         private CollisionManager collisionManager;
-        private Effect vaivenX;
+        private Effect vaiven;
+
         private float time;
-
-        /*public void initWorld(string MediaDir, Terreno terreno)
-        {
-            this.terreno = terreno;
-            collisionManager = CollisionManager.Instance;
-
-            initObjects(MediaDir);
-            initializeList();
-        }*/
 
         public void initWorld(string MediaDir, string ShadersDir, Terreno terreno)
         {
@@ -91,10 +83,13 @@ namespace TGC.Group.Model
 
         public void initShaders(string shadersDir)
         {
-            vaivenX = TgcShaders.loadEffect(shadersDir + "VertexShader\\MovimientosBasicos.fx");
-            canoa.Effect = vaivenX;
+            vaiven = TgcShaders.loadEffect(shadersDir + "VertexShader\\MovimientosBasicos.fx");
+            canoa.Effect = vaiven;
             canoa.Technique = "OndulacionZ";
-            vaivenX.SetValue("amplitud_vaiven", 5);
+            vaiven.SetValue("amplitud_vaiven", 5);
+            
+            avionCaza.Effect = vaiven;
+            avionCaza.Technique = "CirculoXZ";
         }
 
         private void initObjects(string MediaDir)
@@ -247,8 +242,8 @@ namespace TGC.Group.Model
             terreno.corregirAltura(arbolesSelvaticos);
 
             // Creación de rocas.
-            string rocaDir = MediaDir + "Meshes\\Vegetation\\Roca\\Roca-TgcScene.xml";
-            rocaOriginal = cargarMesh(rocaDir);
+            rocaOriginal = cargarMesh(MediaDir + "Meshes\\Vegetation\\Roca\\Roca-TgcScene.xml");
+            rocaOriginal.AutoTransformEnable = false;
 
             // Rocas en el agua.
             Utils.disponerEnCirculoXZ(rocaOriginal, rocas, 4, 500 * FACTOR, FastMath.PI_HALF);
@@ -260,21 +255,14 @@ namespace TGC.Group.Model
             }
 
             // Frontera oeste de rocas.
-            rocaOriginal.Position = new Vector3(1500, 0, -3000);
-            rocaOriginal.Scale = new Vector3(4.0f, 4.0f, 4.0f);
-            rocaOriginal.AutoTransformEnable = false;
-            rocaOriginal.Transform = Matrix.Scaling(rocaOriginal.Scale) * Matrix.Translation(rocaOriginal.Position) * rocaOriginal.Transform;
-
-            rocaOriginal.createBoundingBox();
-            rocaOriginal.updateBoundingBox();
-
             var count = rocas.Count;
-            Utils.disponerEnLineaX(rocaOriginal, rocas, 49, -100, new Vector3(1500, 0, -3000));
+            Utils.disponerEnLineaX(rocaOriginal, rocas, 20, -200, new Vector3(1500, 0, -3000));
             for (int i = count; i <= rocas.Count - 1; i++)
             {
-                rocas[i].AutoTransformEnable = false;
-                rocas[i].Scale = new Vector3(4.0f, 4.0f, 4.0f);
-                rocas[i].Transform = Matrix.Scaling(rocas[i].Scale) * rocas[i].Transform;
+                var roca = rocas[i];
+                roca.AutoTransformEnable = false;
+                roca.Scale = new Vector3(4.0f, 4.0f, 4.0f);
+                roca.Transform = Matrix.Scaling(roca.Scale) * roca.Transform;
             }
             terreno.corregirAltura(rocas);
 
@@ -351,10 +339,11 @@ namespace TGC.Group.Model
                                             * Matrix.Scaling(2f, 1.2f, 0.3f)
                                             * Matrix.Translation(avionMilitar.Position));
 
-
             //avion de caza
             avionCaza = cargarMesh(MediaDir + "Meshes\\Vehiculos\\AvionCaza\\AvionCaza-TgcScene.xml");
             avionCaza.Position = new Vector3(3423, 3000, -3847);
+            avionCaza.AutoTransformEnable = false;
+            avionCaza.Transform = Matrix.Translation(avionCaza.Position);
             avionCaza.updateBoundingBox();
 
             //tractor
@@ -369,7 +358,6 @@ namespace TGC.Group.Model
             canoa = cargarMesh(MediaDir + "Meshes\\Vehiculos\\Canoa\\Canoa-TgcScene.xml");
             canoa.Position = new Vector3(3423, 10, -3847);
             canoa.updateBoundingBox();
-
 
             //camionCisterna
             camionCisterna = cargarMesh(MediaDir + "Meshes\\Vehiculos\\CamionCisterna\\CamionCisterna-TgcScene.xml");
@@ -435,7 +423,7 @@ namespace TGC.Group.Model
             cajitas.Clear();
 
             //dispose de efectos
-            vaivenX.Dispose();
+            vaiven.Dispose();
         }
 
         public void initObstaculos()
@@ -480,7 +468,8 @@ namespace TGC.Group.Model
             {
                 var center = roca.BoundingBox.calculateBoxCenter();
                 var radio = roca.BoundingBox.calculateAxisRadius();
-
+                roca.createBoundingBox();
+                roca.updateBoundingBox();
                 var cilindro = new TgcBoundingCylinderFixedY(center, radio.X * 0.95f, radio.Y);
 
                 collisionManager.agregarCylinder(cilindro);
@@ -497,7 +486,8 @@ namespace TGC.Group.Model
             collisionManager.agregarAABB(canoa.BoundingBox);
             collisionManager.agregarAABB(helicopter.BoundingBox);
             collisionManager.agregarAABB(camionCisterna.BoundingBox);
-            collisionManager.agregarAABB(tractor.BoundingBox);
+            collisionManager.agregarAABB(tractor.BoundingBox);            
+            collisionManager.agregarAABB(avionCaza.BoundingBox);
 
             collisionManager.agregarAABB(tanqueFuturista.BoundingBox);
             foreach (var mesh in tanqueFuturista.MeshInstances)
@@ -542,9 +532,16 @@ namespace TGC.Group.Model
         {
             time += elapsedTime;
             // Cargar variables de shader, por ejemplo el tiempo transcurrido.
-            vaivenX.SetValue("time", time);
+            vaiven.SetValue("time", time);
             canoa.UpdateMeshTransform();
-            canoa.AutoUpdateBoundingBox = false;
+
+            vaiven.SetValue("rotationTime", time);
+            avionCaza.UpdateMeshTransform();
+
+            //esto es para actualizar la posicion del bounding box
+            var newPos = avionCaza.Position + new Vector3(1000 * FastMath.Sin(time), 0, 1000 * FastMath.Cos(time));
+            avionCaza.BoundingBox.scaleTranslate(newPos, new Vector3(1, 1, 1));
+
         }
 
         TgcMesh cargarMesh(string unaDireccion)

@@ -6,6 +6,7 @@ float4x4 matInverseTransposeWorld; //Matriz Transpose(Invert(World))
 
 //variables
 float time;
+float rotationTime;
 float amplitud_vaiven;
 
 //Textura para DiffuseMap
@@ -76,9 +77,8 @@ VS_OUTPUT vs_vaiven_circulo_xz(VS_INPUT Input)
 
 	float X = Input.Position.x;
 	float Z = Input.Position.z;
-	Input.Position.x += 50*sin(time);
-	//Input.Position.y = Y * cos(time) - Z * sin(time);
-	Input.Position.z += 50 * cos(time);
+	Input.Position.x += 1000* sin(rotationTime);
+	Input.Position.z += 1000 * cos(rotationTime);
 
 	//Proyectar posicion
 	Output.Position = mul(Input.Position, matWorldViewProj);
@@ -87,8 +87,8 @@ VS_OUTPUT vs_vaiven_circulo_xz(VS_INPUT Input)
 	Output.Texcoord = Input.Texcoord;
 
 	// Animar color
-	Input.Color.r = abs(sin(time));
-	Input.Color.g = abs(cos(time));
+	Input.Color.r = abs(sin(rotationTime));
+	Input.Color.g = abs(cos(rotationTime));
 
 	//Propago el color x vertice
 	Output.Color = Input.Color;
