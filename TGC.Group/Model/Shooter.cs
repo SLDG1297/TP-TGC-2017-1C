@@ -22,6 +22,9 @@ using TGC.Core.Shaders;
 using Microsoft.DirectX.Direct3D;
 using TGC.Core.Interpolation;
 using System.Windows.Forms;
+using TGC.Core.Sound;
+using System.IO;
+using TGC.Core.Input;
 
 namespace TGC.Group.Model
 {
@@ -90,6 +93,10 @@ namespace TGC.Group.Model
         //variables para esconder el mouse
         public Point mouseCenter;
         public bool mouseEscondido;
+        
+        //sonidos
+        public TgcStaticSound sound;
+
         /// <summary>
         ///     Constructor del juego.
         /// </summary>
@@ -159,7 +166,9 @@ namespace TGC.Group.Model
             //quadtree.createDebugQuadtreeMeshes();
             gameLoaded = true;
             loadPostProcessShaders();
+            //loadSounds(MediaDir);
 
+            //escondo el cursor
             mouseEscondido = true;
             Cursor.Hide();
 		}
@@ -229,6 +238,29 @@ namespace TGC.Group.Model
             intVaivenAlarm.reset();
         }
 
+
+        public void loadSounds(string MediaDir, string soundPath)
+        {
+            string currentFile = null;
+
+            var shootingPath = MediaDir + soundPath;
+
+            if (currentFile == null || currentFile != shootingPath)
+            {
+                currentFile = shootingPath;
+
+                //Borrar sonido anterior
+                if (sound != null)
+                {
+                    sound.dispose();
+                    sound = null;
+                }
+                //Cargar sonido
+                sound = new TgcStaticSound();
+                sound.loadSound(currentFile, DirectSound.DsDevice);
+            }
+        }
+
         public override void Update()
         {
 			PreUpdate();
@@ -289,7 +321,27 @@ namespace TGC.Group.Model
                     mouseEscondido = false;
                 }
 
-                if(mouseEscondido) Cursor.Position = mouseCenter;
+
+                //TODO: Cambiar segun el arma!
+                if (Input.keyPressed(Microsoft.DirectX.DirectInput.Key.R))
+                {
+                    loadSounds(MediaDir, "Sound\\weapons\\ak47_clipin.wav");
+                    sound.play();
+
+                    sound.stop();
+                    loadSounds(MediaDir, "Sound\\weapons\\ak47_clipout.wav");
+                    sound.play();
+                }
+
+                if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT) || Input.buttonDown(TgcD3dInput.MouseButtons.BUTTON_LEFT))
+                {
+                    loadSounds(MediaDir, "Sound\\weapons\\ak47-shoot1.wav");
+                    sound.play();
+                    
+                }
+
+
+                if (mouseEscondido) Cursor.Position = mouseCenter;
             }            
         }
         
@@ -527,6 +579,8 @@ namespace TGC.Group.Model
             screenQuadVB.Dispose();
             depthStencil.Dispose();
             depthStencilOld.Dispose();
+
+            sound.dispose();
         }
 
 #region Métodos Auxiliares
