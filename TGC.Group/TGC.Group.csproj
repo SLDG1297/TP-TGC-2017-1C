@@ -172,7 +172,11 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Shaders\PostProcess\GaussianBlur.fx" />
+    <Content Include="Shaders\PostProcess\PostProcess.fx" />
+    <Content Include="Shaders\VertexShader\MovimientosBasicos.fx" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>

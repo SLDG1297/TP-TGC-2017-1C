@@ -115,24 +115,24 @@ namespace TGC.Group.Model
 
 		public void InitGame()
 		{
-			// Iniciar jugador
+			//Iniciar jugador
 			initJugador();
-			// Iniciar HUD
+			//Iniciar HUD
 			initText();
 
-            // Iniciar escenario
+            //Iniciar escenario
             //initHeightmap();
-            world.initWorld(MediaDir, terreno);
+            world.initWorld(MediaDir,ShadersDir, terreno);
 			initSkyBox();
 
 			var pmin = new Vector3(-16893, -2000, 17112);
 			var pmax = new Vector3(18240, 8884, -18876);
 			limits = new TgcBoundingAxisAlignBox(pmin, pmax);
 
-			// Iniciar enemigos
+			//Iniciar enemigos
 			initEnemigos();
 
-            // Iniciar bounding boxes
+            //Iniciar bounding boxes
             world.initObstaculos();
             CollisionManager.Instance.setPlayer(jugador);
 
@@ -198,10 +198,10 @@ namespace TGC.Group.Model
             depthStencilOld = device.DepthStencilSurface;
 
             //cargo los shaders
-            alarmaEffect = TgcShaders.loadEffect(ShadersDir + "PostProcess.fx");
+            alarmaEffect = TgcShaders.loadEffect(ShadersDir + "PostProcess\\PostProcess.fx");
             alarmaEffect.Technique = "AlarmaTechnique";
 
-            gaussianBlur = TgcShaders.loadEffect(ShadersDir + "GaussianBlur.fx");
+            gaussianBlur = TgcShaders.loadEffect(ShadersDir + "PostProcess\\GaussianBlur.fx");
             gaussianBlur.Technique = "DefaultTechnique";
             gaussianBlur.SetValue("g_RenderTarget", renderTarget2D);
             // Resolucion de pantalla
@@ -233,6 +233,7 @@ namespace TGC.Group.Model
 
 			else
 			{
+                world.updateWorld(ElapsedTime);
 				if (!FPSCamera)
 				{
 					// Update jugador
@@ -270,9 +271,7 @@ namespace TGC.Group.Model
 				collisionManager.checkCollisions(ElapsedTime);
 				// Update HUD
 				updateText();
-			}
-
-            
+			}            
         }
         
         public override void Render()

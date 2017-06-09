@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 using TGC.Core.BoundingVolumes;
 using TGC.Core.Geometry;
 using TGC.Core.SceneLoader;
+using TGC.Core.Shaders;
 using TGC.Core.Terrain;
 using TGC.Core.Textures;
 using TGC.Core.Utils;
 using TGC.Group.Model.Collisions;
+using Microsoft.DirectX.Direct3D;
 
 namespace TGC.Group.Model
 {
@@ -65,22 +67,38 @@ namespace TGC.Group.Model
         private List<TgcMesh> meshes = new List<TgcMesh>();
 
         private CollisionManager collisionManager;
-        
-        public void initWorld(string MediaDir, Terreno terreno)
+        private Effect vaivenX;
+        private float time;
+
+        /*public void initWorld(string MediaDir, Terreno terreno)
         {
             this.terreno = terreno;
             collisionManager = CollisionManager.Instance;
 
             initObjects(MediaDir);
             initializeList();
+        }*/
+
+        public void initWorld(string MediaDir, string ShadersDir, Terreno terreno)
+        {
+            this.terreno = terreno;
+            collisionManager = CollisionManager.Instance;
+            initObjects(MediaDir);
+            initializeList();
+            time = 0;
+            initShaders(ShadersDir);
         }
 
-
-        public void initObjects(string MediaDir)
+        public void initShaders(string shadersDir)
         {
-            // Variables auxiliares.
-            int ultimoElemento;
+            vaivenX = TgcShaders.loadEffect(shadersDir + "VertexShader\\MovimientosBasicos.fx");
+            canoa.Effect = vaivenX;
+            canoa.Technique = "OndulacionZ";
+            vaivenX.SetValue("amplitud_vaiven", 5);
+        }
 
+        private void initObjects(string MediaDir)
+        {
             // Ubicación de la casa.
             string casaDir = MediaDir + "Meshes\\Edificios\\Casa\\Casa-TgcScene.xml";
             casa = cargarScene(casaDir);
@@ -352,6 +370,7 @@ namespace TGC.Group.Model
             canoa.Position = new Vector3(3423, 10, -3847);
             canoa.updateBoundingBox();
 
+
             //camionCisterna
             camionCisterna = cargarMesh(MediaDir + "Meshes\\Vehiculos\\CamionCisterna\\CamionCisterna-TgcScene.xml");
             helicopter.AutoTransformEnable = false;
@@ -361,7 +380,7 @@ namespace TGC.Group.Model
             camionCisterna.updateBoundingBox();
         }
 
-        public void initializeList()
+        private void initializeList()
         {
             meshes.Add(arbolSelvatico);
             meshes.Add(hummer);
@@ -414,6 +433,9 @@ namespace TGC.Group.Model
             arbolesSelvaticos.Clear();
             palmeras.Clear();
             cajitas.Clear();
+
+            //dispose de efectos
+            vaivenX.Dispose();
         }
 
         public void initObstaculos()
@@ -515,7 +537,16 @@ namespace TGC.Group.Model
                 collisionManager.agregarAABB(caja.BoundingBox);
             }
         }
-        
+
+        public void updateWorld(float elapsedTime)
+        {
+            time += elapsedTime;
+            // Cargar variables de shader, por ejemplo el tiempo transcurrido.
+            vaivenX.SetValue("time", time);
+            canoa.UpdateMeshTransform();
+            canoa.AutoUpdateBoundingBox = false;
+        }
+
         TgcMesh cargarMesh(string unaDireccion)
         {
             return cargarScene(unaDireccion).Meshes[0];
