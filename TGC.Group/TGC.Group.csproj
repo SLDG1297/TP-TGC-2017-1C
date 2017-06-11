@@ -92,6 +92,7 @@
     <Compile Include="Model\Collisions\CollisionManager.cs" />
     <Compile Include="Model\Entities\Arma.cs" />
     <Compile Include="Model\Entities\Enemy.cs" />
+    <Compile Include="Model\Entities\Movimientos\Movimiento.cs" />
     <Compile Include="Model\Entities\Personaje.cs" />
     <Compile Include="Model\GameModel.cs" />
     <Compile Include="Model\Entities\Player.cs" />
@@ -99,6 +100,7 @@
     <Compile Include="Model\Optimization\Quadtree\QuadtreeBuilder.cs" />
     <Compile Include="Model\Optimization\Quadtree\QuadtreeNode.cs" />
     <Compile Include="Model\Shooter.cs" />
+    <Compile Include="Model\SoundPlayer.cs" />
     <Compile Include="Model\Terreno.cs" />
     <Compile Include="Model\Utils.cs" />
     <Compile Include="Model\World.cs" />

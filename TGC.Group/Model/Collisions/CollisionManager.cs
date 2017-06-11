@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TGC.Core.BoundingVolumes;
 using TGC.Core.Collision;
+using TGC.Core.Geometry;
 using TGC.Core.Utils;
 using TGC.Group.Model.Entities;
 
@@ -50,24 +51,24 @@ namespace TGC.Group.Model.Collisions
             checkBulletCollisions(ElapsedTime);
         }
 
-        public void applyGravity(float ElapsedTime)
+        public void applyGravity(float ElapsedTime, Personaje personaje)
         {
             var epsilon = 3.5f;
             var movY = new Vector3(0, -5, 0);
-            var posicion = player.Position;
+            var posicion = personaje.Position;
             var adjustedPosY = terreno.posicionEnTerreno(posicion.X, posicion.Z);
 
-            if (player.Esqueleto.Position.Y + movY.Y < adjustedPosY) Vector3.Multiply(movY, 0.001f);
+            if (personaje.Esqueleto.Position.Y + movY.Y < adjustedPosY) Vector3.Multiply(movY, 0.001f);
             if (posicion.Y > adjustedPosY)
             {
-                player.Esqueleto.Position += movY;
+                personaje.Esqueleto.Position += movY;
 
                 //esto es porque cuando baja las colinas hay como un vaiven de arriba a abajo feisimo
-                if (Math.Abs(posicion.Y - adjustedPosY) < epsilon) player.adjustYPos(adjustedPosY);
+                if (Math.Abs(posicion.Y - adjustedPosY) < epsilon) personaje.adjustYPos(adjustedPosY);
             }
             else
             {
-               player.adjustYPos(adjustedPosY);
+                personaje.adjustYPos(adjustedPosY);
             }
         }
 
@@ -277,15 +278,16 @@ namespace TGC.Group.Model.Collisions
         
         public void renderAll(float elapsedTime)
         {
-            //foreach (var bb in boundingBoxes) bb.render();
-            //foreach (var bb in boundingCylinders) bb.render();
-            //foreach (var bb in orientedBoxes) bb.render();
+            /*
+            foreach (var bb in boundingBoxes) bb.render();
+            foreach (var bb in boundingCylinders) bb.render();
+            foreach (var bb in orientedBoxes) bb.render();
 
-            //foreach (var bb in jugadores)
-            //{
-              //  bb.BoundingCylinder.render();
-                //bb.HeadCylinder.render();
-            //}
+            foreach (var bb in jugadores)
+            {
+                bb.BoundingCylinder.render();
+                bb.HeadCylinder.render();
+            }*/
             //renderizar balas
             //remuevo primero las que impactaron
             //balas.FindAll(bala => bala.Impacto == true).ForEach(bala => bala.dispose());
@@ -358,10 +360,10 @@ namespace TGC.Group.Model.Collisions
             return balas;
         }
 
-        public bool debeDisparar(Enemy enemigo)
+        public bool colisionRayoPlayer(TgcRay ray)
         {
             var cilindro = player.BoundingCylinder;
-            return TgcCollisionUtils.testRayCylinder(enemigo.Ray,cilindro);
+            return TgcCollisionUtils.testRayCylinder(ray, cilindro);
         }
 
         public void agregarAABB(TgcBoundingAxisAlignBox a)
@@ -412,6 +414,17 @@ namespace TGC.Group.Model.Collisions
             return jugadores;
         }
 
+        public bool colisiona(Enemy enemigo)
+        {
+            var enemyCilinder = enemigo.BoundingCylinder;
+            bool colisionCil = boundingCylinders.Any(
+                    cilinder => TgcCollisionUtils.testCylinderCylinder(enemyCilinder, cilinder));
+
+            bool colisionAABB = boundingBoxes.Any(
+                    aabb => TgcCollisionUtils.testAABBCylinder(aabb,enemyCilinder));
+
+            return colisionCil || colisionAABB;
+        }
 
 #endregion
     }

@@ -20,6 +20,11 @@ namespace TGC.Group.Model.Entities
         private string media;
         private int danioBala;
 
+
+        public string shootPath { get; set; }
+        public string noBulletPath { get; set; }
+        public string reloadPath { get;  set; }
+
         //Por cada arma generamos un constructor, asi no tenemos que setear el path a manopla y
         //viene de una
         public static Arma AK47(string mediaDir)
@@ -32,7 +37,10 @@ namespace TGC.Group.Model.Entities
 
             arma.balas = 35;
             arma.recargas = 3;
-            arma.danioBala = 15;
+            arma.danioBala = 25;
+
+            arma.shootPath = "Sound\\weapons\\ak47-shoot1.wav";
+            arma.reloadPath = "Sound\\weapons\\ak47_clipin.wav";
 
             return arma;
         }
@@ -45,6 +53,8 @@ namespace TGC.Group.Model.Entities
             //cargo el mesh de dicha arma
             attachment.Mesh = loader.loadSceneFromFile(mediaDir + meshPath).Meshes[0];
             media = mediaDir;
+
+            noBulletPath = "Sound\\weapons\\boltpull.wav";
         }
 
         public void setPlayer(Personaje personaje)

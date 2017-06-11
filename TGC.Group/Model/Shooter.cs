@@ -171,7 +171,9 @@ namespace TGC.Group.Model
             //escondo el cursor
             mouseEscondido = true;
             Cursor.Hide();
-		}
+
+            SoundPlayer.Instance.playMusic(MediaDir, DirectSound);
+        }
 
         public void loadPostProcessShaders()
         {
@@ -306,8 +308,10 @@ namespace TGC.Group.Model
 				// Update enemigos.
 				foreach (var enemy in enemigos)
 				{
-					enemy.updateStatus(jugador.Position, ElapsedTime, obstaculos, terreno.posicionEnTerreno(enemy.Position.X, enemy.Position.Z));
-				}
+					//enemy.updateStatus(jugador.Position, ElapsedTime, obstaculos, terreno.posicionEnTerreno(enemy.Position.X, enemy.Position.Z));
+
+                    enemy.mover(jugador.Position, obstaculos, ElapsedTime,  terreno.posicionEnTerreno(enemy.Position.X, enemy.Position.Z));
+                }
 
 				//chequear colisiones con balas
 				collisionManager.checkCollisions(ElapsedTime);
@@ -319,25 +323,9 @@ namespace TGC.Group.Model
                 {
                     if(mouseEscondido) Cursor.Show();
                     mouseEscondido = false;
-                }                
-
-                //TODO: Cambiar segun el arma!
-                if (Input.keyPressed(Microsoft.DirectX.DirectInput.Key.R))
-                {
-                    loadSounds(MediaDir, "Sound\\weapons\\ak47_clipin.wav");
-                    sound.play();
-                   
-                    loadSounds(MediaDir, "Sound\\weapons\\ak47_clipout.wav");
-                    sound.play();
                 }
 
-                if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT) || Input.buttonDown(TgcD3dInput.MouseButtons.BUTTON_LEFT))
-                {
-                    loadSounds(MediaDir, "Sound\\weapons\\ak47-shoot1.wav");
-                    sound.play();
-                    
-                }
-
+                SoundPlayer.Instance.playPlayerSounds(MediaDir, Input, jugador);                
 
                 if (mouseEscondido) Cursor.Position = mouseCenter;
             }            

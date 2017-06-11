@@ -166,7 +166,7 @@ namespace TGC.Group.Model.Entities
             esqueleto.Position += realmove;
             updateBoundingBoxes();
 
-            if(!jumping) CollisionManager.Instance.applyGravity(ElapsedTime);
+            if(!jumping) CollisionManager.Instance.applyGravity(ElapsedTime,this);
 
             //adjustPosition
             //CollisionManager.Instance.adjustPosition(this);
@@ -202,10 +202,5 @@ namespace TGC.Group.Model.Entities
             get { return jumping; }
         }
 
-
-        public void adjustYPos(float y)
-        {
-            esqueleto.Position= new Vector3(esqueleto.Position.X, y ,esqueleto.Position.Z);
-        }
     }
 }

@@ -9,17 +9,17 @@ using TGC.Core.BoundingVolumes;
 using TGC.Group.Model.Collisions;
 using TGC.Core.Geometry;
 using TGC.Core.Utils;
+using TGC.Group.Model.Entities.Movimientos;
 
 namespace TGC.Group.Model.Entities
 {
 	public class Enemy : Personaje
 	{
 		// Setear estatus de la IA. 0 = Parado, 1 = escapando, 2 = persiguiendo al jugador
-		private int estatus_ia;
 		private float Rotacion = 0f;
-		private float lastPosTerreno;
         private TgcRay ray;
-
+        private Movimiento movimiento;
+        private Vector3 direccion;
         /// <summary>
         ///     Construye un enemigo que trata de encontrar al jugador y matarlo.
         /// </summary>
@@ -36,124 +36,92 @@ namespace TGC.Group.Model.Entities
 			velocidadRotacion = 120f;
 			tiempoSalto = 10f;
 			velocidadSalto = 0.5f;
-			estatus_ia = 0;
+
+            direccion = initPosition - new Vector3(initPosition.X, initPosition.Y, initPosition.Z + 1);
+            //direccion.Normalize();
+            
+            var random = new Random();
+            var num = random.Next(1, 2);
+
+            if(num == 1) {
+                movimiento = new Unidireccion();
+            }
+            else
+            {
+                movimiento = new Parado();
+            }
+
             ray = new TgcRay();
-		}
+        }
 
 		public bool isCollidingWithObject(List<TgcBoundingAxisAlignBox> obstaculos) { 
 			 var collider = getColliderAABB(obstaculos);
 			return collider != null;
 		}
 
-		public void updateStatus(Vector3 posicionJugador, float elapsedTime, List<TgcBoundingAxisAlignBox> obstaculos, float posicionY)
-		{
-			var dir_escape = this.Position - posicionJugador;
-			dir_escape.Y = 0;
-			var dist = dir_escape.Length();
-			System.Console.Out.WriteLine(dist);
-
-			switch (estatus_ia)
-			{
-				case 0:
-                    if (dist <= 250)
-                    {
-                        estatus_ia = 1;
-                    }
-                    break;
-
-				case 1:
-					if (dist >= 400) { 
-						estatus_ia = 0;
-					}
-					break;
-
-				case 2:
-					if (dist < 400) { 
-						estatus_ia = 0;
-					}
-					break;
-			}
-			mover(posicionJugador, obstaculos, elapsedTime, posicionY);
-		}
-
-		public void mover(Vector3 posicionJugador, List<TgcBoundingAxisAlignBox> obstaculos, float elapsedTime, float posicionY)
-		{
-			var moveForward = 0f;
-			var direccion = Position - new Vector3(Position.X, Position.Y, Position.Z + 1);
-			float rotate = 0;
-			Vector3 dir_movimiento = new Vector3(0,0,0);
-            var desplazamiento = new Vector3(0, 0, 0);
-
+        public void mover(Vector3 posicionJugador, List<TgcBoundingAxisAlignBox> obstaculos, float elapsedTime, float posicionY)
+        {
+            movimiento.updateStatus(this, posicionJugador);
+            float rotate = 0;
+            var desplazamiento = movimiento.mover(this, posicionJugador) * elapsedTime;
             resetBooleans();
 
-			if (estatus_ia == 1){
-				moving = true;
-				dir_movimiento = Position - posicionJugador;
-				moveForward = velocidadCaminar - 10f;
-				float dot = Math.Abs(Vector3.Dot(direccion, -dir_movimiento));
-				if (dot > Math.PI / 3) { 
-					rotate = (float)Math.Acos(System.Convert.ToDouble(dot));
-				}
-			}
+            moving = desplazamiento != new Vector3(0, 0, 0);
+            rotate = 0f;
 
-			if (estatus_ia == 2) {
-				moving = true;
-				dir_movimiento = posicionJugador - Position;
-				moveForward = -velocidadCaminar;
-				float dot = Math.Abs(Vector3.Dot(direccion, dir_movimiento));
-				if (dot > Math.PI / 3)
-				{
-					rotate = (float)Math.Acos(System.Convert.ToDouble(dot));
-				}
-			}
-
-			if (estatus_ia == 0) {
-				moving = false;
-				moveForward = 0;
-				rotate = 0;
-			}
-
-			displayAnimations();
-
-			dir_movimiento.Y = 0;
-			
-			if (Vector3.Length(dir_movimiento) > 0){
-				desplazamiento = Vector3.Scale(dir_movimiento, 1 / Vector3.Length(dir_movimiento));
-				desplazamiento = Vector3.Scale(desplazamiento, moveForward);
-			}
-
-			desplazamiento.Y = posicionY - esqueleto.Position.Y;
-            desplazamiento.TransformCoordinate(Matrix.RotationY(esqueleto.Rotation.Y));
+            displayAnimations();            
+            esqueleto.rotateY(FastMath.ToRad(rotate));
 
             var realmovement = CollisionManager.Instance.adjustPosition(this, desplazamiento);
             esqueleto.Position += realmovement;
 
             updateBoundingBoxes();
+            CollisionManager.Instance.applyGravity(elapsedTime,this);
+            lastPos = esqueleto.Position;
+            esqueleto.Transform = Matrix.RotationY(FastMath.ToRad(rotate)) *
+                                  Matrix.Translation(esqueleto.Position);
 
-            esqueleto.Transform = Matrix.Translation(esqueleto.Position);
+            BoundingCylinder.setRenderColor(System.Drawing.Color.Red);
+
             //actualizo el rayo
-            ray.Origin = esqueleto.Position;
-            //con esto determino el largo y la direccion del rayo
-            ray.Direction = direccion;
-            
-            //CollisionManager.Instance.adjustPosition(this);
-            ray.Origin = esqueleto.Position;
-            //me fijo si el rayo colisiona con el jugador para ver si puedo disparar
-            if (CollisionManager.Instance.debeDisparar(this))
+            updateRay();
+            if (debeDisparar())
             {
-                if (arma.Balas <= 0) arma.recarga();                
+                if (arma.Balas <= 0) arma.recarga();
                 arma.dispara(elapsedTime, Position, esqueleto.Rotation.Y);
+
             }
+        }
 
-			lastPos = esqueleto.Position;
-			lastPosTerreno = posicionY;
+        public void updateRay()
+        {
+            var dir = new Vector3(direccion.X, 0, direccion.Z);
+            dir.Normalize();
+            ray.Direction = dir;
 
-           
-		}
+            //el mismo que la bala!
+            ray.Origin = esqueleto.Position + new Vector3(0, 50, 0);
+        }
+
+        public void setEstado(Movimiento movimiento)
+        {
+            this.movimiento = movimiento;            
+        }
 
         public TgcRay Ray
         {
             get { return ray; }
+        }
+
+        public bool debeDisparar()
+        {
+            return CollisionManager.Instance.colisionRayoPlayer(ray);
+        }
+
+
+        public float VelocidadCaminar
+        {
+            get { return velocidadCaminar; }
         }
 	}   
 }

@@ -150,9 +150,12 @@ namespace TGC.Group.Model.Entities
             }
         }
 
-                
+
         public void updateBoundingBoxes()
         {
+            //Esqueleto.BoundingBox.move(Position - lastPos);
+            Esqueleto.updateBoundingBox();
+
             BoundingCylinder.move(Position - lastPos);
             cylinderHead.move(Position - lastPos);
 
@@ -188,7 +191,8 @@ namespace TGC.Group.Model.Entities
 
         public void render(float elapsedTime)
         {
-            esqueleto.animateAndRender(elapsedTime);        
+            esqueleto.animateAndRender(elapsedTime);
+            //esqueleto.BoundingBox.render();
         }
 
         public void dispose()
@@ -216,7 +220,12 @@ namespace TGC.Group.Model.Entities
             velocidadCaminar = caminar;
             velocidadIzqDer = izqDer;
         }
-        
+
+        public void adjustYPos(float y)
+        {
+            esqueleto.Position = new Vector3(esqueleto.Position.X, y, esqueleto.Position.Z);
+        }
+
         //GETTERS Y SETTERS
         public TgcSkeletalMesh Esqueleto
         {
@@ -247,7 +256,6 @@ namespace TGC.Group.Model.Entities
         {
             get { return lastPos; }
         }
-
 
         public Vector3 Position
         {
