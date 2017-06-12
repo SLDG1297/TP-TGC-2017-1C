@@ -172,7 +172,7 @@ namespace TGC.Group.Model
             mouseEscondido = true;
             Cursor.Hide();
 
-            SoundPlayer.Instance.playMusic(MediaDir, DirectSound);
+            //SoundPlayer.Instance.playMusic(MediaDir, DirectSound);
         }
 
         public void loadPostProcessShaders()
@@ -280,22 +280,24 @@ namespace TGC.Group.Model
                 world.updateWorld(ElapsedTime);
 				if (!FPSCamera)
 				{
-					// Update jugador
-					jugador.mover(Input, terreno.posicionEnTerreno(jugador.Position.X, jugador.Position.Z), ElapsedTime);
+                    // Update jugador
+                    if (!jugador.Muerto)
+                    {
+                        jugador.mover(Input, terreno.posicionEnTerreno(jugador.Position.X, jugador.Position.Z), ElapsedTime);
 
-					// updownRot -= Input.YposRelative * 0.05f;
-					camaraInterna.OffsetHeight += Input.YposRelative;
-					camaraInterna.rotateY(Input.XposRelative * 0.05f);
-					camaraInterna.TargetDisplacement *= camaraInterna.RotationY * ElapsedTime;
-					// Hacer que la camara siga al personaje en su nueva posicion
-					camaraInterna.Target = jugador.Position;
+                        // updownRot -= Input.YposRelative * 0.05f;
+                        camaraInterna.OffsetHeight += Input.YposRelative;
+                        camaraInterna.rotateY(Input.XposRelative * 0.05f);
+                        camaraInterna.TargetDisplacement *= camaraInterna.RotationY * ElapsedTime;
+                        // Hacer que la camara siga al personaje en su nueva posicion
+                        camaraInterna.Target = jugador.Position;
 
-					var forward = camaraInterna.OffsetForward - Input.WheelPos * 10;
-					if (forward > 10)
-					{
-						camaraInterna.OffsetForward -= Input.WheelPos * 10;
-					}
-
+                        var forward = camaraInterna.OffsetForward - Input.WheelPos * 10;
+                        if (forward > 10)
+                        {
+                            camaraInterna.OffsetForward -= Input.WheelPos * 10;
+                        }
+                    }
 					// Update SkyBox
 					// Cuando se quiera probar cámara en tercera persona
 					skyBox.Center = jugador.Position;
@@ -325,7 +327,7 @@ namespace TGC.Group.Model
                     mouseEscondido = false;
                 }
 
-                SoundPlayer.Instance.playPlayerSounds(MediaDir, Input, jugador);                
+                //SoundPlayer.Instance.playPlayerSounds(MediaDir, Input, jugador);                
 
                 if (mouseEscondido) Cursor.Position = mouseCenter;
             }            
@@ -366,8 +368,8 @@ namespace TGC.Group.Model
             {
                 darkening(device);
                 //drawGaussianBlur(device);
-                //if(jugador.Health < 20) drawAlarm(device, ElapsedTime);
-
+                if (jugador.Health <= 10) drawAlarm(device, ElapsedTime);
+                if(jugador.Muerto) drawGaussianBlur(device);
             }
 
             device.BeginScene();
@@ -409,12 +411,13 @@ namespace TGC.Group.Model
 
                 Utils.renderFromFrustum(world.Meshes, Frustum);
                 Utils.renderFromFrustum(collisionManager.getPlayers(), Frustum,ElapsedTime);
+                Utils.renderFromFrustum(collisionManager.getBalas(), Frustum);
                 //TODO: Con QuadTree los FPS bajan. Tal vez sea porque 
                 //estan mas concentrados en una parte que en otra
                 //quadtree.render(Frustum, true);    
 
-                //renderizar balas
-                collisionManager.renderAll(ElapsedTime);
+                //el renderizado de los bounding box es para testear!
+                //collisionManager.renderBoundingBoxes(ElapsedTime);
             }
             device.EndScene();
         }
@@ -559,29 +562,29 @@ namespace TGC.Group.Model
         {
             terreno.dispose();
 
-			if (!menu.GameStarted)
-			{
-				menu.Dispose();				
-			}
+            if (!menu.GameStarted)
+            {
+                menu.Dispose();
+            }
 
-			else
-			{                
+            else
+            {
                 world.disposeWorld();
-	            // Dispose bounding boxes
-	            obstaculos.ForEach(o => o.dispose());
+                // Dispose bounding boxes
+                obstaculos.ForEach(o => o.dispose());
 
-	            limits.dispose();
-	            // Dispose jugador
-	            //jugador.dispose();
+                limits.dispose();
+                // Dispose jugador
+                //jugador.dispose();
 
-	            // Dispose enemigos
-	            //enemigos.ForEach(e => e.dispose());
-	            collisionManager.disposeAll();
+                // Dispose enemigos
+                //enemigos.ForEach(e => e.dispose());
+                collisionManager.disposeAll();
 
-	            // Dispose HUD
-				texto.Dispose();
-				sombraTexto.Dispose();
-			}
+                // Dispose HUD
+                texto.Dispose();
+                sombraTexto.Dispose();
+            }
 
             gaussianBlur.Dispose();
             alarmaEffect.Dispose();
@@ -591,8 +594,7 @@ namespace TGC.Group.Model
             screenQuadVB.Dispose();
             depthStencil.Dispose();
             depthStencilOld.Dispose();
-
-            sound.dispose();
+            
         }
 
 #region Métodos Auxiliares

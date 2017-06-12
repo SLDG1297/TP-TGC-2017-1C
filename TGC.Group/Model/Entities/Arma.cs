@@ -37,7 +37,7 @@ namespace TGC.Group.Model.Entities
 
             arma.balas = 35;
             arma.recargas = 3;
-            arma.danioBala = 25;
+            arma.danioBala = 15;
 
             arma.shootPath = "Sound\\weapons\\ak47-shoot1.wav";
             arma.reloadPath = "Sound\\weapons\\ak47_clipin.wav";
@@ -82,6 +82,8 @@ namespace TGC.Group.Model.Entities
                 var bala = new Bala(media, position, angulo,danioBala);
                 CollisionManager.Instance.agregarBala(bala);
                 balas--;
+
+                //reproducir sonido!
             }
         }
 
@@ -137,7 +139,9 @@ namespace TGC.Group.Model.Entities
 
         public void update(float ElapsedTime)
         {
-            var desplazamiento = direccion * ElapsedTime;
+            //multiplico por 0.9f porque iria demasiado rapido, entonces no se detectarian colisiones
+            //y por tanto, no se le resta salud al jugador
+            var desplazamiento = direccion * ElapsedTime *0.9f;
 
             bala.Position += desplazamiento;
             bala.updateBoundingBox();

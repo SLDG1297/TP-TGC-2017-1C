@@ -53,6 +53,10 @@ namespace TGC.Group.Model
         {
             mp3Player.stop();
             mp3Player.closeFile();
+
+            if (shootingGun != null) shootingGun.dispose();
+            if (clipin != null) clipin.dispose();
+            if (boltpull != null) boltpull.dispose();
         }
 
         public void playPlayerSounds(string MediaDir,TgcD3dInput Input, Player player)

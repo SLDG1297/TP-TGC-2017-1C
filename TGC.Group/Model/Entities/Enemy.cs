@@ -17,9 +17,12 @@ namespace TGC.Group.Model.Entities
 	{
 		// Setear estatus de la IA. 0 = Parado, 1 = escapando, 2 = persiguiendo al jugador
 		private float Rotacion = 0f;
-        private TgcRay ray;
         private Movimiento movimiento;
         private Vector3 direccion;
+
+        private TgcRay ray;
+        private TgcArrow arrow;
+            
         /// <summary>
         ///     Construye un enemigo que trata de encontrar al jugador y matarlo.
         /// </summary>
@@ -41,17 +44,28 @@ namespace TGC.Group.Model.Entities
             //direccion.Normalize();
             
             var random = new Random();
-            var num = random.Next(1, 2);
+            var num = random.Next(1, 3);
 
-            if(num == 1) {
-                movimiento = new Unidireccion();
-            }
-            else
+            switch (num)
             {
-                movimiento = new Parado();
-            }
+                case 0:
+                    movimiento = new Unidireccion();
+                    break;
+                case 1:
+                    movimiento = new Diagonal();
+                    break;
+                default:
+                    movimiento = new Parado();
+                    break;
+            }           
 
-            ray = new TgcRay();
+            ray = new TgcRay(initPosition + new Vector3(0,50,0),direccion);
+            arrow = new TgcArrow();
+
+            arrow.PStart = ray.Origin;
+            arrow.PEnd = initPosition + (direccion * 100f);
+            arrow.Thickness = 2f;
+            arrow.HeadSize = new Vector2(2, 2);
         }
 
 		public bool isCollidingWithObject(List<TgcBoundingAxisAlignBox> obstaculos) { 
@@ -83,24 +97,27 @@ namespace TGC.Group.Model.Entities
 
             BoundingCylinder.setRenderColor(System.Drawing.Color.Red);
 
-            //actualizo el rayo
-            updateRay();
+            //actualizo el rayo);
             if (debeDisparar())
             {
                 if (arma.Balas <= 0) arma.recarga();
                 arma.dispara(elapsedTime, Position, esqueleto.Rotation.Y);
-
             }
+
+            updateRay();
         }
 
         public void updateRay()
         {
-            var dir = new Vector3(direccion.X, 0, direccion.Z);
-            dir.Normalize();
+            //el mismo que la bala!
+            ray.Origin = esqueleto.Position + new Vector3(0,40,0);
+            var dir = new Vector3(direccion.X, direccion.Y, direccion.Z);
+            //dir.Normalize();
             ray.Direction = dir;
 
-            //el mismo que la bala!
-            ray.Origin = esqueleto.Position + new Vector3(0, 50, 0);
+            arrow.PStart = ray.Origin;
+            arrow.PEnd = ray.Origin + direccion * 100f;
+            arrow.updateValues();
         }
 
         public void setEstado(Movimiento movimiento)
@@ -118,10 +135,14 @@ namespace TGC.Group.Model.Entities
             return CollisionManager.Instance.colisionRayoPlayer(ray);
         }
 
-
         public float VelocidadCaminar
         {
             get { return velocidadCaminar; }
+        }
+
+        public override void render(float elapsedTime) {
+            esqueleto.animateAndRender(elapsedTime);
+            //arrow.render();
         }
 	}   
 }

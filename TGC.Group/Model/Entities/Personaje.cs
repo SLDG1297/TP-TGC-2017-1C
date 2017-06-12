@@ -155,13 +155,9 @@ namespace TGC.Group.Model.Entities
         {
             //Esqueleto.BoundingBox.move(Position - lastPos);
             Esqueleto.updateBoundingBox();
-
+            //BoundingCylinder.Center = Position + new Vector3(0,20,0);
             BoundingCylinder.move(Position - lastPos);
-            cylinderHead.move(Position - lastPos);
-
-            BoundingCylinder.updateValues();
-            cylinderHead.updateValues();
-            
+            cylinderHead.move(Position - lastPos);            
 
             if (crouching)
             {//25
@@ -180,6 +176,9 @@ namespace TGC.Group.Model.Entities
             {
                 resetCylinderValues();
             }
+
+            BoundingCylinder.updateValues();
+            cylinderHead.updateValues();
         }
 
 
@@ -189,7 +188,7 @@ namespace TGC.Group.Model.Entities
             cylinderHead.move(dif.X,0,dif.Z);
         }
 
-        public void render(float elapsedTime)
+        public virtual void render(float elapsedTime)
         {
             esqueleto.animateAndRender(elapsedTime);
             //esqueleto.BoundingBox.render();

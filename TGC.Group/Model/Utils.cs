@@ -229,6 +229,21 @@ namespace TGC.Group.Model
             }
         }
 
+        public static void renderFromFrustum(List<Bala> balas, TgcFrustum frustum)
+        {
+            if (balas.Count > 0)
+            {
+                foreach (var bala in balas)
+                {
+                    var r = TgcCollisionUtils.classifyFrustumAABB(frustum, bala.BoundingBox);
+                    if (r != TgcCollisionUtils.FrustumResult.OUTSIDE)
+                    {
+                        bala.render();
+                    }
+                }
+            }
+        }
+
         public static void applyTransform(List<TgcMesh> meshes, Matrix matriz)
         {
             foreach (var mesh in meshes)

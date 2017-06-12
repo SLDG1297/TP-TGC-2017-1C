@@ -163,11 +163,10 @@ namespace TGC.Group.Model.Entities
             desplazamiento.TransformCoordinate(Matrix.RotationY(Rotacion));
             // esqueleto.Position += desplazamiento;
             var realmove = CollisionManager.Instance.adjustPosition(this, desplazamiento);
-            esqueleto.Position += realmove;
-            updateBoundingBoxes();
+            esqueleto.Position += realmove;            
 
             if(!jumping) CollisionManager.Instance.applyGravity(ElapsedTime,this);
-
+            updateBoundingBoxes();
             //adjustPosition
             //CollisionManager.Instance.adjustPosition(this);
             lastPos = esqueleto.Position;

@@ -68,6 +68,15 @@ namespace TGC.Group.Model.Entities.Movimientos
 
         public override void updateStatus(Enemy enemigo, Vector3 posicionJugador)
         {
+            if (CollisionManager.Instance.colisiona(enemigo))
+            {
+                invertirDireccion();
+            }
+
+            if (estaCerca(enemigo, posicionJugador))
+            {
+                enemigo.setEstado(new Perseguir(false));
+            }
         }
     }
 
@@ -95,8 +104,6 @@ namespace TGC.Group.Model.Entities.Movimientos
                 z = 0;
                 x = 1;
             }
-
-
         }
 
         public override void updateStatus(Enemy enemigo, Vector3 posicionJugador)
