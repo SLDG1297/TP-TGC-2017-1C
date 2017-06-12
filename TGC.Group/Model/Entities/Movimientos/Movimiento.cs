@@ -25,7 +25,6 @@ namespace TGC.Group.Model.Entities.Movimientos
             var dir_escape = enemigo.Position - posicionJugador;
             dir_escape.Y = 0;
             var dist = dir_escape.Length();
-            System.Console.Out.WriteLine(dist);
 
             return dist >= 400;
         }
@@ -45,15 +44,19 @@ namespace TGC.Group.Model.Entities.Movimientos
     {
         public override Vector3 mover(Enemy enemigo, Vector3 posicionJugador)
         {
-            var ret = new Vector3(0, 0, 0);
-            return ret * signo;
+            return new Vector3(0, 0, 0);
         }
 
         public override void updateStatus(Enemy enemigo, Vector3 posicionJugador)
         {
             if(estaCerca(enemigo,posicionJugador))
             {
-                enemigo.setEstado(new Perseguir(false));
+                enemigo.setEstado(new Escapar());
+            }
+
+            if(enemigo.debeDisparar())
+            {
+                enemigo.setEstado(new Perseguir());
             }
         }
     }
@@ -75,7 +78,7 @@ namespace TGC.Group.Model.Entities.Movimientos
 
             if (estaCerca(enemigo, posicionJugador))
             {
-                enemigo.setEstado(new Perseguir(false));
+                enemigo.setEstado(new Escapar());
             }
         }
     }
@@ -115,7 +118,7 @@ namespace TGC.Group.Model.Entities.Movimientos
 
             if (estaCerca(enemigo, posicionJugador))
             {
-                enemigo.setEstado(new Perseguir(false));
+                enemigo.setEstado(new Escapar());
             }
         }
     }
@@ -123,17 +126,10 @@ namespace TGC.Group.Model.Entities.Movimientos
      //EL ENEMIGO SE MUEVE HASTA LA POSICION DEL ENEMIGO
      public class Perseguir : Movimiento
      {
-        public Perseguir(bool persiguiendo)
-        {
-            if (persiguiendo) signo = -1;
-            else signo = 1;
-        }
-
         public override Vector3 mover(Enemy enemigo, Vector3 posicionJugador)
         {
-            var res = enemigo.Position - posicionJugador;
-
-            return res * signo;
+            var res = posicionJugador - enemigo.Position;
+            return res;
         }
 
         public override void updateStatus(Enemy enemigo, Vector3 posicionJugador)
@@ -147,6 +143,33 @@ namespace TGC.Group.Model.Entities.Movimientos
             { 
               enemigo.setEstado(new Parado());                
             }
+
+            if (estaCerca(enemigo, posicionJugador))
+            {
+               //enemigo.setEstado(new Escapar());
+            }
         }
      }
+
+     public class Escapar : Movimiento
+     {
+        public override Vector3 mover(Enemy enemigo, Vector3 posicionJugador)
+        {
+            return enemigo.Position - posicionJugador;
+        }
+
+        public override void updateStatus(Enemy enemigo, Vector3 posicionJugador)
+        {
+            //por ahora (modificar pronto) se queda quieto, lo cual tiene sentido 
+            //no va a escapar a otro lado sino que va a asegurarse de que tenga distancia apropiada para disparar
+            //a lo sumo moverse en una direccion
+
+            //EDIT : otra opcion es que busque cobertura
+            if (estaLejos(enemigo, posicionJugador))
+            {
+                enemigo.setEstado(new Parado());
+            }
+        }
+     }
+
 }
