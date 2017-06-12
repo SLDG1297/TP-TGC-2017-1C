@@ -115,7 +115,14 @@ namespace TGC.Group.Form
                     if (ApplicationActive())
                     {
                         Modelo.Update();
-                        Modelo.Render();
+                        if (Modelo == null)
+                        {
+                            ShutDown();
+                        }
+                        else
+                        {
+                            Modelo.Render();
+                        }
                     }
                     else
                     {
