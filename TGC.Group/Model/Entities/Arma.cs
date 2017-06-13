@@ -141,7 +141,7 @@ namespace TGC.Group.Model.Entities
         {
             //multiplico por 0.9f porque iria demasiado rapido, entonces no se detectarian colisiones
             //y por tanto, no se le resta salud al jugador
-            var desplazamiento = direccion * ElapsedTime *0.85f;
+            var desplazamiento = direccion * ElapsedTime * 0.80f;
 
             bala.Position += desplazamiento;
             bala.updateBoundingBox();

@@ -197,6 +197,7 @@ namespace TGC.Group.Model.Entities
         public void dispose()
         {
             arma.dispose();
+            
             //esqueleto.dispose();            
         }
 

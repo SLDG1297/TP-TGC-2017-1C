@@ -49,7 +49,7 @@ namespace TGC.Group.Model.Entities
             }
         }        
 
-		public void mover(TgcD3dInput Input, float posicionY, float ElapsedTime) {
+		public void mover(TgcD3dInput Input, float ElapsedTime) {
             //Calcular proxima posicion de personaje segun Input
             var moveForward = 0f;
             var moveLeftRight = 0f;
@@ -161,20 +161,20 @@ namespace TGC.Group.Model.Entities
                                                 jump,// + posicionY - lastPos.Y,
                                                 moveForward * ElapsedTime);
             desplazamiento.TransformCoordinate(Matrix.RotationY(Rotacion));
-            // esqueleto.Position += desplazamiento;
+
+            //ajusto la posicion dependiendo las colisiones
             var realmove = CollisionManager.Instance.adjustPosition(this, desplazamiento);
             esqueleto.Position += realmove;            
 
+            //aplico la gravedad segun el personaje (si esta sobre el suelo no hace nada)
             if(!jumping) CollisionManager.Instance.applyGravity(ElapsedTime,this);
+
             updateBoundingBoxes();
-            //adjustPosition
-            //CollisionManager.Instance.adjustPosition(this);
             lastPos = esqueleto.Position;
 
             esqueleto.Transform = Matrix.RotationY(Utils.DegreeToRadian(rotate))
                                 * Matrix.RotationY(Rotacion)
                                 * Matrix.Translation(esqueleto.Position);
-
         }
 
 		protected List<TgcBoundingAxisAlignBox> getColliderAABBList(List<TgcBoundingAxisAlignBox> obstaculos)

@@ -232,7 +232,6 @@ namespace TGC.Group.Model.Collisions
         //METODOS ASOCIADOS A LAS COLISIONES CON BALAS
         public void checkBulletCollisions(float ElapsedTime)
         { 
-            var enemigosASacar = new List<Personaje>();
             var balasASacar = new List<Bala>();
 
             //chequeo las colisiones de las balas que se esten moviendo
@@ -256,17 +255,10 @@ namespace TGC.Group.Model.Collisions
                         bala.setImpacto(true);
                         var jugador = enemigoQueColisionaCon(boundingBox);
                         jugador.recibiDanio(bala.Danio);
-
-                        if (jugador.Muerto) enemigosASacar.Add(jugador);
+                        
                         balasASacar.Add(bala);
                     }
                 }
-            }
-
-            foreach (var enemigo in enemigosASacar)
-            {
-                enemigo.dispose();
-                this.jugadores.Remove(enemigo);
             }
 
             foreach (var bala in balasASacar)
@@ -323,7 +315,6 @@ namespace TGC.Group.Model.Collisions
                 jugador => colisionaCon(bala, jugador));
         }
 
-
         public Personaje enemigoQueColisionaCon(TgcBoundingAxisAlignBox aabb)
         {
             return jugadores.Find(
@@ -350,8 +341,15 @@ namespace TGC.Group.Model.Collisions
 
         public bool colisionRayoPlayer(TgcRay ray)
         {
-            var cilindro = player.BoundingCylinder;
-            return TgcCollisionUtils.testRayCylinder(ray, cilindro);
+            if (player == null)
+            {
+                return false;
+            }
+            else
+            {
+                var cilindro = player.BoundingCylinder;
+                return TgcCollisionUtils.testRayCylinder(ray, cilindro);
+            }
         }
 
         public void agregarAABB(TgcBoundingAxisAlignBox a)
@@ -414,6 +412,122 @@ namespace TGC.Group.Model.Collisions
             return colisionCil || colisionAABB;
         }
 
-#endregion
+        public List<TgcBoundingAxisAlignBox> boundingBoxDentroDelRadio(Enemy enemigo, float radio)
+        {
+            var enemyPosX = enemigo.Position.X;
+            var enemyPosZ = enemigo.Position.Z;
+
+            foreach (var box in boundingBoxes)
+            {
+                if (FastMath.Pow2(box.calculateBoxCenter().X - enemyPosX) + FastMath.Pow2(box.calculateBoxCenter().Z - enemyPosZ)
+                    <= FastMath.Pow2(radio))
+                {
+                    box.setRenderColor(System.Drawing.Color.Red);
+                }
+                else
+                {
+                    box.setRenderColor(System.Drawing.Color.Yellow);
+                }
+            }
+
+
+
+            List<TgcBoundingAxisAlignBox> objetos = boundingBoxes.FindAll(boundingBox =>
+
+               FastMath.Pow2(boundingBox.calculateBoxCenter().X - enemyPosX)
+                + FastMath.Pow2(boundingBox.calculateBoxCenter().Z - enemyPosZ) <= FastMath.Pow2(radio)
+            );
+
+            return objetos;
+        }
+
+        public List<TgcBoundingCylinderFixedY> boundingCylindersDentroDelRadio(Enemy enemigo, float radio)
+        {
+            var enemyPosX = enemigo.Position.X;
+            var enemyPosZ = enemigo.Position.Z;
+
+            foreach(var cil in boundingCylinders)
+            {
+                //Esto es para testear que se seleccionan los posibles objetos en los cuales se esconderia
+                //el enemegio, BORRAR!
+                if (FastMath.Pow2(cil.Center.X - enemyPosX) + FastMath.Pow2(cil.Center.Z - enemyPosZ)
+                    <= FastMath.Pow2(radio))
+                {
+                    cil.setRenderColor(System.Drawing.Color.Red);
+                }
+                else
+                {
+                    cil.setRenderColor(System.Drawing.Color.Yellow);
+                }
+            }
+
+            List<TgcBoundingCylinderFixedY> objetos = boundingCylinders.FindAll(boundingCylinder =>
+
+               FastMath.Pow2(boundingCylinder.Center.X - enemyPosX)
+                + FastMath.Pow2(boundingCylinder.Center.Z - enemyPosZ) <= FastMath.Pow2(radio)
+            );
+
+            return objetos;
+        }
+
+
+        public TgcBoundingCylinderFixedY cilindroMasCercano(Enemy enemigo,List<TgcBoundingCylinderFixedY> cilindros)
+        {
+            TgcBoundingCylinderFixedY cilindroMasCercano = null;
+            float distanciamin = 0;
+
+            foreach (var cil in cilindros)
+            {
+                var distancia = Vector3.Subtract(enemigo.Position, cil.Center);
+
+                if (cilindroMasCercano == null)
+                {
+                    cilindroMasCercano = cil;
+                    distanciamin = distancia.Length();
+                }
+                else
+                {
+                    if (distancia.Length() < distanciamin)
+                    {
+                        cilindroMasCercano = cil;
+                        distanciamin = distancia.Length();
+                    }
+                }
+            }
+
+
+            return cilindroMasCercano;
+        }
+
+        public TgcBoundingAxisAlignBox AABBMasCercano(Enemy enemigo, List<TgcBoundingAxisAlignBox> boundingBoxes)
+        {
+            TgcBoundingAxisAlignBox cilindroMasCercano = null;
+            float distanciamin = 0;
+
+            foreach (var cil in boundingBoxes)
+            {
+                var distancia = Vector3.Subtract(enemigo.Position, cil.calculateBoxCenter());
+
+                if (cilindroMasCercano == null)
+                {
+                    cilindroMasCercano = cil;
+                    distanciamin = distancia.Length();
+                }
+                else
+                {
+                    if (distancia.Length() < distanciamin)
+                    {
+                        cilindroMasCercano = cil;
+                        distanciamin = distancia.Length();
+                    }
+                }
+            }
+
+
+            return cilindroMasCercano;
+        }
+
+
+        #endregion
     }
 }

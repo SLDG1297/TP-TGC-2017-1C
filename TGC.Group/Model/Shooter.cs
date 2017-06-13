@@ -166,7 +166,6 @@ namespace TGC.Group.Model
             //quadtree.createDebugQuadtreeMeshes();
             gameLoaded = true;
             loadPostProcessShaders();
-            //loadSounds(MediaDir);
 
             //escondo el cursor
             mouseEscondido = true;
@@ -283,7 +282,7 @@ namespace TGC.Group.Model
                     // Update jugador
                     if (!jugador.Muerto)
                     {
-                        jugador.mover(Input, terreno.posicionEnTerreno(jugador.Position.X, jugador.Position.Z), ElapsedTime);
+                        jugador.mover(Input, ElapsedTime);
 
                         // updownRot -= Input.YposRelative * 0.05f;
                         camaraInterna.OffsetHeight += Input.YposRelative;
@@ -298,6 +297,10 @@ namespace TGC.Group.Model
                             camaraInterna.OffsetForward -= Input.WheelPos * 10;
                         }
                     }
+                    else
+                    {                      
+                        collisionManager.getPlayers().Remove(jugador);
+                    }
 					// Update SkyBox
 					// Cuando se quiera probar cámara en tercera persona
 					skyBox.Center = jugador.Position;
@@ -307,16 +310,24 @@ namespace TGC.Group.Model
 					skyBox.Center = Camara.Position;
 				}
 
-				// Update enemigos.
-				foreach (var enemy in enemigos)
-				{
-					//enemy.updateStatus(jugador.Position, ElapsedTime, obstaculos, terreno.posicionEnTerreno(enemy.Position.X, enemy.Position.Z));
 
+                var enemigosASacar = new List<Enemy>();
+                // Update enemigos.
+                foreach (var enemy in enemigos)
+				{
                     enemy.mover(jugador.Position, obstaculos, ElapsedTime,  terreno.posicionEnTerreno(enemy.Position.X, enemy.Position.Z));
+                    if (enemy.Muerto) enemigosASacar.Add(enemy);
                 }
 
-				//chequear colisiones con balas
-				collisionManager.checkCollisions(ElapsedTime);
+                foreach (var enemigo in enemigosASacar)
+                {
+                    enemigo.dispose();
+                    enemigos.Remove(enemigo);
+                    collisionManager.getPlayers().Remove(enemigo);
+                }
+
+                //chequear colisiones con balas
+                collisionManager.checkCollisions(ElapsedTime);
 				// Update HUD
 				updateText();
                 
@@ -327,9 +338,9 @@ namespace TGC.Group.Model
                     mouseEscondido = false;
                 }
 
-                //SoundPlayer.Instance.playPlayerSounds(MediaDir, Input, jugador);                
-
-                if (mouseEscondido) Cursor.Position = mouseCenter;
+                //SoundPlayer.Instance.playPlayerSounds(MediaDir, Input, jugador);           
+                if (mouseEscondido && !jugador.Muerto) Cursor.Position = mouseCenter;
+                else Cursor.Show();
             }            
         }
         

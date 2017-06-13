@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TGC.Core.BoundingVolumes;
+using TGC.Core.Utils;
 using TGC.Group.Model.Collisions;
 
 namespace TGC.Group.Model.Entities.Movimientos
@@ -49,15 +51,19 @@ namespace TGC.Group.Model.Entities.Movimientos
 
         public override void updateStatus(Enemy enemigo, Vector3 posicionJugador)
         {
+            //si esta a una distancia cercana, escapar para mantener una distancia segura
             if(estaCerca(enemigo,posicionJugador))
             {
                 enemigo.setEstado(new Escapar());
             }
 
+            //si el jugador se cruza en la mirada, disparar
             if(enemigo.debeDisparar())
             {
                 enemigo.setEstado(new Perseguir());
             }
+
+            //si esta muy lejos, moverse en una direccion cualquiera, o sino ir a buscarlo
         }
     }
 
@@ -71,11 +77,13 @@ namespace TGC.Group.Model.Entities.Movimientos
 
         public override void updateStatus(Enemy enemigo, Vector3 posicionJugador)
         {
+            //si choca con algun objeto, invertir direccion o cambiar de movimiento
             if (CollisionManager.Instance.colisiona(enemigo))
             {
                 invertirDireccion();
             }
 
+            //si esta a una distancia cercana, escapar para mantener una distancia segura
             if (estaCerca(enemigo, posicionJugador))
             {
                 enemigo.setEstado(new Escapar());
@@ -111,11 +119,14 @@ namespace TGC.Group.Model.Entities.Movimientos
 
         public override void updateStatus(Enemy enemigo, Vector3 posicionJugador)
         {
+
+            //si choca con algun objeto, invertir direccion o cambiar de movimiento
             if (CollisionManager.Instance.colisiona(enemigo))
             {
                 invertirDireccion();
             }
 
+            //si esta a una distancia cercana, escapar para mantener una distancia segura
             if (estaCerca(enemigo, posicionJugador))
             {
                 enemigo.setEstado(new Escapar());
@@ -167,9 +178,98 @@ namespace TGC.Group.Model.Entities.Movimientos
             //EDIT : otra opcion es que busque cobertura
             if (estaLejos(enemigo, posicionJugador))
             {
-                enemigo.setEstado(new Parado());
+                //enemigo.setEstado(new Parado());
+                enemigo.setEstado(new Refugiarse());
             }
         }
      }
 
+      
+     public class Refugiarse : Movimiento
+     {
+        public bool cubierto;
+
+        public override Vector3 mover(Enemy enemigo, Vector3 posicionJugador)
+        {
+            //busco objetos a la redonda para cubrirme
+            //de ellos, me escondo detras del que este mas cerca del jugador
+            //para esconderme, me muevo hasta que haya objeto entre el jugador y el enemigo
+            var res = new Vector3();
+            var res1 = new Vector3(0, 0, 0);
+            float dist1 = 0;
+
+            var res2 = new Vector3(0, 0, 0);
+            float dist2= 0;
+
+            var cilindros = CollisionManager.Instance.boundingCylindersDentroDelRadio(enemigo, 700);
+            var boundingBoxes = CollisionManager.Instance.boundingBoxDentroDelRadio(enemigo, 700);
+
+            if(cilindros != null)
+            {
+                var cilindroMasCercano = CollisionManager.Instance.cilindroMasCercano(enemigo, cilindros);
+
+                if(cilindroMasCercano!= null)
+                {
+                    //si se interpone algo entre el jugador y el enemigo
+                    //sumarle algo en el sentido
+                    res1 = Vector3.Subtract( cilindroMasCercano.Center, enemigo.Position);
+                    dist1 = res1.Length();
+                }
+                else
+                {
+                    res1 = new Vector3(0, 0, 0);
+                }
+            }
+
+            if (boundingBoxes != null)
+            {
+                var bbMasCercano = CollisionManager.Instance.AABBMasCercano(enemigo, boundingBoxes);
+
+                    if (bbMasCercano != null)
+                    {
+                        //si se interpone algo entre el jugador y el enemigo
+                        //sumarle algo en el sentido
+                        res2 = Vector3.Subtract(bbMasCercano.calculateBoxCenter(), enemigo.Position);
+                        dist2 = res2.Length();
+                    }
+                    else
+                    {
+                         res2 = new Vector3(0, 0, 0);
+                    }
+            }
+
+            if (dist1 == 0)
+            {
+                if (dist2 != 0)
+                {
+                    res = res2;
+                }
+            }
+            else
+            {
+                if(dist2 == 0)
+                {
+                    res = res1;
+                }
+            }
+
+            res.Y = 0;
+            return res;
+        }
+
+        public override void updateStatus(Enemy enemigo, Vector3 posicionJugador)
+        {
+            if (estaCerca(enemigo, posicionJugador))
+            {
+                enemigo.setEstado(new Escapar());
+            }
+
+            if (CollisionManager.Instance.colisiona(enemigo))
+            {
+                enemigo.setEstado(new Parado());
+            }
+        }
+
+        
+     }
 }
