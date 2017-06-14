@@ -30,6 +30,10 @@ namespace TGC.Group.Model
 {
     public class Shooter : TgcExample
     {
+        private readonly float far_plane = 10000f;
+        private readonly float near_plane = 1f;
+
+        private readonly int SHADOWMAP_SIZE = 512;
         private const int FACTOR = 8;
         // Constantes de escenario
         // Menu
@@ -75,7 +79,6 @@ namespace TGC.Group.Model
         private TgcTexture alarmTexture;
         private Effect gaussianBlur;
         private Effect alarmaEffect;
-
         private Surface depthStencil; // Depth-stencil buffer
         private Surface depthStencilOld;
 
@@ -96,6 +99,20 @@ namespace TGC.Group.Model
         
         //sonidos
         public TgcStaticSound sound;
+
+        //sombras
+        private Effect shadowMap;
+        private bool activateShadowMap = false;
+        private float alfa_sol; // pos. del sol
+        private Vector3 g_LightDir; // direccion de la luz actual
+        private Vector3 g_LightPos; // posicion de la luz actual (la que estoy analizando)
+        private Matrix g_LightView; // matriz de view del light
+        private Matrix g_mShadowProj; // Projection matrix for shadow map
+        private CubeTexture g_pCubeMapAgua;
+        private Surface g_pDSShadow; // Depth-stencil buffer for rendering to shadow map
+
+        private Texture g_pShadowMap; // Texture to which the shadow map is rendered
+
 
         /// <summary>
         ///     Constructor del juego.
@@ -150,6 +167,12 @@ namespace TGC.Group.Model
             world.initObstaculos();
             CollisionManager.Instance.setPlayer(jugador);
 
+            foreach(var mesh in world.Meshes)
+            {
+                if(activateShadowMap) mesh.Effect = shadowMap;
+                //mesh.Technique = "RenderScene";
+            }
+
             // Iniciar cámara
             if (!FPSCamera) {
                 // Configurar cámara en Tercera Persona y la asigno al TGC.
@@ -171,11 +194,14 @@ namespace TGC.Group.Model
             mouseEscondido = true;
             Cursor.Hide();
 
+            if(activateShadowMap) createShadowMap();
             //SoundPlayer.Instance.playMusic(MediaDir, DirectSound);
         }
 
         public void loadPostProcessShaders()
         {
+            shadowMap =TgcShaders.loadEffect(ShadersDir + "ShadowMap.fx");
+
             var device = D3DDevice.Instance.Device;
             //Se crean 2 triangulos (o Quad) con las dimensiones de la pantalla con sus posiciones ya transformadas
             // x = -1 es el extremo izquiedo de la pantalla, x = 1 es el extremo derecho
@@ -239,6 +265,39 @@ namespace TGC.Group.Model
             intVaivenAlarm.reset();
         }
 
+        public void createShadowMap()
+        {
+            //--------------------------------------------------------------------------------------
+            // Creo el shadowmap.
+            // Format.R32F
+            // Format.X8R8G8B8
+            g_pShadowMap = new Texture(D3DDevice.Instance.Device, SHADOWMAP_SIZE, SHADOWMAP_SIZE,
+                1, Usage.RenderTarget, Format.R32F,
+                Pool.Default);
+
+            // tengo que crear un stencilbuffer para el shadowmap manualmente
+            // para asegurarme que tenga la el mismo tamano que el shadowmap, y que no tenga
+            // multisample, etc etc.
+            g_pDSShadow = D3DDevice.Instance.Device.CreateDepthStencilSurface(SHADOWMAP_SIZE,
+                SHADOWMAP_SIZE,
+                DepthFormat.D24S8,
+                MultiSampleType.None,
+                0,
+                true);
+            // por ultimo necesito una matriz de proyeccion para el shadowmap, ya
+            // que voy a dibujar desde el pto de vista de la luz.
+            // El angulo tiene que ser mayor a 45 para que la sombra no falle en los extremos del cono de luz
+            // de hecho, un valor mayor a 90 todavia es mejor, porque hasta con 90 grados es muy dificil
+            // lograr que los objetos del borde generen sombras
+            var aspectRatio = D3DDevice.Instance.AspectRatio;
+            g_mShadowProj = Matrix.PerspectiveFovLH(Geometry.DegreeToRadian(130.0f),
+                aspectRatio, near_plane, far_plane);
+            D3DDevice.Instance.Device.Transform.Projection =
+                Matrix.PerspectiveFovLH(Geometry.DegreeToRadian(45.0f),
+                    aspectRatio, near_plane, far_plane);
+            
+
+        }
 
         public void loadSounds(string MediaDir, string soundPath)
         {
@@ -277,7 +336,19 @@ namespace TGC.Group.Model
 			else
 			{
                 world.updateWorld(ElapsedTime);
-				if (!FPSCamera)
+
+
+                alfa_sol += ElapsedTime * Geometry.DegreeToRadian(1.0f);
+                if (alfa_sol > 2.5)
+                    alfa_sol = 1.5f;
+                // animo la posicion del sol
+                //g_LightPos = new Vector3(1500f * (float)Math.Cos(alfa_sol), 1500f * (float)Math.Sin(alfa_sol), 0f);
+                g_LightPos = new Vector3(2000f * (float)Math.Cos(alfa_sol), 2000f * (float)Math.Sin(alfa_sol),
+                    0f);
+                g_LightDir = -g_LightPos;
+                g_LightDir.Normalize();
+
+                if (!FPSCamera)
 				{
                     // Update jugador
                     if (!jugador.Muerto)
@@ -348,6 +419,7 @@ namespace TGC.Group.Model
         {
             ClearTextures();
             var device = D3DDevice.Instance.Device;
+            D3DDevice.Instance.Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
 
             //esto es renderizar todo como viene, sin efectos
             gaussianBlur.Technique = "DefaultTechnique";
@@ -369,7 +441,12 @@ namespace TGC.Group.Model
 
             device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
 
+            if (seDebeActivarEfecto() && activateShadowMap) RenderShadowMap();
             //Dibujamos la escena comun, pero en vez de a la pantalla al Render Target
+           // terreno.getTerrerno().Effect = shadowMap;
+            //terreno.getTerrerno().Technique = "RenderScene";
+        
+
             drawScene(device, ElapsedTime);
 
             //Liberar memoria de surface de Render Target
@@ -396,8 +473,7 @@ namespace TGC.Group.Model
             device.EndScene();
             device.Present();
         }
-
-
+        
         private bool seDebeActivarEfecto()
         {
             return gameLoaded && efecto ;
@@ -515,8 +591,7 @@ namespace TGC.Group.Model
                     }
                 }       
         }
-
-
+        
         public void drawAlarm(Device device, float elapsedTime)
         {
             device.SetRenderTarget(0, pOldRT);
@@ -568,6 +643,63 @@ namespace TGC.Group.Model
             device.EndScene();
         }
 
+        public void RenderShadowMap()
+        {
+            g_LightPos = new Vector3(4293, 2437, 18358);
+            g_LightDir = new Vector3(0,0,0) - g_LightPos;
+            g_LightDir.Normalize();
+            //Doy posicion a la luz
+            // Calculo la matriz de view de la luz
+            shadowMap.SetValue("g_vLightPos", new Vector4(g_LightPos.X, g_LightPos.Y, g_LightPos.Z, 1));
+            shadowMap.SetValue("g_vLightDir", new Vector4(g_LightDir.X, g_LightDir.Y, g_LightDir.Z, 1));
+            g_LightView = Matrix.LookAtLH(g_LightPos, g_LightPos + g_LightDir, new Vector3(0, 0, 1));
+
+            // inicializacion standard:
+            shadowMap.SetValue("g_mProjLight", g_mShadowProj);
+            shadowMap.SetValue("g_mViewLightProj", g_LightView * g_mShadowProj);
+
+            // Primero genero el shadow map, para ello dibujo desde el pto de vista de luz
+            // a una textura, con el VS y PS que generan un mapa de profundidades.
+            var pOldRT = D3DDevice.Instance.Device.GetRenderTarget(0);
+            var pShadowSurf = g_pShadowMap.GetSurfaceLevel(0);
+            D3DDevice.Instance.Device.SetRenderTarget(0, pShadowSurf);
+            var pOldDS = D3DDevice.Instance.Device.DepthStencilSurface;
+            D3DDevice.Instance.Device.DepthStencilSurface = g_pDSShadow;
+            D3DDevice.Instance.Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.White, 1.0f, 0);
+            D3DDevice.Instance.Device.BeginScene();
+
+            // Hago el render de la escena pp dicha
+            // solo los objetos que proyectan sombras:
+            //Renderizar terreno
+           // terreno.getTerrerno().Effect = shadowMap;
+            //erreno.getTerrerno().Technique = "RenderShadow";
+            //terreno.render();
+            // dibujo el wolrd
+            foreach(var mesh in world.Meshes)
+            {
+                mesh.Technique = "RenderShadow";
+            }
+            world.renderWorld(Frustum);
+            
+            // el tanque
+            // Seteo la tecnica: estoy generando la sombra o estoy dibujando la escena
+            //mesh.Technique = "RenderShadow";
+            //mesh.render();
+            // Termino
+            D3DDevice.Instance.Device.EndScene();
+            //TextureLoader.Save("shadowmap.bmp", ImageFileFormat.Bmp, g_pShadowMap);
+
+            // restuaro el render target y el stencil
+            D3DDevice.Instance.Device.DepthStencilSurface = pOldDS;
+            D3DDevice.Instance.Device.SetRenderTarget(0, pOldRT);
+
+            shadowMap.SetValue("g_txShadow", g_pShadowMap);
+
+            foreach (var mesh in world.Meshes)
+            {
+                mesh.Technique = "RenderScene";
+            }
+        }
 
         public override void Dispose()
         {

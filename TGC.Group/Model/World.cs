@@ -544,6 +544,11 @@ namespace TGC.Group.Model
 
         }
 
+        public void renderWorld(TgcFrustum frustum)
+        {
+            Utils.renderFromFrustum(meshes, frustum);
+        }
+
         TgcMesh cargarMesh(string unaDireccion)
         {
             return cargarScene(unaDireccion).Meshes[0];
