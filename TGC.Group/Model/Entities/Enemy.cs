@@ -49,10 +49,10 @@ namespace TGC.Group.Model.Entities
             switch (num)
             {
                 case 0:
-                    movimiento = new Unidireccion();
+                    movimiento = new Unidireccion(true,true);
                     break;
                 case 1:
-                    movimiento = new Diagonal();
+                    movimiento = new Diagonal(true,true);
                     break;
                 default:
                     movimiento = new Parado();
@@ -132,7 +132,8 @@ namespace TGC.Group.Model.Entities
 
         public bool debeDisparar()
         {
-            return CollisionManager.Instance.colisionRayoPlayer(ray);
+            return
+                CollisionManager.Instance.colisionRayoPlayer(ray);
         }
 
         public float VelocidadCaminar

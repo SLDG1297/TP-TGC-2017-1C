@@ -70,23 +70,58 @@ namespace TGC.Group.Model.Entities.Movimientos
     //EL ENEMIGO SE MUEVE EN DIAGONAL
     public class Diagonal : Movimiento
     {
+        public Vector3 movimiento = new Vector3(1, 0, 1);
+
+        public Diagonal(bool xPos, bool zPos)
+        {
+            if (!xPos) movimiento.X = -1;
+            if (!zPos) movimiento.Z = -1;
+        }
+
         public override Vector3 mover(Enemy enemigo, Vector3 posicionJugador)
         {
-            return new Vector3(1, 0, 1) * enemigo.VelocidadCaminar * signo;
+            return movimiento * enemigo.VelocidadCaminar * signo;
         }
 
         public override void updateStatus(Enemy enemigo, Vector3 posicionJugador)
         {
             //si choca con algun objeto, invertir direccion o cambiar de movimiento
             if (CollisionManager.Instance.colisiona(enemigo))
-            {
+            {          
+                //invertir direccion
                 invertirDireccion();
+
+                //seguir asi o sobre alguno de los ejes
+                var random = new Random();
+                var num = random.Next(0, 2);
+
+                switch (num)
+                {
+                    //direccion de x
+                    case 0:
+                        enemigo.setEstado(new Unidireccion(true, movimiento.X > 0));
+                        break;
+
+                    //direccion de z
+                    case 1:
+                        enemigo.setEstado(new Unidireccion(false, movimiento.Z > 0));
+                        break;
+
+                    default:
+                        //simplemente invierto la direccion
+                        break;                        
+                }
             }
 
             //si esta a una distancia cercana, escapar para mantener una distancia segura
             if (estaCerca(enemigo, posicionJugador))
             {
                 enemigo.setEstado(new Escapar());
+            }
+
+            if(enemigo.debeDisparar() && estaLejos(enemigo, posicionJugador))
+            {
+                enemigo.setEstado(new Perseguir());
             }
         }
     }
@@ -96,26 +131,30 @@ namespace TGC.Group.Model.Entities.Movimientos
     {
         private int x = 1;
         private int z = 0;
+        
+
+        public Unidireccion(bool ejex, bool positivo)
+        {
+            signo = 1;
+            if (!ejex)
+            {
+                x = 0;
+                if (positivo) z = 1;
+                else z = -1;
+            }
+            else
+            {
+                z = 0;
+                if (positivo) x = 1;
+                else x = -1;
+            }
+        }
 
         public override Vector3 mover(Enemy enemigo, Vector3 posicionJugador)
         {
             return new Vector3(x, 0, z) * enemigo.VelocidadCaminar *  signo;
         }
-
-        public override void invertirDireccion()
-        {
-            if (z == 0)
-            {
-                z = 1;
-                x = 0;
-            }
-
-            if (x == 0)
-            {
-                z = 0;
-                x = 1;
-            }
-        }
+        
 
         public override void updateStatus(Enemy enemigo, Vector3 posicionJugador)
         {
@@ -124,6 +163,45 @@ namespace TGC.Group.Model.Entities.Movimientos
             if (CollisionManager.Instance.colisiona(enemigo))
             {
                 invertirDireccion();
+
+                //diagonal, pero siguiendo la direccion que tenia
+                //seguir asi o sobre alguno de los ejes
+                var random = new Random();
+                var num = random.Next(0, 2);
+
+                switch (num)
+                {
+                    case 0:
+                        //uno de los signos positivo y el otro segun la direccion que tenia pero opuesta
+                        if (x == 0)
+                        {
+                            enemigo.setEstado(new Diagonal(true, z > 0));
+                        }
+                        else
+                        {
+                            enemigo.setEstado(new Diagonal(z > 0, true));
+                        }
+                        break;
+
+                    //direccion de z
+                    case 1:
+                        //lo opuesto a lo anterior
+                        if (x == 0)
+                        {
+                            enemigo.setEstado(new Diagonal(false, z > 0));
+                        }
+                        else
+                        {
+                            enemigo.setEstado(new Diagonal(z > 0, false));
+                        }
+                        break;
+
+                    default:
+                        //simplemente invierto la direccion
+                        break;
+                }
+
+                //invertir direccion
             }
 
             //si esta a una distancia cercana, escapar para mantener una distancia segura
@@ -183,8 +261,7 @@ namespace TGC.Group.Model.Entities.Movimientos
             }
         }
      }
-
-      
+          
      public class Refugiarse : Movimiento
      {
         public bool cubierto;

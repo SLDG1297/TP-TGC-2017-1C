@@ -348,7 +348,7 @@ namespace TGC.Group.Model.Collisions
             else
             {
                 var cilindro = player.BoundingCylinder;
-                return TgcCollisionUtils.testRayCylinder(ray, cilindro);
+                return TgcCollisionUtils.testRayCylinder(ray, cilindro) && !player.Muerto;
             }
         }
 
