@@ -167,7 +167,10 @@ namespace TGC.Group.Model.Entities
             bala.Position += desplazamiento;
             bala.updateBoundingBox();
             bala.AutoTransformEnable = false;
-            bala.Transform = Matrix.RotationX(bala.Rotation.X) * Matrix.Scaling(bala.Scale) * Matrix.Translation(bala.Position);
+            bala.Transform = Matrix.RotationX(bala.Rotation.X)
+                             * Matrix.RotationY(bala.Rotation.Y)
+                             * Matrix.Scaling(bala.Scale)
+                             * Matrix.Translation(bala.Position);
             bala.BoundingBox.transform(bala.Transform);            
         }
 
@@ -181,7 +184,7 @@ namespace TGC.Group.Model.Entities
             if (!impacto)
             {
                 bala.render();
-                bala.BoundingBox.render();
+                //bala.BoundingBox.render();
             }
         }
 

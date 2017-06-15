@@ -163,7 +163,7 @@ namespace TGC.Group.Model.Entities
 
         public override void render(float elapsedTime) {
             esqueleto.animateAndRender(elapsedTime);
-            arrow.render();
+            //arrow.render();
         }
 	}   
 }
