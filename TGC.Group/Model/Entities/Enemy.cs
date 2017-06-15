@@ -76,27 +76,32 @@ namespace TGC.Group.Model.Entities
         public void mover(Vector3 posicionJugador, List<TgcBoundingAxisAlignBox> obstaculos, float elapsedTime, float posicionY)
         {
             movimiento.updateStatus(this, posicionJugador);
-            float rotate = 0;
             var desplazamiento = movimiento.mover(this, posicionJugador) * elapsedTime;
             resetBooleans();
 
+            float rotation = 0f;
+
             moving = desplazamiento != new Vector3(0, 0, 0);
-            rotate = 0f;
+            //rotate = 0f;
+
+            esqueleto.AutoTransformEnable = false;
+            if (moving)
+            {
+                rotation = anguloEntre(desplazamiento, direccion);
+                esqueleto.rotateY(rotation);
+            }
 
             displayAnimations();            
-            esqueleto.rotateY(FastMath.ToRad(rotate));
 
             var realmovement = CollisionManager.Instance.adjustPosition(this, desplazamiento);
             esqueleto.Position += realmovement;
+            CollisionManager.Instance.applyGravity(elapsedTime,this);
 
             updateBoundingBoxes();
-            CollisionManager.Instance.applyGravity(elapsedTime,this);
             lastPos = esqueleto.Position;
-            esqueleto.Transform = Matrix.RotationY(FastMath.ToRad(rotate)) *
-                                  Matrix.Translation(esqueleto.Position);
-
-            BoundingCylinder.setRenderColor(System.Drawing.Color.Red);
-
+            esqueleto.Transform = Matrix.RotationY(rotation) 
+                                  * Matrix.Translation(esqueleto.Position);
+            
             //actualizo el rayo);
             if (debeDisparar())
             {
@@ -105,6 +110,15 @@ namespace TGC.Group.Model.Entities
             }
 
             updateRay();
+        }
+
+        public float anguloEntre(Vector3 v1, Vector3 v2)
+        {
+            var vector1 = new Vector3(v1.X, 0, v1.Z);
+            var vector2 = new Vector3(v2.X, 0, v2.Z);
+            var angle = FastMath.Acos(Vector3.Dot(Vector3.Normalize(vector1), Vector3.Normalize(vector2)));
+
+            return angle;
         }
 
         public void updateRay()
