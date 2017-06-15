@@ -62,6 +62,9 @@ namespace TGC.Group.Model.Entities
             ray = new TgcRay(initPosition + new Vector3(0,50,0),direccion);
             arrow = new TgcArrow();
 
+           //var ray1;
+           //var ray2;
+
             arrow.PStart = ray.Origin;
             arrow.PEnd = initPosition + (direccion * 100f);
             arrow.Thickness = 2f;
@@ -84,24 +87,27 @@ namespace TGC.Group.Model.Entities
             moving = desplazamiento != new Vector3(0, 0, 0);
             //rotate = 0f;
 
-            esqueleto.AutoTransformEnable = false;
-            if (moving)
-            {
-                rotation = anguloEntre(desplazamiento, direccion);
-                esqueleto.rotateY(rotation);
-            }
+            //esqueleto.AutoTransformEnable = false;
+            //if (moving)
+            //{
+            //    rotation = anguloEntre(desplazamiento, direccion);
+            //    esqueleto.rotateY(rotation);
+            //}
 
-            displayAnimations();            
+            displayAnimations();
 
+            desplazamiento.TransformCoordinate(Matrix.RotationY(Rotacion));
             var realmovement = CollisionManager.Instance.adjustPosition(this, desplazamiento);
             esqueleto.Position += realmovement;
             CollisionManager.Instance.applyGravity(elapsedTime,this);
+            //direccion = realmovement;
 
             updateBoundingBoxes();
             lastPos = esqueleto.Position;
             esqueleto.Transform = Matrix.RotationY(rotation) 
                                   * Matrix.Translation(esqueleto.Position);
-            
+
+            arma.setPosition(esqueleto.Position);
             //actualizo el rayo);
             if (debeDisparar())
             {
@@ -124,7 +130,7 @@ namespace TGC.Group.Model.Entities
         public void updateRay()
         {
             //el mismo que la bala!
-            ray.Origin = esqueleto.Position + new Vector3(0,40,0);
+            ray.Origin = esqueleto.Position + new Vector3(0, 40, 0);
             var dir = new Vector3(direccion.X, direccion.Y, direccion.Z);
             //dir.Normalize();
             ray.Direction = dir;
@@ -157,7 +163,7 @@ namespace TGC.Group.Model.Entities
 
         public override void render(float elapsedTime) {
             esqueleto.animateAndRender(elapsedTime);
-            //arrow.render();
+            arrow.render();
         }
 	}   
 }

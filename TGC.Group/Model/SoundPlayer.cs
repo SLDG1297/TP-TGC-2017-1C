@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.DirectX;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,16 +12,18 @@ namespace TGC.Group.Model
 {
     public class SoundPlayer
     {
-        private string musicFilePath;
         private TgcMp3Player mp3Player = new TgcMp3Player();
 
-        private static SoundPlayer instance;
-
-        public TgcStaticSound shootingGun;
-        public TgcStaticSound clipin;
-        public TgcStaticSound boltpull;
+        private static SoundPlayer instance;       
 
         public TgcDirectSound DirectSound;
+
+        public string mediaDir;
+        public Tgc3dSound sound;
+        public Tgc3dSound ambientSound;
+
+        public float time = 0;
+
 
         //Constructor privado para que nadie pueda instanciarlo
         private SoundPlayer() { }
@@ -34,9 +37,19 @@ namespace TGC.Group.Model
 
             }
         }
+        
+        public void initAndPlayMusic(string MediaDir, TgcDirectSound directsound, Personaje personaje){
+            this.DirectSound = directsound;
+            mediaDir = MediaDir;
+            var filePath = MediaDir + "Sound\\music\\Military.mp3";
 
+            mp3Player.closeFile();
+            mp3Player.FileName = filePath;
 
+            mp3Player.play(true);
 
+            DirectSound.ListenerTracking = personaje.Esqueleto;
+        }
         public void playMusic(string MediaDir, TgcDirectSound directsound)
         {
             this.DirectSound = directsound;
@@ -47,43 +60,15 @@ namespace TGC.Group.Model
             mp3Player.FileName = filePath;
 
             mp3Player.play(true);
+            mediaDir = MediaDir;
         }
 
         public void dispose()
         {
             mp3Player.stop();
             mp3Player.closeFile();
-
-            if (shootingGun != null) shootingGun.dispose();
-            if (clipin != null) clipin.dispose();
-            if (boltpull != null) boltpull.dispose();
         }
-
-        public void playPlayerSounds(string MediaDir,TgcD3dInput Input, Player player)
-        {
-            Arma arma = player.Arma;
-
-            if (Input.keyPressed(Microsoft.DirectX.DirectInput.Key.R))
-            {
-                clipin = loadStaticSound(clipin, MediaDir, arma.reloadPath);
-                clipin.play();
-            }
-
-            if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT) || Input.buttonDown(TgcD3dInput.MouseButtons.BUTTON_LEFT))
-            {
-                if (player.Arma.Balas > 0)
-                {
-                    shootingGun = loadStaticSound(shootingGun, MediaDir, arma.shootPath);
-                    shootingGun.play();
-                }
-                else
-                {
-                    boltpull = loadStaticSound(boltpull, MediaDir, arma.noBulletPath);
-                    boltpull.play();
-                }
-
-            }
-        }
+        
 
         public TgcStaticSound loadStaticSound(TgcStaticSound sound,string MediaDir, string soundPath)
         {            
@@ -109,5 +94,32 @@ namespace TGC.Group.Model
 
             return sound;
         }
+
+
+        public void play3DSound(Vector3 position, string filePath)
+        {
+            if (sound != null) sound.dispose();
+            sound = new Tgc3dSound(mediaDir + filePath, position, DirectSound.DsDevice);
+            sound.MinDistance = 200f;
+
+            sound.play();
+        }
+
+        public void playAmbientSound(float elapsedTime)
+        {
+            time = +elapsedTime;
+
+            if(time >= 100 && time < 103)
+            {
+                ambientSound = new Tgc3dSound("Sound\\ambient\\Birds1.wav",new Vector3(800, 0, 1000), DirectSound.DsDevice);
+                ambientSound.MinDistance = 400f;
+
+                ambientSound.play();
+                time = 0;
+            }
+        }
+
+
+
     }
 }

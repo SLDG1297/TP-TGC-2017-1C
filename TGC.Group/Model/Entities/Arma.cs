@@ -19,7 +19,7 @@ namespace TGC.Group.Model.Entities
         private TgcSkeletalBoneAttach attachment;
         private string media;
         private int danioBala;
-
+        private Vector3 position;
 
         public string shootPath { get; set; }
         public string noBulletPath { get; set; }
@@ -84,7 +84,13 @@ namespace TGC.Group.Model.Entities
                 balas--;
 
                 //reproducir sonido!
+                SoundPlayer.Instance.play3DSound(position, shootPath);
             }
+            else
+            {
+                SoundPlayer.Instance.play3DSound(position, noBulletPath);
+            }
+
         }
 
         public void recarga()
@@ -93,6 +99,8 @@ namespace TGC.Group.Model.Entities
             {
                 balas = 30;
                 recargas--;
+
+                SoundPlayer.Instance.play3DSound(position, reloadPath);
             }
         }
         
@@ -110,6 +118,19 @@ namespace TGC.Group.Model.Entities
         public int DanioBala
         {
             get { return danioBala; }
+        }
+
+        public Vector3 Position
+        {
+            get
+            {
+                return position;
+            }
+        }
+
+        public void setPosition(Vector3 pos)
+        {
+            position = pos;
         }
     }
 

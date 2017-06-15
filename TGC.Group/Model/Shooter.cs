@@ -196,6 +196,7 @@ namespace TGC.Group.Model
 
             if(activateShadowMap) createShadowMap();
             //SoundPlayer.Instance.playMusic(MediaDir, DirectSound);
+            SoundPlayer.Instance.initAndPlayMusic(MediaDir, DirectSound, jugador);
         }
 
         public void loadPostProcessShaders()
@@ -375,11 +376,14 @@ namespace TGC.Group.Model
 					// Update SkyBox
 					// Cuando se quiera probar cámara en tercera persona
 					skyBox.Center = jugador.Position;
+
 				}
 				else
 				{
 					skyBox.Center = Camara.Position;
 				}
+
+                SoundPlayer.Instance.playAmbientSound(ElapsedTime);
 
 
                 var enemigosASacar = new List<Enemy>();

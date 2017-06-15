@@ -89,6 +89,7 @@ namespace TGC.Group.Model.Entities
             {
                 moveForward = -velocidadCaminar;
                 moving = true;
+
             }
 
             //Atras
@@ -161,7 +162,7 @@ namespace TGC.Group.Model.Entities
                                                 jump,// + posicionY - lastPos.Y,
                                                 moveForward * ElapsedTime);
             desplazamiento.TransformCoordinate(Matrix.RotationY(Rotacion));
-
+            
             //ajusto la posicion dependiendo las colisiones
             var realmove = CollisionManager.Instance.adjustPosition(this, desplazamiento);
             esqueleto.Position += realmove;            
@@ -171,13 +172,17 @@ namespace TGC.Group.Model.Entities
 
             updateBoundingBoxes();
             lastPos = esqueleto.Position;
+            arma.setPosition(esqueleto.Position);
 
             esqueleto.Transform = Matrix.RotationY(Utils.DegreeToRadian(rotate))
                                 * Matrix.RotationY(Rotacion)
                                 * Matrix.Translation(esqueleto.Position);
         }
 
-		protected List<TgcBoundingAxisAlignBox> getColliderAABBList(List<TgcBoundingAxisAlignBox> obstaculos)
+        
+
+
+        protected List<TgcBoundingAxisAlignBox> getColliderAABBList(List<TgcBoundingAxisAlignBox> obstaculos)
 		{
 			return obstaculos.FindAll(
 				delegate (TgcBoundingAxisAlignBox AABB) {
