@@ -441,7 +441,8 @@ namespace TGC.Group.Model
             //poldDs : old depthstencil
             pOldDS = device.DepthStencilSurface;
 
-            if (seDebeActivarEfecto()) device.DepthStencilSurface = depthStencilOld;
+            //if (seDebeActivarEfecto()) device.DepthStencilSurface = depthStencilOld;
+			if (seDebeActivarEfecto()) device.DepthStencilSurface = depthStencil;
 
             device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
 
