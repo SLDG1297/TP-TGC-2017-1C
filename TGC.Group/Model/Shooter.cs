@@ -228,7 +228,7 @@ namespace TGC.Group.Model
                 device.PresentationParameters.BackBufferHeight, 1, Usage.RenderTarget,
                 Format.X8R8G8B8, Pool.Default);
 
-            g_pRenderTarget4 = new Texture(device, device.PresentationParameters.BackBufferWidth / 4, 
+			g_pRenderTarget4 = new Texture(device, device.PresentationParameters.BackBufferWidth / 4, 
                                            device.PresentationParameters.BackBufferHeight / 4, 1, Usage.RenderTarget,
                                            Format.X8R8G8B8, Pool.Default);
 
@@ -459,10 +459,12 @@ namespace TGC.Group.Model
 
             if (seDebeActivarEfecto())
             {
+				device.SetRenderTarget(0, pOldRT);
                 darkening(device);
+				grayscale(device, (float)(100 - jugador.Health) / 100);
                 //drawGaussianBlur(device);
                 if (jugador.Health <= 10) drawAlarm(device, ElapsedTime);
-                if(jugador.Muerto) drawGaussianBlur(device);
+                if (jugador.Muerto) drawGaussianBlur(device);
             }
 
             device.BeginScene();
@@ -597,9 +599,9 @@ namespace TGC.Group.Model
                 }       
         }
         
-        public void drawAlarm(Device device, float elapsedTime)
+		public void drawAlarm(Device device, float elapsedTime)
         {
-            device.SetRenderTarget(0, pOldRT);
+            //device.SetRenderTarget(0, pOldRT);
             device.DepthStencilSurface = depthStencilOld;
             //Arrancamos la escena
             device.BeginScene();
@@ -625,7 +627,7 @@ namespace TGC.Group.Model
         }
 
         public void darkening(Device device) {
-            device.SetRenderTarget(0, pOldRT);
+            //device.SetRenderTarget(0, pOldRT);
             device.DepthStencilSurface = depthStencilOld;
             //Arrancamos la escena
             device.BeginScene();
@@ -647,6 +649,31 @@ namespace TGC.Group.Model
 
             device.EndScene();
         }
+
+		public void grayscale(Device device, float intensity)
+		{
+			//device.SetRenderTarget(0, pOldRT);
+			device.DepthStencilSurface = depthStencilOld;
+			//Arrancamos la escena
+			device.BeginScene();
+			device.VertexFormat = CustomVertex.PositionTextured.Format;
+			device.SetStreamSource(0, screenQuadVB, 0);
+
+
+			alarmaEffect.Technique = "GrayscaleTechnique";
+			//Cargamos parametros en el shader de Post-Procesado
+			alarmaEffect.SetValue("render_target2D", renderTarget2D);
+			alarmaEffect.SetValue("gray_intensity", intensity);
+			//Limiamos la pantalla y ejecutamos el render del shader
+			device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
+			alarmaEffect.Begin(FX.None);
+			alarmaEffect.BeginPass(0);
+			device.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 2);
+			alarmaEffect.EndPass();
+			alarmaEffect.End();
+
+			device.EndScene();
+		}
 
         public void RenderShadowMap()
         {

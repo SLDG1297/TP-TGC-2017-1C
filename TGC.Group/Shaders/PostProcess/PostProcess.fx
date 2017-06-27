@@ -209,3 +209,29 @@ technique DefaultTechnique
 		PixelShader = compile ps_2_0 ps_default();
 	}
 }
+
+/**************************************************************************************/
+/* GRAYSCALE */
+/**************************************************************************************/
+
+float gray_intensity;
+
+float4 ps_gray(PS_INPUT_DEFAULT Input) : COLOR0
+{
+	float4 color = tex2D(RenderTarget, Input.Texcoord);
+
+	float k = (color.r + color.g + color.b) / 3;
+
+	float4 gray = float4(k, k, k, 1);
+
+	return (1 - gray_intensity) * color + gray_intensity * gray;
+}
+
+technique GrayscaleTechnique
+{
+	pass Pass_0
+	{
+		VertexShader = compile vs_2_0 vs_default();
+		PixelShader = compile ps_2_0 ps_gray();
+	}
+}
