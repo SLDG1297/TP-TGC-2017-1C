@@ -25,6 +25,7 @@ using System.Windows.Forms;
 using TGC.Core.Sound;
 using System.IO;
 using TGC.Core.Input;
+using TGC.Group.Model.UI;
 
 namespace TGC.Group.Model
 {
@@ -69,6 +70,8 @@ namespace TGC.Group.Model
         // HUD
 		private TgcText2D texto = new TgcText2D();
 		private TgcText2D sombraTexto = new TgcText2D();
+
+        private UIManager UIManager;
 
         //otros
         private CollisionManager collisionManager;
@@ -197,6 +200,9 @@ namespace TGC.Group.Model
             if(activateShadowMap) createShadowMap();
             //SoundPlayer.Instance.playMusic(MediaDir, DirectSound);
             SoundPlayer.Instance.initAndPlayMusic(MediaDir, DirectSound, jugador);
+
+            UIManager = new UIManager();
+            UIManager.Init(MediaDir);
         }
 
         public void loadPostProcessShaders()
@@ -368,6 +374,8 @@ namespace TGC.Group.Model
                         {
                             camaraInterna.OffsetForward -= Input.WheelPos * 10;
                         }
+
+                        UIManager.Update(jugador, ElapsedTime);
                     }
                     else
                     {                      
@@ -404,6 +412,7 @@ namespace TGC.Group.Model
                 //chequear colisiones con balas
                 collisionManager.checkCollisions(ElapsedTime);
 				// Update HUD
+                //TODO : Borrar - Es solo para ver la posicion
 				updateText();
                 
                 //TODO: hacer que ESC sea pausar! u otro!
@@ -475,7 +484,14 @@ namespace TGC.Group.Model
                 sombraTexto.render();
                 texto.render();
 
-                if(FPSCamera) DrawText.drawText(Convert.ToString(Camara.Position), 10, 1000, Color.OrangeRed);
+                if (FPSCamera)
+                {
+                    DrawText.drawText(Convert.ToString(Camara.Position), 10, 1000, Color.OrangeRed);
+                }
+                else
+                {
+                    UIManager.Render();
+                }
             }
             device.EndScene();
             device.Present();
@@ -757,6 +773,7 @@ namespace TGC.Group.Model
                 collisionManager.disposeAll();
 
                 // Dispose HUD
+                UIManager.Dispose();
                 texto.Dispose();
                 sombraTexto.Dispose();
             }
@@ -846,10 +863,10 @@ namespace TGC.Group.Model
 		}
 
 		private void updateText() {
-			texto.Text = "HEALTH: " + jugador.Health;
-			texto.Text += "\tBALAS: " + jugador.Arma.Balas;
-			texto.Text += "\tRECARGAS: " + jugador.Arma.Recargas;
-            texto.Text += "\nPosition\n" + jugador.Position;
+			//texto.Text = "HEALTH: " + jugador.Health;
+			//texto.Text += "\tBALAS: " + jugador.Arma.Balas;
+			//texto.Text += "\tRECARGAS: " + jugador.Arma.Recargas;
+            texto.Text = "\nPosition\n" + jugador.Position;
 
             sombraTexto.Text = texto.Text;
 		}
