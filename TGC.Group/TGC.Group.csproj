@@ -102,6 +102,10 @@
     <Compile Include="Model\Shooter.cs" />
     <Compile Include="Model\SoundPlayer.cs" />
     <Compile Include="Model\Terreno.cs" />
+    <Compile Include="Model\UI\CustomBitmap.cs" />
+    <Compile Include="Model\UI\CustomSprite.cs" />
+    <Compile Include="Model\UI\Drawer2D.cs" />
+    <Compile Include="Model\UI\UIManager.cs" />
     <Compile Include="Model\Utils.cs" />
     <Compile Include="Model\World.cs" />
     <Compile Include="Program.cs" />
