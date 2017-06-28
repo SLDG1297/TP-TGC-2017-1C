@@ -113,7 +113,7 @@ namespace TGC.Group.Model.Entities
             if (debeDisparar())
             {
                 if (arma.Balas <= 0) arma.recarga();
-                arma.dispara(elapsedTime, Position, esqueleto.Rotation.Y);
+                arma.dispara(elapsedTime, Position, rotation);
             }
 
             updateRay();
@@ -121,9 +121,11 @@ namespace TGC.Group.Model.Entities
 
         public void updateRay()
         {
+            
             //el mismo que la bala!
             ray.Origin = esqueleto.Position + new Vector3(0, 40, 0);
             var dir = new Vector3(direccion.X, direccion.Y, direccion.Z);
+
             //dir.Normalize();
             ray.Direction = dir;
 

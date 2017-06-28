@@ -68,6 +68,7 @@ namespace TGC.Group.Model
 
         private CollisionManager collisionManager;
         private Effect vaiven;
+        private Effect viento;
 
         private float time;
 
@@ -77,7 +78,7 @@ namespace TGC.Group.Model
             collisionManager = CollisionManager.Instance;
             initObjects(MediaDir);
             initializeList();
-            time = 0;
+            
             initShaders(ShadersDir);
         }
 
@@ -90,6 +91,30 @@ namespace TGC.Group.Model
             
             avionCaza.Effect = vaiven;
             avionCaza.Technique = "CirculoXZ";
+
+            viento = TgcShaders.loadEffect(shadersDir + "VertexShader\\Wind.fx");
+            
+            foreach(var pasto in pastitos)
+            {
+                pasto.Effect = viento;
+                pasto.Technique = "Wind";
+            }
+
+            foreach (var arbusto in arbustitos)
+            {
+                arbusto.Effect = viento;
+                arbusto.Technique = "Wind";
+            }
+
+            foreach (var arbol in arbolesSelvaticos)
+            {
+                arbol.Effect = viento;
+                arbol.Technique = "Wind";
+            }
+
+
+            time = 0;
+
         }
 
         private void initObjects(string MediaDir)
@@ -122,9 +147,9 @@ namespace TGC.Group.Model
             string pastitoDir = MediaDir + "Meshes\\Vegetation\\Pasto\\Pasto-TgcScene.xml";
             pastito = cargarMesh(pastitoDir);
             pastito.AlphaBlendEnable = true;
-            pastito.Scale = new Vector3(0.5f, 0.5f, 0.5f);
+            pastito.Scale = new Vector3(2f, 2f, 2f);
             pastito.AutoTransformEnable = false;
-            Utils.disponerEnRectanguloXZ(pastito, pastitos, 20, 20, 50);
+            Utils.disponerEnRectanguloXZ(pastito, pastitos, 30, 30, 250);
             foreach (var pasto in pastitos)
             {
                 var despl = new Vector3(0, 0, 8000);
@@ -140,7 +165,7 @@ namespace TGC.Group.Model
             //arbustitos
             arbusto = cargarMesh(MediaDir + "Meshes\\Vegetation\\Arbusto\\Arbusto-TgcScene.xml");
             arbusto.AlphaBlendEnable = true;
-            arbusto.Scale = new Vector3(0.5f, 0.5f, 0.5f);
+            arbusto.Scale = new Vector3(2f, 2f, 2f);
             pastito.AutoTransformEnable = false;
             Utils.aleatorioXZExceptoRadioInicial(arbusto, arbustitos, 2000);
             terreno.corregirAltura(arbustitos);
@@ -424,6 +449,7 @@ namespace TGC.Group.Model
 
             //dispose de efectos
             vaiven.Dispose();
+            viento.Dispose();
         }
 
         public void initObstaculos()
@@ -533,6 +559,8 @@ namespace TGC.Group.Model
             time += elapsedTime;
             // Cargar variables de shader, por ejemplo el tiempo transcurrido.
             vaiven.SetValue("time", time);
+            viento.SetValue("time", time);
+
             canoa.UpdateMeshTransform();
 
             vaiven.SetValue("rotationTime", time);
@@ -541,11 +569,12 @@ namespace TGC.Group.Model
             //esto es para actualizar la posicion del bounding box
             var newPos = avionCaza.Position + new Vector3(1000 * FastMath.Sin(time), 0, 1000 * FastMath.Cos(time));
             avionCaza.BoundingBox.scaleTranslate(newPos, new Vector3(1, 1, 1));
-
+           
         }
 
         public void renderWorld(TgcFrustum frustum)
         {
+
             Utils.renderFromFrustum(meshes, frustum);
         }
 

@@ -46,7 +46,7 @@ namespace TGC.Group.Model
             mp3Player.closeFile();
             mp3Player.FileName = filePath;
 
-            mp3Player.play(true);
+            //mp3Player.play(true);
 
             DirectSound.ListenerTracking = personaje.Esqueleto;
         }
@@ -59,7 +59,7 @@ namespace TGC.Group.Model
             mp3Player.closeFile();
             mp3Player.FileName = filePath;
 
-            mp3Player.play(true);
+            //mp3Player.play(true);
             mediaDir = MediaDir;
         }
 
@@ -102,24 +102,21 @@ namespace TGC.Group.Model
             sound = new Tgc3dSound(mediaDir + filePath, position, DirectSound.DsDevice);
             sound.MinDistance = 200f;
 
-            sound.play();
+            //sound.play();
         }
 
         public void playAmbientSound(float elapsedTime)
         {
             time = +elapsedTime;
 
-            if(time >= 100 && time < 103)
+            if(time > 300 && time < 303)
             {
                 ambientSound = new Tgc3dSound("Sound\\ambient\\Birds1.wav",new Vector3(800, 0, 1000), DirectSound.DsDevice);
                 ambientSound.MinDistance = 400f;
 
-                ambientSound.play();
+                //ambientSound.play();
                 time = 0;
             }
         }
-
-
-
     }
 }

@@ -52,9 +52,21 @@ namespace TGC.Group.Model.Entities.Movimientos
         public override void updateStatus(Enemy enemigo, Vector3 posicionJugador)
         {
             //si esta a una distancia cercana, escapar para mantener una distancia segura
-            if(estaCerca(enemigo,posicionJugador))
+            if (estaCerca(enemigo, posicionJugador))
             {
-                enemigo.setEstado(new Escapar());
+                var random = new Random();
+                var num = random.Next(0, 1);
+
+                //escapo o directamente busco refugio
+                switch (num)
+                {
+                    case 0:
+                        enemigo.setEstado(new Escapar());
+                        break;
+                    case 1:
+                        enemigo.setEstado(new Refugiarse());
+                        break;
+                }
             }
 
             //si el jugador se cruza en la mirada, disparar
@@ -289,7 +301,7 @@ namespace TGC.Group.Model.Entities.Movimientos
                 {
                     //si se interpone algo entre el jugador y el enemigo
                     //sumarle algo en el sentido
-                    res1 = Vector3.Subtract( cilindroMasCercano.Center, enemigo.Position);
+                    res1 = Vector3.Subtract(cilindroMasCercano.Center, enemigo.Position);
                     dist1 = res1.Length();
                 }
                 else
@@ -345,8 +357,6 @@ namespace TGC.Group.Model.Entities.Movimientos
             {
                 enemigo.setEstado(new Parado());
             }
-        }
-
-        
+        }        
      }
 }
