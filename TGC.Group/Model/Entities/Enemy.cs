@@ -44,7 +44,7 @@ namespace TGC.Group.Model.Entities
             //direccion.Normalize();
             
             var random = new Random();
-            var num = random.Next(1, 3);
+            var num = random.Next(0,1);
 
             switch (num)
             {
@@ -54,9 +54,9 @@ namespace TGC.Group.Model.Entities
                 case 1:
                     movimiento = new Diagonal(true,true);
                     break;
-                default:
-                    movimiento = new Parado();
-                    break;
+                //default:
+                  //  movimiento = new Parado();
+                    //break;
             }           
 
             ray = new TgcRay(initPosition + new Vector3(0,50,0),direccion);
@@ -79,24 +79,26 @@ namespace TGC.Group.Model.Entities
         public void mover(Vector3 posicionJugador, List<TgcBoundingAxisAlignBox> obstaculos, float elapsedTime, float posicionY)
         {
             movimiento.updateStatus(this, posicionJugador);
+
             var desplazamiento = movimiento.mover(this, posicionJugador) * elapsedTime;
             resetBooleans();
 
             float rotation = 0f;
 
             moving = desplazamiento != new Vector3(0, 0, 0);
-            //rotate = 0f;
 
-            //esqueleto.AutoTransformEnable = false;
-            //if (moving)
-            //{
-            //    rotation = anguloEntre(desplazamiento, direccion);
-            //    esqueleto.rotateY(rotation);
-            //}
+            esqueleto.AutoTransformEnable = false;
+           
+            rotation = Utils.anguloEntre(Utils.proyectadoY(desplazamiento),
+                                             Utils.proyectadoY(direccion));
+            esqueleto.rotateY(rotation);            
 
             displayAnimations();
 
-            desplazamiento.TransformCoordinate(Matrix.RotationY(Rotacion));
+            //TODO: rotar la direccion y el rayito
+            //if(moving) direccion.TransformCoordinate(Matrix.RotationY(FastMath.ToRad(rotation)));
+
+            //desplazamiento.TransformCoordinate(Matrix.RotationY(rotation));
             var realmovement = CollisionManager.Instance.adjustPosition(this, desplazamiento);
             esqueleto.Position += realmovement;
             CollisionManager.Instance.applyGravity(elapsedTime,this);
@@ -107,8 +109,7 @@ namespace TGC.Group.Model.Entities
             esqueleto.Transform = Matrix.RotationY(rotation) 
                                   * Matrix.Translation(esqueleto.Position);
 
-            arma.setPosition(esqueleto.Position);
-            //actualizo el rayo);
+            arma.setPosition(esqueleto.Position);           
             if (debeDisparar())
             {
                 if (arma.Balas <= 0) arma.recarga();
@@ -116,15 +117,6 @@ namespace TGC.Group.Model.Entities
             }
 
             updateRay();
-        }
-
-        public float anguloEntre(Vector3 v1, Vector3 v2)
-        {
-            var vector1 = new Vector3(v1.X, 0, v1.Z);
-            var vector2 = new Vector3(v2.X, 0, v2.Z);
-            var angle = FastMath.Acos(Vector3.Dot(Vector3.Normalize(vector1), Vector3.Normalize(vector2)));
-
-            return angle;
         }
 
         public void updateRay()
@@ -163,7 +155,7 @@ namespace TGC.Group.Model.Entities
 
         public override void render(float elapsedTime) {
             esqueleto.animateAndRender(elapsedTime);
-            //arrow.render();
+            arrow.render();
         }
 	}   
 }

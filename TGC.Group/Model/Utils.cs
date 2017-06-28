@@ -257,5 +257,21 @@ namespace TGC.Group.Model
 		{
 			return degree * (3.141592654f / 180.0f);
 		}
+
+        public static float anguloEntre(Vector3 v1, Vector3 v2)
+        {
+            var vector1 = new Vector3(v1.X, v1.Y, v1.Z);
+            var vector2 = new Vector3(v2.X, v2.Y, v2.Z);
+
+            vector1.Normalize();
+            vector2.Normalize();
+
+            return FastMath.Acos(Vector3.Dot(vector1, vector2));
+        }
+
+        public static Vector3 proyectadoY(Vector3 v)
+        {
+            return new Vector3(v.X, 0, v.Z);
+        }
     }
 }
