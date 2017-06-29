@@ -342,7 +342,6 @@ namespace TGC.Group.Model
 
 			else
 			{
-                world.updateWorld(ElapsedTime);
 
 
                 alfa_sol += ElapsedTime * Geometry.DegreeToRadian(1.0f);
@@ -409,11 +408,13 @@ namespace TGC.Group.Model
                     collisionManager.getPlayers().Remove(enemigo);
                 }
 
+                world.updateWorld(ElapsedTime);
                 //chequear colisiones con balas
                 collisionManager.checkCollisions(ElapsedTime);
-				// Update HUD
+
+                // Update HUD
                 //TODO : Borrar - Es solo para ver la posicion
-				updateText();
+                updateText();
                 
                 //TODO: hacer que ESC sea pausar! u otro!
                 if (Input.keyPressed(Microsoft.DirectX.DirectInput.Key.Escape))
@@ -432,6 +433,7 @@ namespace TGC.Group.Model
         {
             ClearTextures();
             var device = D3DDevice.Instance.Device;
+
             D3DDevice.Instance.Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
 
             //esto es renderizar todo como viene, sin efectos
@@ -517,11 +519,16 @@ namespace TGC.Group.Model
                 // Render escenario
                 terreno.render();
                 //limits.render();
-                if (!FPSCamera) skyBox.render();         
+                if (!FPSCamera) skyBox.render();
+                
+                D3DDevice.Instance.ParticlesEnabled = true;
+                D3DDevice.Instance.EnableParticles();
 
                 Utils.renderFromFrustum(world.Meshes, Frustum);
+                Utils.renderFromFrustum(world.Barriles, Frustum, ElapsedTime);
                 Utils.renderFromFrustum(collisionManager.getPlayers(), Frustum,ElapsedTime);
                 Utils.renderFromFrustum(collisionManager.getBalas(), Frustum);
+
                 //TODO: Con QuadTree los FPS bajan. Tal vez sea porque 
                 //estan mas concentrados en una parte que en otra
                 //quadtree.render(Frustum, true);    

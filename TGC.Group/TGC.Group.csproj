@@ -94,6 +94,7 @@
     <Compile Include="Model\Entities\Enemy.cs" />
     <Compile Include="Model\Entities\Movimientos\Movimiento.cs" />
     <Compile Include="Model\Entities\Personaje.cs" />
+    <Compile Include="Model\Environment\Explosivo.cs" />
     <Compile Include="Model\GameModel.cs" />
     <Compile Include="Model\Entities\Player.cs" />
     <Compile Include="Model\Optimization\Quadtree\Quadtree.cs" />

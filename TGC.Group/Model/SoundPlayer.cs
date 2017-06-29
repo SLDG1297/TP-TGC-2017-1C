@@ -50,6 +50,7 @@ namespace TGC.Group.Model
 
             DirectSound.ListenerTracking = personaje.Esqueleto;
         }
+
         public void playMusic(string MediaDir, TgcDirectSound directsound)
         {
             this.DirectSound = directsound;
@@ -100,9 +101,9 @@ namespace TGC.Group.Model
         {
             if (sound != null) sound.dispose();
             sound = new Tgc3dSound(mediaDir + filePath, position, DirectSound.DsDevice);
-            sound.MinDistance = 200f;
-
-            //sound.play();
+            sound.MinDistance = 800f;
+            
+            sound.play();
         }
 
         public void playAmbientSound(float elapsedTime)

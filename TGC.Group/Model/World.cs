@@ -13,6 +13,7 @@ using TGC.Core.Textures;
 using TGC.Core.Utils;
 using TGC.Group.Model.Collisions;
 using Microsoft.DirectX.Direct3D;
+using TGC.Group.Model.Environment;
 
 namespace TGC.Group.Model
 {
@@ -46,11 +47,15 @@ namespace TGC.Group.Model
         private TgcMesh helicopter;
         private TgcMesh camionCisterna;
         private TgcMesh tractor;
-        private TgcMesh barril;
         private TgcMesh cajaFuturistica;
         private TgcMesh avionMilitar;
         private TgcMesh tanqueFuturista;
         private TgcMesh avionCaza;
+
+
+        //private TgcMesh barril;
+        private Barril barril;
+        private List<Barril> barriles = new List<Barril>();
 
         private TgcBox cajita;
         private TgcMesh cajitaMuniciones;
@@ -292,9 +297,11 @@ namespace TGC.Group.Model
             terreno.corregirAltura(rocas);
 
             //barril
-            barril = cargarMesh(MediaDir + "Meshes\\Objetos\\BarrilPolvora\\BarrilPolvora-TgcScene.xml");
-            barril.Position = new Vector3(-6802, 8, 10985);
-            barril.updateBoundingBox();
+            //barril = cargarMesh(MediaDir + "Meshes\\Objetos\\BarrilPolvora\\BarrilPolvora-TgcScene.xml");
+            //barril.Position = new Vector3(-6802, 8, 10985);
+            //barril.updateBoundingBox();
+            barril = new Barril(MediaDir , new Vector3(-6802, 8, 10985));
+            barriles.Add(barril);
 
             // Autitos!
             hummer = cargarMesh(MediaDir + "Meshes\\Vehiculos\\Hummer\\Hummer-TgcScene.xml");
@@ -403,7 +410,7 @@ namespace TGC.Group.Model
             meshes.Add(helicopter);
             meshes.Add(camionCisterna);
             meshes.Add(tractor);
-            meshes.Add(barril);
+            //meshes.Add(barril.Mesh);
             meshes.Add(faraon);
             meshes.Add(avionMilitar);
             meshes.Add(tanqueFuturista);
@@ -434,7 +441,7 @@ namespace TGC.Group.Model
             helicopter.dispose();
             avionMilitar.dispose();
             tractor.dispose();
-            barril.dispose();
+            //barril.dispose();
             arbusto.dispose();
             ametralladora.dispose();
             tanqueFuturista.dispose();
@@ -446,6 +453,11 @@ namespace TGC.Group.Model
             arbolesSelvaticos.Clear();
             palmeras.Clear();
             cajitas.Clear();
+
+            foreach(var barril in barriles)
+            {
+                barril.dispose();
+            }
 
             //dispose de efectos
             vaiven.Dispose();
@@ -502,8 +514,9 @@ namespace TGC.Group.Model
             }
 
             //bounding cylinder del barril
-            var barrilCylinder = new TgcBoundingCylinderFixedY(barril.BoundingBox.calculateBoxCenter(), barril.BoundingBox.calculateBoxRadius() - 18, 24);
-            collisionManager.agregarCylinder(barrilCylinder);
+            //var barrilCylinder = new TgcBoundingCylinderFixedY(barril.BoundingBox.calculateBoxCenter(), barril.BoundingBox.calculateBoxRadius() - 18, 24);
+            //collisionManager.agregarCylinder(barrilCylinder);
+            barril.createBoundingVolume();
 
             //cilindro del faraon del mesio
             var faraonCylinder = new TgcBoundingCylinderFixedY(faraon.BoundingBox.calculateBoxCenter(), faraon.BoundingBox.calculateBoxRadius() * 0.15f, 1500);
@@ -557,6 +570,8 @@ namespace TGC.Group.Model
         public void updateWorld(float elapsedTime)
         {
             time += elapsedTime;
+            //foreach(var barril in barriles) barril.update();
+
             // Cargar variables de shader, por ejemplo el tiempo transcurrido.
             vaiven.SetValue("time", time);
             viento.SetValue("time", time);
@@ -568,7 +583,7 @@ namespace TGC.Group.Model
 
             //esto es para actualizar la posicion del bounding box
             var newPos = avionCaza.Position + new Vector3(1000 * FastMath.Sin(time), 0, 1000 * FastMath.Cos(time));
-            avionCaza.BoundingBox.scaleTranslate(newPos, new Vector3(1, 1, 1));
+            avionCaza.BoundingBox.scaleTranslate(newPos, new Vector3(1, 1, 1));           
            
         }
 
@@ -592,6 +607,11 @@ namespace TGC.Group.Model
         {
             get { return meshes; }
         }
-        
+
+        public List<Barril> Barriles
+        {
+            get { return barriles; }
+        }
+
     }
 }

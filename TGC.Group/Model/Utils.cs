@@ -141,8 +141,7 @@ namespace TGC.Group.Model
                 meshes.Add(instance);
             }
         }
-
-
+        
         public static void disponerAleatorioXZ(TgcMesh originalMesh, List<TgcMesh> meshes, int veces)
         {
 
@@ -166,8 +165,7 @@ namespace TGC.Group.Model
                 meshes.Add(instance);
             }
         } 
-
-
+        
         public static void aleatorioXZExceptoRadioInicial(TgcMesh originalMesh, List<TgcMesh> meshes, int veces)
         {
             int radioCentro = 8000;
@@ -239,6 +237,22 @@ namespace TGC.Group.Model
                     if (r != TgcCollisionUtils.FrustumResult.OUTSIDE)
                     {
                         bala.render();
+                    }
+                }
+            }
+        }
+
+        public static void renderFromFrustum(List<Environment.Barril> barriles, TgcFrustum frustum, float elapsedTime)
+        {
+            if (barriles.Count > 0)
+            {
+                foreach (var barril in barriles)
+                {
+                    var r = TgcCollisionUtils.classifyFrustumAABB(frustum, barril.Mesh.BoundingBox);
+                    if (r != TgcCollisionUtils.FrustumResult.OUTSIDE)
+                    {
+                        barril.render(elapsedTime);
+                        
                     }
                 }
             }

@@ -10,6 +10,7 @@ using TGC.Core.Collision;
 using TGC.Core.Geometry;
 using TGC.Core.Utils;
 using TGC.Group.Model.Entities;
+using TGC.Group.Model.Environment;
 
 namespace TGC.Group.Model.Collisions
 {
@@ -20,6 +21,9 @@ namespace TGC.Group.Model.Collisions
         private List<TgcBoundingCylinderFixedY> boundingCylinders = new List<TgcBoundingCylinderFixedY>();
         private List<TgcBoundingSphere> boundingSpheres = new List<TgcBoundingSphere>();
         private List<TgcBoundingOrientedBox> orientedBoxes = new List<TgcBoundingOrientedBox>();
+
+        private List<Barril> barriles = new List<Barril>();
+        //public Barril barril;
 
         //objetos que cambian su posicion
         private List<Bala> balas = new List<Bala>();
@@ -244,20 +248,37 @@ namespace TGC.Group.Model.Collisions
 
                     var boundingBox = bala.BoundingBox;
 
-                    if(colisionaConAAAB(boundingBox) || colisionaConCilindro(boundingBox)){
-                        
-                        bala.setImpacto(true);
-                        balasASacar.Add(bala);
-                    }
-
-                    if (colisionaConJugador(boundingBox))
+                    if (colisionaConBarril(bala.BoundingBox))
                     {
                         bala.setImpacto(true);
-                        var jugador = enemigoQueColisionaCon(boundingBox);
-                        jugador.recibiDanio(bala.Danio);
-                        
                         balasASacar.Add(bala);
+
+                        var barrilQueExplota = barriles.Find(
+                            barril => TgcCollisionUtils.testAABBCylinder(bala.BoundingBox,
+                                                                         barril.BoundingCylinder));
+                        barrilQueExplota.explotar(jugadores);
                     }
+                    else
+                    {
+                        if (colisionaConAAAB(boundingBox) || colisionaConCilindro(boundingBox))
+                        {
+
+                            bala.setImpacto(true);
+                            balasASacar.Add(bala);
+                        }
+                        else
+                        {
+                            if (colisionaConJugador(boundingBox))
+                            {
+                                bala.setImpacto(true);
+                                var jugador = enemigoQueColisionaCon(boundingBox);
+                                jugador.recibiDanio(bala.Danio);
+
+                                balasASacar.Add(bala);
+                            }
+                        }
+                    }
+                    
                 }
             }
 
@@ -313,6 +334,12 @@ namespace TGC.Group.Model.Collisions
  
             return jugadores.Any(
                 jugador => colisionaCon(bala, jugador));
+        }
+
+        public bool colisionaConBarril(TgcBoundingAxisAlignBox aabb)
+        {
+            return barriles.Any(
+                barril => TgcCollisionUtils.testAABBCylinder(aabb,barril.BoundingCylinder));
         }
 
         public Personaje enemigoQueColisionaCon(TgcBoundingAxisAlignBox aabb)
@@ -371,7 +398,14 @@ namespace TGC.Group.Model.Collisions
         {
             balas.Add(bala);
         }
-        
+
+        public void agregarBarril(Barril barril)
+        {
+            barriles.Add(barril);
+            agregarCylinder(barril.BoundingCylinder);
+        }
+
+
         public void cleanAll()
         {
             boundingBoxes.Clear();
@@ -412,6 +446,12 @@ namespace TGC.Group.Model.Collisions
             return colisionCil || colisionAABB;
         }
 
+        public bool colisionBarrilBala(Barril barril)
+        {
+            return balas.Any(bala => TgcCollisionUtils.testAABBCylinder(bala.BoundingBox, barril.BoundingCylinder));
+        }
+
+
         public List<TgcBoundingAxisAlignBox> boundingBoxDentroDelRadio(Enemy enemigo, float radio)
         {
             var enemyPosX = enemigo.Position.X;
@@ -429,8 +469,6 @@ namespace TGC.Group.Model.Collisions
                     box.setRenderColor(System.Drawing.Color.Yellow);
                 }
             }
-
-
 
             List<TgcBoundingAxisAlignBox> objetos = boundingBoxes.FindAll(boundingBox =>
 
@@ -469,8 +507,7 @@ namespace TGC.Group.Model.Collisions
 
             return objetos;
         }
-
-
+        
         public TgcBoundingCylinderFixedY cilindroMasCercano(Enemy enemigo,List<TgcBoundingCylinderFixedY> cilindros)
         {
             TgcBoundingCylinderFixedY cilindroMasCercano = null;
