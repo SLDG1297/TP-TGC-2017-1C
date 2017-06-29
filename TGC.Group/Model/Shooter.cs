@@ -26,6 +26,7 @@ using TGC.Core.Sound;
 using System.IO;
 using TGC.Core.Input;
 using TGC.Group.Model.UI;
+using TGC.Group.Model.Optimization;
 
 namespace TGC.Group.Model
 {
@@ -524,10 +525,10 @@ namespace TGC.Group.Model
                 D3DDevice.Instance.ParticlesEnabled = true;
                 D3DDevice.Instance.EnableParticles();
 
-                Utils.renderFromFrustum(world.Meshes, Frustum);
-                Utils.renderFromFrustum(world.Barriles, Frustum, ElapsedTime);
-                Utils.renderFromFrustum(collisionManager.getPlayers(), Frustum,ElapsedTime);
-                Utils.renderFromFrustum(collisionManager.getBalas(), Frustum);
+                RenderUtils.renderFromFrustum(world.Meshes, Frustum);
+                RenderUtils.renderFromFrustum(world.Barriles, Frustum, ElapsedTime);
+                RenderUtils.renderFromFrustum(collisionManager.getPlayers(), Frustum,ElapsedTime);
+                RenderUtils.renderFromFrustum(collisionManager.getBalas(), Frustum);
 
                 //TODO: Con QuadTree los FPS bajan. Tal vez sea porque 
                 //estan mas concentrados en una parte que en otra

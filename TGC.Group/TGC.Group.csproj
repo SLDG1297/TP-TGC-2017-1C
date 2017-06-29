@@ -90,6 +90,7 @@
     <Compile Include="Model\Cameras\FirstPersonCamera.cs" />
     <Compile Include="Model\Cameras\ThirdPersonCamera.cs" />
     <Compile Include="Model\Collisions\CollisionManager.cs" />
+    <Compile Include="Model\Collisions\CollisionUtils.cs" />
     <Compile Include="Model\Entities\Arma.cs" />
     <Compile Include="Model\Entities\Enemy.cs" />
     <Compile Include="Model\Entities\Movimientos\Movimiento.cs" />
@@ -100,6 +101,7 @@
     <Compile Include="Model\Optimization\Quadtree\Quadtree.cs" />
     <Compile Include="Model\Optimization\Quadtree\QuadtreeBuilder.cs" />
     <Compile Include="Model\Optimization\Quadtree\QuadtreeNode.cs" />
+    <Compile Include="Model\Optimization\RenderUtils.cs" />
     <Compile Include="Model\Shooter.cs" />
     <Compile Include="Model\SoundPlayer.cs" />
     <Compile Include="Model\Terreno.cs" />
