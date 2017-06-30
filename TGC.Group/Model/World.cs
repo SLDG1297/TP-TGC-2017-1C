@@ -14,6 +14,7 @@ using TGC.Core.Utils;
 using TGC.Group.Model.Collisions;
 using Microsoft.DirectX.Direct3D;
 using TGC.Group.Model.Environment;
+using TGC.Group.Model.Optimization;
 
 namespace TGC.Group.Model
 {
@@ -51,11 +52,9 @@ namespace TGC.Group.Model
         private TgcMesh avionMilitar;
         private TgcMesh tanqueFuturista;
         private TgcMesh avionCaza;
+        private TgcMesh barril;
 
-
-        //private TgcMesh barril;
-        private Barril barril;
-        private List<Barril> barriles = new List<Barril>();
+        private List<Barril> barrilesExplosivos = new List<Barril>();
 
         private TgcBox cajita;
         private TgcMesh cajitaMuniciones;
@@ -67,6 +66,7 @@ namespace TGC.Group.Model
         private List<TgcMesh> cajitas = new List<TgcMesh>();
         private List<TgcMesh> arbolesSelvaticos = new List<TgcMesh>();
         private List<TgcMesh> arbustitos = new List<TgcMesh>();
+        private List<TgcMesh> barriles = new List<TgcMesh>();
 
         //lista de objetos totales
         private List<TgcMesh> meshes = new List<TgcMesh>();
@@ -296,12 +296,26 @@ namespace TGC.Group.Model
             }
             terreno.corregirAltura(rocas);
 
-            //barril
-            //barril = cargarMesh(MediaDir + "Meshes\\Objetos\\BarrilPolvora\\BarrilPolvora-TgcScene.xml");
-            //barril.Position = new Vector3(-6802, 8, 10985);
+            //barriles - son explosivos
+            barril = cargarMesh(MediaDir + "Meshes\\Objetos\\BarrilPolvora\\BarrilPolvora-TgcScene.xml");
+            barril.Position = new Vector3(-6802, 8, 10985);
             //barril.updateBoundingBox();
-            barril = new Barril(MediaDir , new Vector3(-6802, 8, 10985));
+            //barril = new Barril(MediaDir , new Vector3(-6802, 8, 10985),
             barriles.Add(barril);
+
+            Utils.aleatorioXZExceptoRadioInicial(barril,barriles, 25);
+            terreno.corregirAltura(barriles);
+
+            foreach (var barril in barriles)
+            {
+                //lo hago antes porque necesito el mediaDir
+                barril.createBoundingBox();
+                barril.updateBoundingBox();
+
+                var barrilExplosivo = new Barril(MediaDir, barril.Position, barril);
+                barrilExplosivo.createBoundingVolume();
+                barrilesExplosivos.Add(barrilExplosivo);
+            }
 
             // Autitos!
             hummer = cargarMesh(MediaDir + "Meshes\\Vehiculos\\Hummer\\Hummer-TgcScene.xml");
@@ -422,6 +436,7 @@ namespace TGC.Group.Model
             meshes.AddRange(arbolesSelvaticos);
             meshes.AddRange(arbustitos);
             meshes.AddRange(cajitas);
+            meshes.AddRange(barriles);
         }
 
         public void disposeWorld()
@@ -441,7 +456,7 @@ namespace TGC.Group.Model
             helicopter.dispose();
             avionMilitar.dispose();
             tractor.dispose();
-            //barril.dispose();
+            barril.dispose();
             arbusto.dispose();
             ametralladora.dispose();
             tanqueFuturista.dispose();
@@ -454,9 +469,9 @@ namespace TGC.Group.Model
             palmeras.Clear();
             cajitas.Clear();
 
-            foreach(var barril in barriles)
+            foreach(var barril in barrilesExplosivos)
             {
-                barril.dispose();
+               barril.dispose();
             }
 
             //dispose de efectos
@@ -511,12 +526,7 @@ namespace TGC.Group.Model
                 var cilindro = new TgcBoundingCylinderFixedY(center, radio.X * 0.95f, radio.Y);
 
                 collisionManager.agregarCylinder(cilindro);
-            }
-
-            //bounding cylinder del barril
-            //var barrilCylinder = new TgcBoundingCylinderFixedY(barril.BoundingBox.calculateBoxCenter(), barril.BoundingBox.calculateBoxRadius() - 18, 24);
-            //collisionManager.agregarCylinder(barrilCylinder);
-            barril.createBoundingVolume();
+            };
 
             //cilindro del faraon del mesio
             var faraonCylinder = new TgcBoundingCylinderFixedY(faraon.BoundingBox.calculateBoxCenter(), faraon.BoundingBox.calculateBoxRadius() * 0.15f, 1500);
@@ -589,8 +599,7 @@ namespace TGC.Group.Model
 
         public void renderWorld(TgcFrustum frustum)
         {
-
-            Utils.renderFromFrustum(meshes, frustum);
+            RenderUtils.renderFromFrustum(meshes, frustum);
         }
 
         TgcMesh cargarMesh(string unaDireccion)
@@ -608,10 +617,9 @@ namespace TGC.Group.Model
             get { return meshes; }
         }
 
-        public List<Barril> Barriles
+        public List<Barril> BarrilesExplosivos
         {
-            get { return barriles; }
+            get { return barrilesExplosivos; }
         }
-
     }
 }

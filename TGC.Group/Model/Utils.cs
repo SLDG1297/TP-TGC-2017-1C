@@ -11,10 +11,11 @@ using TGC.Core.SceneLoader;
 using TGC.Core.Terrain;
 using TGC.Core.Utils;
 using TGC.Group.Model.Entities;
+using TGC.Group.Model.Environment;
 
 namespace TGC.Group.Model
 {
-    class Utils
+    public class Utils
     {
         /// <summary>
         ///     Dispone un mesh en forma de circulo n veces dado un radio y el angulo. El angulo de fase es 0
@@ -194,67 +195,36 @@ namespace TGC.Group.Model
             }
         }
 
-        /// <summary>
-        ///     Renderiza todos los elementos de una lista de meshes.
-        /// </summary>
-        public static void renderMeshes(List<TgcMesh> meshes)
+        public static void aleatorioXZExceptoRadioInicial(string MediaDir,Barril barrilOriginal, List<Barril> barriles, int veces)
         {
-            foreach(var mesh in meshes) mesh.render();
-        }
+            int radioCentro = 8000;
 
-
-        public static void renderFromFrustum(List<TgcMesh> meshes,TgcFrustum frustum)
-        {
-            foreach (var mesh in meshes)
+            var n = new Random();
+            for (var i = 0; i < veces; i++)
             {
-                var r = TgcCollisionUtils.classifyFrustumAABB(frustum, mesh.BoundingBox);
-                if (r != TgcCollisionUtils.FrustumResult.OUTSIDE)
-                {
-                    mesh.render();
-                }
-            }
-        }
+                var x = n.Next(-15927, 15927);
+                var z = n.Next(-15112, 15112);
 
-        public static void renderFromFrustum(List<Personaje> enemigos, TgcFrustum frustum, float elapsedTime)
-        {
-            foreach (var enemigo in enemigos)
-            {
-                var r = TgcCollisionUtils.classifyFrustumAABB(frustum, enemigo.BoundingBox);
-                if (r != TgcCollisionUtils.FrustumResult.OUTSIDE)
+                //desplazo los objetos que se encuentran en el circulo del medio del mapa
+                if (FastMath.Pow2(x) + FastMath.Pow2(z) < FastMath.Pow2(radioCentro))
                 {
-                    enemigo.render(elapsedTime);
+                    x = x * radioCentro;
+                    z = z * radioCentro;
                 }
-            }
-        }
 
-        public static void renderFromFrustum(List<Bala> balas, TgcFrustum frustum)
-        {
-            if (balas.Count > 0)
-            {
-                foreach (var bala in balas)
-                {
-                    var r = TgcCollisionUtils.classifyFrustumAABB(frustum, bala.BoundingBox);
-                    if (r != TgcCollisionUtils.FrustumResult.OUTSIDE)
-                    {
-                        bala.render();
-                    }
-                }
-            }
-        }
+                var mesh = barrilOriginal.Mesh;
+                var instance = mesh.createMeshInstance(mesh.Name + barriles.Count + 1);
 
-        public static void renderFromFrustum(List<Environment.Barril> barriles, TgcFrustum frustum, float elapsedTime)
-        {
-            if (barriles.Count > 0)
-            {
-                foreach (var barril in barriles)
-                {
-                    var r = TgcCollisionUtils.classifyFrustumAABB(frustum, barril.Mesh.BoundingBox);
-                    if (r != TgcCollisionUtils.FrustumResult.OUTSIDE)
-                    {
-                        barril.render(elapsedTime);
-                        
-                    }
-                }
+                //instance.AutoTransformEnable = false;
+                instance.AlphaBlendEnable = true;
+                var position = new Vector3(x, 0, z);
+
+                instance.Position = position;
+                var barril = new Barril(MediaDir, position, instance);
+
+                //.Position = new Vector3(x, 0, z);
+                //instance.Transform = Matrix.Translation(instance.Position);
+                barriles.Add(barril);
             }
         }
 

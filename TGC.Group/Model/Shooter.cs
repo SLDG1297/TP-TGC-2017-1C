@@ -526,7 +526,7 @@ namespace TGC.Group.Model
                 D3DDevice.Instance.EnableParticles();
 
                 RenderUtils.renderFromFrustum(world.Meshes, Frustum);
-                RenderUtils.renderFromFrustum(world.Barriles, Frustum, ElapsedTime);
+                RenderUtils.renderFromFrustum(world.BarrilesExplosivos, Frustum, ElapsedTime);
                 RenderUtils.renderFromFrustum(collisionManager.getPlayers(), Frustum,ElapsedTime);
                 RenderUtils.renderFromFrustum(collisionManager.getBalas(), Frustum);
 

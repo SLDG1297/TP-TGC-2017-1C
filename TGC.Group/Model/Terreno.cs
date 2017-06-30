@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TGC.Core.SceneLoader;
 using TGC.Core.Terrain;
+using TGC.Group.Model.Environment;
 
 namespace TGC.Group.Model
 {
@@ -74,6 +75,17 @@ namespace TGC.Group.Model
                 float posicionY = posicionEnTerreno(mesh.Position.X, mesh.Position.Z);
                 mesh.Position = new Vector3(mesh.Position.X, posicionY, mesh.Position.Z);
                 mesh.Transform = Matrix.Translation(0, posicionY, 0) * mesh.Transform;
+            }
+        }
+
+        public void corregirAltura(List<Barril> barriles)
+        {
+            foreach (var barril in barriles)
+            {
+                float posicionY = posicionEnTerreno(barril.Position.X, barril.Position.Z);
+
+                barril.setPosition(new Vector3(barril.Position.X, posicionY + 8, barril.Position.Z));
+                //barril.Mesh.Transform = Matrix.Translation(barril.Mesh.Position);
             }
         }
 

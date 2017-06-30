@@ -20,7 +20,7 @@ namespace TGC.Group.Model.Environment
         protected Vector3 position;
         protected int danio;
         protected string explosionPath;
-
+        
         protected string particlePath;
         protected ParticleEmitter emitter;
         public bool exploto = false;
@@ -76,6 +76,19 @@ namespace TGC.Group.Model.Environment
         public TgcMesh Mesh
         {
             get { return mesh; }
+        }        
+
+        public Vector3 Position
+        {
+            get{ return position; }
+        }
+
+        public void setPosition(Vector3 pos)
+        {
+            position = pos;
+            mesh.Position = pos;
+
+            mesh.Transform = Matrix.Translation(mesh.Position);
         }
     }
 
@@ -83,12 +96,10 @@ namespace TGC.Group.Model.Environment
     {
         private TgcBoundingCylinderFixedY boundingCylinder;
 
-        public Barril(string MediaDir, Vector3 initPos)
+        public Barril(string MediaDir, Vector3 initPos, TgcMesh unMesh)
         {
-            var sceneloader = new TgcSceneLoader();
-            //barril
-            mesh = sceneloader.loadSceneFromFile(MediaDir + "Meshes\\Objetos\\BarrilPolvora\\BarrilPolvora-TgcScene.xml").Meshes[0];
-            mesh.Position = initPos;
+            mesh = unMesh;
+            //mesh.Position = initPos;
 
             position = initPos;
 
@@ -99,7 +110,7 @@ namespace TGC.Group.Model.Environment
 
             particlePath = MediaDir + "Texturas\\Particles\\fuego.png";
         }
-
+ 
         public override void createBoundingVolume()
         {
             this.boundingCylinder = new TgcBoundingCylinderFixedY(mesh.BoundingBox.calculateBoxCenter(),
@@ -115,7 +126,7 @@ namespace TGC.Group.Model.Environment
 
         public void render(float elapsedTime)
         {
-            mesh.render();
+            //mesh.render();
             if (exploto)
             {
                 emitter.render(elapsedTime);
@@ -124,7 +135,7 @@ namespace TGC.Group.Model.Environment
 
         public void dispose()
         {
-            mesh.dispose();
+            //if(mesh!= null) mesh.dispose();
             boundingCylinder.dispose();
 
             if(emitter != null)
