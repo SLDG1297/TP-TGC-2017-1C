@@ -21,6 +21,12 @@ namespace TGC.Group.Model.Optimization
             foreach (var mesh in meshes) mesh.render();
         }
 
+        public static bool estaDentroDelFrustum(TgcMesh mesh, TgcFrustum frustum)
+        {
+            var r = TgcCollisionUtils.classifyFrustumAABB(frustum, mesh.BoundingBox);
+            return r != TgcCollisionUtils.FrustumResult.OUTSIDE;
+        }
+
         /// <summary>
         ///     Renderiza todos los elementos de una lista de meshes dado un frustum.
         /// </summary>

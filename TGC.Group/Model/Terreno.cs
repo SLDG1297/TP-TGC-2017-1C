@@ -1,9 +1,12 @@
 ﻿using Microsoft.DirectX;
+using Microsoft.DirectX.Direct3D;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TGC.Core.Direct3D;
 using TGC.Core.SceneLoader;
 using TGC.Core.Terrain;
 using TGC.Group.Model.Environment;
@@ -16,6 +19,7 @@ namespace TGC.Group.Model
         private const float MAP_SCALE_XZ = 160.0f; // Original = 20
         private const float MAP_SCALE_Y = 10.4f; // Original = 1.3
         private TgcSimpleTerrain heightmap;
+        public Texture terrainTexture;
 
         public Terreno(string MediaDir, Vector3 center)
         {
@@ -25,7 +29,18 @@ namespace TGC.Group.Model
             heightmap = new TgcSimpleTerrain();
 
             heightmap.loadHeightmap(heightmapDir, MAP_SCALE_XZ, MAP_SCALE_Y, center);
+           
+
+            //Dispose textura anterior, si habia
+            if (terrainTexture != null && !terrainTexture.Disposed)
+            {
+                terrainTexture.Dispose();
+            }
             heightmap.loadTexture(textureDir);
+            //Rotar e invertir textura
+            var b = (Bitmap)Image.FromFile(textureDir);
+            b.RotateFlip(RotateFlipType.Rotate90FlipX);
+            terrainTexture = Texture.FromBitmap(D3DDevice.Instance.Device, b, Usage.None, Pool.Managed);
         }
 
         public float posicionEnTerreno(float x, float z)
