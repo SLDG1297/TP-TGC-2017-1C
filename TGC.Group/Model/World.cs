@@ -130,6 +130,11 @@ namespace TGC.Group.Model
             piso.Technique = "RenderScene";
             time = 0;
 
+            avionMilitar.Effect = envmap;
+            avionMilitar.Technique = "RenderScene";
+
+            tanqueFuturista.Effect = envmap;
+            tanqueFuturista.Technique = "RenderScene";
         }
 
         private void initObjects(string MediaDir)
@@ -642,6 +647,132 @@ namespace TGC.Group.Model
             avionCaza.Effect = vaiven;
             avionCaza.Technique = "CirculoXZ";
         }
+
+
+        public void initRenderEnvMap(TgcFrustum Frustum, float ElapsedTime, TgcCamera camera, TgcSkyBox skybox)
+        {
+            initRenderLagos(skybox, Frustum);
+            //if (RenderUtils.estaDentroDelFrustum(tanqueFuturista, Frustum))
+            //{
+            //        renderEnvMap(tanqueFuturista, ElapsedTime, camera, skybox);
+            //}
+
+           // if (RenderUtils.estaDentroDelFrustum(avionMilitar, Frustum))
+           // {
+           //     renderEnvMap(avionMilitar, ElapsedTime, camera, skybox);
+           // }
+           
+        }
+
+
+        public void renderEnvMap(TgcMesh mesh, float ElapsedTime, TgcCamera camera, TgcSkyBox skybox)
+        {
+                var aspectRatio = D3DDevice.Instance.AspectRatio;
+                 // Creo el env map del tanque:
+                 var g_pCubeMap = new CubeTexture(D3DDevice.Instance.Device, 256, 1, Usage.RenderTarget,
+                                Format.A16B16G16R16F, Pool.Default);
+                var pOldRT = D3DDevice.Instance.Device.GetRenderTarget(0);
+                // ojo: es fundamental que el fov sea de 90 grados.
+                // asi que re-genero la matriz de proyeccion
+                D3DDevice.Instance.Device.Transform.Projection =
+                    Matrix.PerspectiveFovLH(Geometry.DegreeToRadian(90.0f), 1f, 1f, 10000f);
+
+                // Genero las caras del enviroment map
+                for (var nFace = CubeMapFace.PositiveX; nFace <= CubeMapFace.NegativeZ; ++nFace)
+                {
+                    var pFace = g_pCubeMap.GetCubeMapSurface(nFace, 0);
+                    D3DDevice.Instance.Device.SetRenderTarget(0, pFace);
+                    Vector3 Dir, VUP;
+                    Color color;
+                    switch (nFace)
+                    {
+                        default:
+                        case CubeMapFace.PositiveX:
+                            // Left
+                            Dir = new Vector3(1, 0, 0);
+                            VUP = new Vector3(0, 1, 0);
+                            color = Color.Black;
+                            break;
+
+                        case CubeMapFace.NegativeX:
+                            // Right
+                            Dir = new Vector3(-1, 0, 0);
+                            VUP = new Vector3(0, 1, 0);
+                            color = Color.Red;
+                            break;
+
+                        case CubeMapFace.PositiveY:
+                            // Up
+                            Dir = new Vector3(0, 1, 0);
+                            VUP = new Vector3(0, 0, -1);
+                            color = Color.Gray;
+                            break;
+
+                        case CubeMapFace.NegativeY:
+                            // Down
+                            Dir = new Vector3(0, -1, 0);
+                            VUP = new Vector3(0, 0, 1);
+                            color = Color.Yellow;
+                            break;
+
+                        case CubeMapFace.PositiveZ:
+                            // Front
+                            Dir = new Vector3(0, 0, 1);
+                            VUP = new Vector3(0, 1, 0);
+                            color = Color.Green;
+                            break;
+
+                        case CubeMapFace.NegativeZ:
+                            // Back
+                            Dir = new Vector3(0, 0, -1);
+                            VUP = new Vector3(0, 1, 0);
+                            color = Color.Blue;
+                            break;
+                    }
+
+                    //Obtener ViewMatrix haciendo un LookAt desde la posicion final anterior al centro de la camara
+                    var Pos = tanqueFuturista.Position;
+                    D3DDevice.Instance.Device.Transform.View = Matrix.LookAtLH(Pos, Pos + Dir, VUP);
+
+                    D3DDevice.Instance.Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, color, 1.0f, 0);
+
+                    D3DDevice.Instance.Device.BeginScene();
+                    //Renderizar
+                    terreno.render();
+                    skybox.render();
+                    foreach (var meshcito in meshes)
+                    {
+                        if (FastMath.Pow2(mesh.Position.X - meshcito.Position.X) +
+                            FastMath.Pow2(mesh.Position.Z - meshcito.Position.Z)
+                            <= FastMath.Pow2(500))
+                        {
+                            meshcito.render();
+                        }
+                    }
+                    D3DDevice.Instance.Device.EndScene();
+                }
+
+                // restuaro el render target
+                D3DDevice.Instance.Device.SetRenderTarget(0, pOldRT);
+
+                D3DDevice.Instance.Device.Transform.View = camera.GetViewMatrix();
+
+                D3DDevice.Instance.Device.Transform.Projection =
+                    Matrix.PerspectiveFovLH(Geometry.DegreeToRadian(45.0f),
+                                aspectRatio, 1f, 10000f);
+
+                // Cargo las var. del shader:
+                envmap.SetValue("g_txCubeMap", g_pCubeMap);
+                envmap.SetValue("fvLightPosition", new Vector4(4000f, 6000f, 3000f, 0f));
+                envmap.SetValue("fvEyePosition",
+                    TgcParserUtils.vector3ToFloat3Array(camera.Position));
+                envmap.SetValue("time", time);
+
+                mesh.Technique = "RenderCubeMap";
+
+                envmap.SetValue("g_txCubeMap", g_pCubeMap);
+                g_pCubeMap.Dispose();
+            }
 
         public void initRenderLagos(TgcSkyBox skyBox, TgcFrustum frustum)
         {
