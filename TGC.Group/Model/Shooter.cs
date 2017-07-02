@@ -435,7 +435,7 @@ namespace TGC.Group.Model
         {
             ClearTextures();
 
-            if(gameLoaded) world.initRenderLagos(skyBox, Frustum);
+            //if(gameLoaded) world.initRenderLagos(skyBox, Frustum);
             var device = D3DDevice.Instance.Device;
             if (seDebeActivarEfecto() && activateShadowMap) RenderShadowMap();
             D3DDevice.Instance.Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
@@ -534,7 +534,7 @@ namespace TGC.Group.Model
                 RenderUtils.renderFromFrustum(collisionManager.getPlayers(), Frustum,ElapsedTime);
                 RenderUtils.renderFromFrustum(collisionManager.getBalas(), Frustum);
                 
-                world.endRenderLagos(Camara, Frustum);
+                //world.endRenderLagos(Camara, Frustum);
                 //TODO: Con QuadTree los FPS bajan. Tal vez sea porque 
                 //estan mas concentrados en una parte que en otra
                 //quadtree.render(Frustum, true);    

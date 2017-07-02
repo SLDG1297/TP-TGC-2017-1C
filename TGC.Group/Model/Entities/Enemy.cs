@@ -78,6 +78,7 @@ namespace TGC.Group.Model.Entities
 
         public void mover(Vector3 posicionJugador, List<TgcBoundingAxisAlignBox> obstaculos, float elapsedTime, float posicionY)
         {
+            var aux = direccion;
             movimiento.updateStatus(this, posicionJugador);
 
             var desplazamiento = movimiento.mover(this, posicionJugador) * elapsedTime;
@@ -88,21 +89,23 @@ namespace TGC.Group.Model.Entities
             moving = desplazamiento != new Vector3(0, 0, 0);
 
             esqueleto.AutoTransformEnable = false;
-           
+
             rotation = Utils.anguloEntre(Utils.proyectadoY(desplazamiento),
-                                             Utils.proyectadoY(direccion));
-            esqueleto.rotateY(rotation);            
+                                             Utils.proyectadoY(Position));
 
-            displayAnimations();
-
+            esqueleto.rotateY(rotation);
+            direccion = desplazamiento;
+            //Vector3.Multiply(direccion, 100f);
             //TODO: rotar la direccion y el rayito
-            //if(moving) direccion.TransformCoordinate(Matrix.RotationY(FastMath.ToRad(rotation)));
+            //if (moving) direccion = new Vector3(direccion.X * FastMath.Cos(rotation), direccion.Y, direccion.Z * FastMath.Sin(rotation)) *1000;
 
             //desplazamiento.TransformCoordinate(Matrix.RotationY(rotation));
             var realmovement = CollisionManager.Instance.adjustPosition(this, desplazamiento);
             esqueleto.Position += realmovement;
             CollisionManager.Instance.applyGravity(elapsedTime,this);
             //direccion = realmovement;
+            
+            displayAnimations();
 
             updateBoundingBoxes();
             lastPos = esqueleto.Position;

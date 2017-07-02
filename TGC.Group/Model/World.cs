@@ -770,7 +770,7 @@ namespace TGC.Group.Model
             {
 
                 var aspectRatio = D3DDevice.Instance.AspectRatio;
-                var g_LightPos = new Vector3(4000f , 2000 ,3000f);
+                var g_LightPos = new Vector3(4000f , 6000f ,3000f);
                 var g_LightDir = piso.Position - g_LightPos;
                 g_LightDir.Normalize();
     
@@ -784,7 +784,7 @@ namespace TGC.Group.Model
                             1f, 100000f);
                 // Cargo las var. del shader:
                 //envmap.SetValue("g_txCubeMap", g_pCubeMap);
-                envmap.SetValue("fvLightPosition", new Vector4(4000f, 2000, 3000f, 1f));
+                envmap.SetValue("fvLightPosition", new Vector4(4000f, 6000f, 3000f, 0f));
                 envmap.SetValue("fvEyePosition", TgcParserUtils.vector3ToFloat3Array(camara.Position));
 
                 //Doy posicion a la luz
@@ -794,8 +794,8 @@ namespace TGC.Group.Model
                 var g_LightView = Matrix.LookAtLH(g_LightPos, g_LightPos + g_LightDir, new Vector3(0, 0, 1));
 
                 // inicializacion standard:
-                envmap.SetValue("g_mProjLight", g_mShadowProj);
-                envmap.SetValue("g_mViewLightProj", g_LightView * g_mShadowProj);
+                //envmap.SetValue("g_mProjLight", g_mShadowProj);
+               // envmap.SetValue("g_mViewLightProj", g_LightView * g_mShadowProj);
 
 
                 //D3DDevice.Instance.Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
