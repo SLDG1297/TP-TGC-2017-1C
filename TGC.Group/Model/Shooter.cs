@@ -76,7 +76,8 @@ namespace TGC.Group.Model
 
         //otros
         private CollisionManager collisionManager;
-		private bool FPSCamera = false;
+
+		private bool FPSCamera = true;
         private Quadtree quadtree;
 
         //efectos
@@ -350,8 +351,8 @@ namespace TGC.Group.Model
                     alfa_sol = 1.5f;
                 // animo la posicion del sol
                 //g_LightPos = new Vector3(1500f * (float)Math.Cos(alfa_sol), 1500f * (float)Math.Sin(alfa_sol), 0f);
-                g_LightPos = new Vector3(2000f * (float)Math.Cos(alfa_sol), 2000f * (float)Math.Sin(alfa_sol),
-                    0f);
+                g_LightPos = new Vector3(5000 * (float)Math.Cos(alfa_sol), 5000 * (float)Math.Sin(alfa_sol),
+                    5000f);
                 g_LightDir = -g_LightPos;
                 g_LightDir.Normalize();
 
@@ -433,8 +434,10 @@ namespace TGC.Group.Model
         public override void Render()
         {
             ClearTextures();
-            var device = D3DDevice.Instance.Device;
 
+            if(gameLoaded) world.initRenderLagos(skyBox, Frustum);
+            var device = D3DDevice.Instance.Device;
+            if (seDebeActivarEfecto() && activateShadowMap) RenderShadowMap();
             D3DDevice.Instance.Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
 
             //esto es renderizar todo como viene, sin efectos
@@ -458,12 +461,11 @@ namespace TGC.Group.Model
 
             device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
 
-            if (seDebeActivarEfecto() && activateShadowMap) RenderShadowMap();
+            
             //Dibujamos la escena comun, pero en vez de a la pantalla al Render Target
            // terreno.getTerrerno().Effect = shadowMap;
             //terreno.getTerrerno().Technique = "RenderScene";
         
-
             drawScene(device, ElapsedTime);
 
             //Liberar memoria de surface de Render Target
@@ -515,6 +517,8 @@ namespace TGC.Group.Model
             }
             else
             {
+
+                world.restoreEffect();
                 var lista = world.Meshes;
 
                 // Render escenario
@@ -529,7 +533,8 @@ namespace TGC.Group.Model
                 RenderUtils.renderFromFrustum(world.BarrilesExplosivos, Frustum, ElapsedTime);
                 RenderUtils.renderFromFrustum(collisionManager.getPlayers(), Frustum,ElapsedTime);
                 RenderUtils.renderFromFrustum(collisionManager.getBalas(), Frustum);
-
+                
+                world.endRenderLagos(Camara, Frustum);
                 //TODO: Con QuadTree los FPS bajan. Tal vez sea porque 
                 //estan mas concentrados en una parte que en otra
                 //quadtree.render(Frustum, true);    
@@ -701,8 +706,8 @@ namespace TGC.Group.Model
 
         public void RenderShadowMap()
         {
-            g_LightPos = new Vector3(4293, 2437, 18358);
-            g_LightDir = new Vector3(0,0,0) - g_LightPos;
+            g_LightPos = new Vector3(5000, 800, 5000);
+            g_LightDir = g_LightPos - new Vector3(0,0,0) ;
             g_LightDir.Normalize();
             //Doy posicion a la luz
             // Calculo la matriz de view de la luz
@@ -733,6 +738,7 @@ namespace TGC.Group.Model
             // dibujo el wolrd
             foreach(var mesh in world.Meshes)
             {
+                mesh.Effect = shadowMap;
                 mesh.Technique = "RenderShadow";
             }
             world.renderWorld(Frustum);
@@ -755,6 +761,7 @@ namespace TGC.Group.Model
             {
                 mesh.Technique = "RenderScene";
             }
+            world.restoreEffect();
         }
 
         public override void Dispose()

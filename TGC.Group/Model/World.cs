@@ -15,6 +15,9 @@ using TGC.Group.Model.Collisions;
 using Microsoft.DirectX.Direct3D;
 using TGC.Group.Model.Environment;
 using TGC.Group.Model.Optimization;
+using TGC.Core.Camara;
+using TGC.Core.Direct3D;
+using System.Drawing;
 
 namespace TGC.Group.Model
 {
@@ -38,7 +41,7 @@ namespace TGC.Group.Model
         private TgcMesh palmeraOriginal;
         private TgcMesh pastito;
         private TgcMesh arbusto;
-        private TgcMesh faraon;
+        //private TgcMesh faraon;
         private TgcMesh arbolSelvatico;
         private TgcMesh hummer;
 
@@ -53,6 +56,10 @@ namespace TGC.Group.Model
         private TgcMesh tanqueFuturista;
         private TgcMesh avionCaza;
         private TgcMesh barril;
+
+        private TgcMesh piso;
+        private float nivel_mar;
+        private CubeTexture g_pCubeMapAgua;
 
         private List<Barril> barrilesExplosivos = new List<Barril>();
 
@@ -74,6 +81,7 @@ namespace TGC.Group.Model
         private CollisionManager collisionManager;
         private Effect vaiven;
         private Effect viento;
+        private Effect envmap;
 
         private float time;
 
@@ -117,7 +125,9 @@ namespace TGC.Group.Model
                 arbol.Technique = "Wind";
             }
 
-
+            envmap = TgcShaders.loadEffect(shadersDir + "Demo.fx");
+            piso.Effect = envmap;
+            piso.Technique = "RenderScene";
             time = 0;
 
         }
@@ -154,7 +164,7 @@ namespace TGC.Group.Model
             pastito.AlphaBlendEnable = true;
             pastito.Scale = new Vector3(2f, 2f, 2f);
             pastito.AutoTransformEnable = false;
-            Utils.disponerEnRectanguloXZ(pastito, pastitos, 30, 30, 250);
+            //Utils.disponerEnRectanguloXZ(pastito, pastitos, 30, 30, 250);
             foreach (var pasto in pastitos)
             {
                 var despl = new Vector3(0, 0, 8000);
@@ -176,12 +186,12 @@ namespace TGC.Group.Model
             terreno.corregirAltura(arbustitos);
 
             // Creación de faraón.
-            string faraonDir = MediaDir + "Meshes\\Objetos\\EstatuaFaraon\\EstatuaFaraon-TgcScene.xml";
-            faraon = cargarMesh(faraonDir);
-            faraon.AutoTransformEnable = false;
-            faraon.Scale = new Vector3(FACTOR, FACTOR, FACTOR);
-            faraon.Transform = Matrix.Scaling(faraon.Scale) * faraon.Transform;
-            faraon.updateBoundingBox();
+            //string faraonDir = MediaDir + "Meshes\\Objetos\\EstatuaFaraon\\EstatuaFaraon-TgcScene.xml";
+            //faraon = cargarMesh(faraonDir);
+            //faraon.AutoTransformEnable = false;
+            //faraon.Scale = new Vector3(FACTOR, FACTOR, FACTOR);
+            //faraon.Transform = Matrix.Scaling(faraon.Scale) * faraon.Transform;
+            //faraon.updateBoundingBox();
 
             // Creación de cajitas.
             cajita = TgcBox.fromSize(new Vector3(30 * FACTOR, 30 * FACTOR, 30 * FACTOR), TgcTexture.createTexture(MediaDir + "Texturas\\paja4.jpg"));
@@ -412,6 +422,14 @@ namespace TGC.Group.Model
             camionCisterna.Scale = new Vector3(2f, 2f, 2f);
             camionCisterna.Transform = Matrix.Scaling(camionCisterna.Scale) * Matrix.Translation(camionCisterna.Position) * camionCisterna.Transform;
             camionCisterna.updateBoundingBox();
+
+            //agua
+            piso = cargarMesh(MediaDir + "Meshes\\Piso\\Agua-TgcScene.xml");
+            nivel_mar = 8;
+            piso.Scale = new Vector3(20f, 1f, 20f);
+            //piso.Position = new Vector3(0f, nivel_mar, 0f);
+
+            piso.Position = new Vector3(11382, nivel_mar + 40, 8885);
         }
 
         private void initializeList()
@@ -425,7 +443,7 @@ namespace TGC.Group.Model
             meshes.Add(camionCisterna);
             meshes.Add(tractor);
             //meshes.Add(barril.Mesh);
-            meshes.Add(faraon);
+            //meshes.Add(faraon);
             meshes.Add(avionMilitar);
             meshes.Add(tanqueFuturista);
             meshes.Add(avionCaza);
@@ -446,7 +464,7 @@ namespace TGC.Group.Model
             rocaOriginal.dispose();
             palmeraOriginal.dispose();
             pastito.dispose();
-            faraon.dispose();
+            //faraon.dispose();
             arbolSelvatico.dispose();
             cajita.dispose();
             hummer.dispose();
@@ -468,7 +486,7 @@ namespace TGC.Group.Model
             arbolesSelvaticos.Clear();
             palmeras.Clear();
             cajitas.Clear();
-
+            piso.dispose();
             foreach(var barril in barrilesExplosivos)
             {
                barril.dispose();
@@ -477,6 +495,7 @@ namespace TGC.Group.Model
             //dispose de efectos
             vaiven.Dispose();
             viento.Dispose();
+            envmap.Dispose();
         }
 
         public void initObstaculos()
@@ -529,8 +548,8 @@ namespace TGC.Group.Model
             };
 
             //cilindro del faraon del mesio
-            var faraonCylinder = new TgcBoundingCylinderFixedY(faraon.BoundingBox.calculateBoxCenter(), faraon.BoundingBox.calculateBoxRadius() * 0.15f, 1500);
-            collisionManager.agregarCylinder(faraonCylinder);
+            //var faraonCylinder = new TgcBoundingCylinderFixedY(faraon.BoundingBox.calculateBoxCenter(), faraon.BoundingBox.calculateBoxRadius() * 0.15f, 1500);
+            //collisionManager.agregarCylinder(faraonCylinder);
 
             collisionManager.agregarAABB(canoa.BoundingBox);
             collisionManager.agregarAABB(helicopter.BoundingBox);
@@ -595,6 +614,205 @@ namespace TGC.Group.Model
             var newPos = avionCaza.Position + new Vector3(1000 * FastMath.Sin(time), 0, 1000 * FastMath.Cos(time));
             avionCaza.BoundingBox.scaleTranslate(newPos, new Vector3(1, 1, 1));           
            
+        }
+
+        public void restoreEffect()
+        {
+            foreach (var pasto in pastitos)
+            {
+                pasto.Effect = viento;
+                pasto.Technique = "Wind";
+            }
+
+            foreach (var arbusto in arbustitos)
+            {
+                arbusto.Effect = viento;
+                arbusto.Technique = "Wind";
+            }
+
+            foreach (var arbol in arbolesSelvaticos)
+            {
+                arbol.Effect = viento;
+                arbol.Technique = "Wind";
+            }
+            canoa.Effect = vaiven;
+            canoa.Technique = "OndulacionZ";
+            vaiven.SetValue("amplitud_vaiven", 5);
+
+            avionCaza.Effect = vaiven;
+            avionCaza.Technique = "CirculoXZ";
+        }
+
+        public void initRenderLagos(TgcSkyBox skyBox, TgcFrustum frustum)
+        {
+            piso.Effect = envmap;
+            piso.Technique = "RenderScene";
+
+            if (g_pCubeMapAgua == null && RenderUtils.estaDentroDelFrustum(piso,frustum))
+            {
+                // solo la primera vez crea el env map del agua
+                CrearEnvMapAgua(skyBox);
+                // ya que esta creado, se lo asigno al effecto:
+                envmap.SetValue("g_txCubeMapAgua", g_pCubeMapAgua);
+            }
+
+        }
+
+        public void CrearEnvMapAgua(TgcSkyBox skyBox)
+        {
+
+            var aspectRatio = D3DDevice.Instance.AspectRatio;
+            // creo el enviroment map para el agua
+            g_pCubeMapAgua = new CubeTexture(D3DDevice.Instance.Device, 256, 1, Usage.RenderTarget,
+                Format.A16B16G16R16F, Pool.Default);
+            var pOldRT = D3DDevice.Instance.Device.GetRenderTarget(0);
+            // ojo: es fundamental que el fov sea de 90 grados.
+            // asi que re-genero la matriz de proyeccion
+            D3DDevice.Instance.Device.Transform.Projection =
+                Matrix.PerspectiveFovLH(Geometry.DegreeToRadian(90.0f),
+                    aspectRatio, 1f, 100000f);
+            // Genero las caras del enviroment map
+            for (var nFace = CubeMapFace.PositiveX; nFace <= CubeMapFace.NegativeZ; ++nFace)
+            {
+                var pFace = g_pCubeMapAgua.GetCubeMapSurface(nFace, 0);
+                D3DDevice.Instance.Device.SetRenderTarget(0, pFace);
+                Vector3 Dir, VUP;
+                Color color;
+                switch (nFace)
+                {
+                    default:
+                    case CubeMapFace.PositiveX:
+                        // Left
+                        Dir = new Vector3(1, 0, 0);
+                        VUP = new Vector3(0, 1, 0);
+                        color = Color.Black;
+                        break;
+
+                    case CubeMapFace.NegativeX:
+                        // Right
+                        Dir = new Vector3(-1, 0, 0);
+                        VUP = new Vector3(0, 1, 0);
+                        color = Color.Red;
+                        break;
+
+                    case CubeMapFace.PositiveY:
+                        // Up
+                        Dir = new Vector3(0, 1, 0);
+                        VUP = new Vector3(0, 0, -1);
+                        color = Color.Gray;
+                        break;
+
+                    case CubeMapFace.NegativeY:
+                        // Down
+                        Dir = new Vector3(0, -1, 0);
+                        VUP = new Vector3(0, 0, 1);
+                        color = Color.Yellow;
+                        break;
+
+                    case CubeMapFace.PositiveZ:
+                        // Front
+                        Dir = new Vector3(0, 0, 1);
+                        VUP = new Vector3(0, 1, 0);
+                        color = Color.Green;
+                        break;
+
+                    case CubeMapFace.NegativeZ:
+                        // Back
+                        Dir = new Vector3(0, 0, -1);
+                        VUP = new Vector3(0, 1, 0);
+                        color = Color.Blue;
+                        break;
+                }
+
+                var Pos = piso.Position;
+                if (nFace == CubeMapFace.NegativeY)
+                    Pos.Y += 2000;
+
+                D3DDevice.Instance.Device.Transform.View = Matrix.LookAtLH(Pos, Pos + Dir, VUP);
+                D3DDevice.Instance.Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, color, 1.0f, 0);
+                D3DDevice.Instance.Device.BeginScene();
+                //Renderizar: solo algunas cosas:
+                if (nFace == CubeMapFace.NegativeY)
+                {
+                    //Renderizar terreno                    
+                    terreno.render();
+                }
+                else
+                {
+                    //Renderizar SkyBox
+                    skyBox.render();
+                    // dibujo el bosque
+                    foreach (var mesh in meshes)
+                    {
+                        if (FastMath.Pow2(piso.Position.X - mesh.Position.X) +
+                            FastMath.Pow2(piso.Position.Z - mesh.Position.Z)
+                            < FastMath.Pow2(800))
+                        {
+                            
+                            //mesh.Effect = envmap;
+                            //mesh.Technique = "RenderScene";
+                            mesh.render();
+                        }
+                    }
+                }
+                var fname = string.Format("face{0:D}.bmp", nFace);
+                //SurfaceLoader.Save(fname, ImageFileFormat.Bmp, pFace);
+
+                D3DDevice.Instance.Device.EndScene();
+            }
+            // restuaro el render target
+            D3DDevice.Instance.Device.SetRenderTarget(0, pOldRT);
+        }
+
+        public void endRenderLagos(TgcCamera camara, TgcFrustum frustum)
+        {
+            if (RenderUtils.estaDentroDelFrustum(piso, frustum))
+            {
+
+                var aspectRatio = D3DDevice.Instance.AspectRatio;
+                var g_LightPos = new Vector3(4000f , 2000 ,3000f);
+                var g_LightDir = piso.Position - g_LightPos;
+                g_LightDir.Normalize();
+    
+                //D3DDevice.Instance.Device.Transform.View = camara.GetViewMatrix();
+                // FIXME! esto no se bien para que lo hace aca.
+                var g_mShadowProj = Matrix.PerspectiveFovLH(Geometry.DegreeToRadian(130.0f), 1f,
+                    1f, 100000f);
+
+                 D3DDevice.Instance.Device.Transform.Projection =
+                       Matrix.PerspectiveFovLH(Geometry.DegreeToRadian(45.0f), aspectRatio,
+                            1f, 100000f);
+                // Cargo las var. del shader:
+                //envmap.SetValue("g_txCubeMap", g_pCubeMap);
+                envmap.SetValue("fvLightPosition", new Vector4(4000f, 2000, 3000f, 1f));
+                envmap.SetValue("fvEyePosition", TgcParserUtils.vector3ToFloat3Array(camara.Position));
+
+                //Doy posicion a la luz
+                // Calculo la matriz de view de la luz
+                envmap.SetValue("g_vLightPos", new Vector4(g_LightPos.X, g_LightPos.Y, g_LightPos.Z, 1));
+                envmap.SetValue("g_vLightDir", new Vector4(g_LightDir.X, g_LightDir.Y, g_LightDir.Z, 1));
+                var g_LightView = Matrix.LookAtLH(g_LightPos, g_LightPos + g_LightDir, new Vector3(0, 0, 1));
+
+                // inicializacion standard:
+                envmap.SetValue("g_mProjLight", g_mShadowProj);
+                envmap.SetValue("g_mViewLightProj", g_LightView * g_mShadowProj);
+
+
+                //D3DDevice.Instance.Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
+                piso.AlphaBlendEnable = true;
+                // Ahora dibujo el agua
+                D3DDevice.Instance.Device.RenderState.AlphaBlendEnable = true;
+                envmap.SetValue("aux_Tex", terreno.terrainTexture);
+                // posicion de la canoa (divido por la escala)
+                //envmap.SetValue("canoa_x", canoa.Position.X / 10.0f);
+                //envmap.SetValue("canoa_y", canoa.Position.Z / 10.0f);
+                envmap.SetValue("time", time);
+                piso.Technique = "RenderAgua";
+                         
+                piso.render();
+            }
+
+            //g_pCubeMap.Dispose();
         }
 
         public void renderWorld(TgcFrustum frustum)
