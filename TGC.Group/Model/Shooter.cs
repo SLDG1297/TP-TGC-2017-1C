@@ -360,7 +360,7 @@ namespace TGC.Group.Model
                     // Update jugador
                     if (!jugador.Muerto)
                     {
-                        jugador.mover(Input, ElapsedTime);
+                        jugador.mover(Input, ElapsedTime, terreno);
 
                         // updownRot -= Input.YposRelative * 0.05f;
                         camaraInterna.OffsetHeight += Input.YposRelative;

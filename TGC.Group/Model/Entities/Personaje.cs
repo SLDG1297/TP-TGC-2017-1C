@@ -191,6 +191,7 @@ namespace TGC.Group.Model.Entities
         public virtual void render(float elapsedTime)
         {
             esqueleto.animateAndRender(elapsedTime);
+            arma.render();
             //esqueleto.BoundingBox.render();
         }
 

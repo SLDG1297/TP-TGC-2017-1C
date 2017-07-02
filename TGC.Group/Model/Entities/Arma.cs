@@ -68,6 +68,11 @@ namespace TGC.Group.Model.Entities
             personaje.Esqueleto.Attachments.Add(attachment);
         }
 
+        public void render()
+        {
+            attachment.Mesh.render();
+        }
+
         public void dispose()
         {
            	attachment.Mesh.dispose();

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TGC.Core.SceneLoader;
 using TGC.Core.Terrain;
+using TGC.Core.Utils;
 using TGC.Group.Model.Environment;
 
 namespace TGC.Group.Model
@@ -66,6 +67,16 @@ namespace TGC.Group.Model
             var H = (H0 * (1 - fracc_i) + H1 * fracc_i) * (1 - fracc_j) +
                     (H2 * (1 - fracc_i) + H3 * fracc_i) * fracc_j;
             return H;
+        }
+
+        public float posicionEnTerreno(Vector3 posicion)
+        {
+            return posicionEnTerreno(posicion.X, posicion.Z);
+        }
+
+        public bool estaEnElPiso(Vector3 posicion)
+        {
+            return posicion.Y < 0 || FastMath.Abs(posicion.Y - this.posicionEnTerreno(posicion)) < 10.0f;
         }
 
         public void corregirAltura(List<TgcMesh> meshes)

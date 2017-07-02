@@ -47,24 +47,24 @@ namespace TGC.Group.Model.Entities
             {
                 health += salud;
             }
-        }        
+        }
 
-		public void mover(TgcD3dInput Input, float ElapsedTime) {
+        public void mover(TgcD3dInput Input, float ElapsedTime, Terreno unTerreno) {
             //Calcular proxima posicion de personaje segun Input
             var moveForward = 0f;
             var moveLeftRight = 0f;
 
             float jump = 0;
-			//float jumpingElapsedTime = 0f;
+            //float jumpingElapsedTime = 0f;
             float rotate = 0;
 
             resetBooleans();
 
-			// Rotar respecto a la posicion del mouse
-			Rotacion += Input.XposRelative * 0.05f;
+            // Rotar respecto a la posicion del mouse
+            Rotacion += Input.XposRelative * 0.05f;
 
             //Correr
-            if (running = Input.keyDown(Key.LeftShift)){
+            if (running = Input.keyDown(Key.LeftShift) && unTerreno.estaEnElPiso(Position)) {
 
                 setVelocidad(300f,300f); 
                 //es para que exploremos mas rapido el terreno
@@ -95,17 +95,17 @@ namespace TGC.Group.Model.Entities
             //Atras
             if (Input.keyDown(Key.S))
             {
-				moveForward = velocidadCaminar - 10f;
+                moveForward = velocidadCaminar - 10f;
                 moving = true;
-				rotate = 180;
+                rotate = 180;
             }
 
             //Derecha
             if (Input.keyDown(Key.D))
             {
                 moveLeftRight = -velocidadIzqDer;
-				//rotate = velocidadRotacion;
-				rotate += Input.keyDown(Key.W) ? 45 : Input.keyDown(Key.S) ? 315 : 90;
+                //rotate = velocidadRotacion;
+                rotate += Input.keyDown(Key.W) ? 45 : Input.keyDown(Key.S) ? 315 : 90;
                 rotating = true;
                 moving = true;
             }
@@ -114,14 +114,14 @@ namespace TGC.Group.Model.Entities
             if (Input.keyDown(Key.A))
             {
                 moveLeftRight = velocidadIzqDer;
-				//rotate = -velocidadRotacion;
-				rotate = Input.keyDown(Key.W) ? -45 : Input.keyDown(Key.S) ? -135 : -90;
-				rotating = true;
+                //rotate = -velocidadRotacion;
+                rotate = Input.keyDown(Key.W) ? -45 : Input.keyDown(Key.S) ? -135 : -90;
+                rotating = true;
                 moving = true;
             }
 
             //Saltar
-            if (!jumping && Input.keyPressed(Key.Space))
+            if (!jumping && Input.keyPressed(Key.Space) && unTerreno.estaEnElPiso(Position))
             {
                 jumping = true;
             }
@@ -140,7 +140,7 @@ namespace TGC.Group.Model.Entities
                 esqueleto.playAnimation("Jump", true);
                 //El salto dura un tiempo hasta llegar a su fin
                 jumpingElapsedTime += ElapsedTime;
-                if (jumpingElapsedTime > tiempoSalto)
+                if (jumpingElapsedTime > tiempoSalto && unTerreno.estaEnElPiso(Position))
                 {
                     jumping = false;
                     jumpingElapsedTime = 0f;
@@ -162,13 +162,13 @@ namespace TGC.Group.Model.Entities
                                                 jump,// + posicionY - lastPos.Y,
                                                 moveForward * ElapsedTime);
             desplazamiento.TransformCoordinate(Matrix.RotationY(Rotacion));
-            
+
             //ajusto la posicion dependiendo las colisiones
             var realmove = CollisionManager.Instance.adjustPosition(this, desplazamiento);
-            esqueleto.Position += realmove;            
+            esqueleto.Position += realmove;
 
             //aplico la gravedad segun el personaje (si esta sobre el suelo no hace nada)
-            if(!jumping) CollisionManager.Instance.applyGravity(ElapsedTime,this);
+            if (!jumping) CollisionManager.Instance.applyGravity(ElapsedTime, this);
 
             updateBoundingBoxes();
             lastPos = esqueleto.Position;
