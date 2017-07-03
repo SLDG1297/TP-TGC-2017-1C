@@ -119,19 +119,26 @@ namespace TGC.Group.Model.Entities
         {
             if (moving)
             {
-                if (running)
+                if (jumping)
                 {
-                    esqueleto.playAnimation("Run", true);
+                    esqueleto.playAnimation("Jump", true, 20);
                 }
                 else
                 {
-                    if (crouching)
+                    if (running)
                     {
-                        esqueleto.playAnimation("CrouchWalk", true);
+                        esqueleto.playAnimation("Run", true);
                     }
                     else
                     {
-                        esqueleto.playAnimation("Walk", true);
+                        if (crouching)
+                        {
+                            esqueleto.playAnimation("CrouchWalk", true);
+                        }
+                        else
+                        {
+                            esqueleto.playAnimation("Walk", true);
+                        }
                     }
                 }
             }

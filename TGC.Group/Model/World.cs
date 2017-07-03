@@ -299,18 +299,6 @@ namespace TGC.Group.Model
                 roca.Transform = Matrix.Scaling(roca.Scale) * roca.Transform;
             }
 
-            // Frontera oeste de rocas.
-            var count = rocas.Count;
-            Utils.disponerEnLineaX(rocaOriginal, rocas, 20, -200, new Vector3(1500, 0, -3000));
-            for (int i = count; i <= rocas.Count - 1; i++)
-            {
-                var roca = rocas[i];
-                roca.AutoTransformEnable = false;
-                roca.Scale = new Vector3(4.0f, 4.0f, 4.0f);
-                roca.Transform = Matrix.Scaling(roca.Scale) * roca.Transform;
-            }
-            terreno.corregirAltura(rocas);
-
             //barriles - son explosivos
             barril = cargarMesh(MediaDir + "Meshes\\Objetos\\BarrilPolvora\\BarrilPolvora-TgcScene.xml");
             barril.Position = new Vector3(-6802, 8, 10985);
