@@ -149,7 +149,7 @@ namespace TGC.Group.Model
                 mesh.AutoTransformEnable = false;
                 mesh.Transform = Matrix.Scaling(1.5f, 2f, 1.75f) * Matrix.RotationY(FastMath.PI_HALF + FastMath.PI) * Matrix.Translation(mesh.Position);
             }
-            terreno.corregirAltura(casa.Meshes);
+            //terreno.corregirAltura(casa.Meshes);
 
             // Creación de palmeras dispuestas circularmente.
             string palmeraDir = MediaDir + "Meshes\\Vegetation\\Palmera\\Palmera-TgcScene.xml";
@@ -299,18 +299,6 @@ namespace TGC.Group.Model
                 roca.Transform = Matrix.Scaling(roca.Scale) * roca.Transform;
             }
 
-            // Frontera oeste de rocas.
-            var count = rocas.Count;
-            Utils.disponerEnLineaX(rocaOriginal, rocas, 20, -200, new Vector3(1500, 0, -3000));
-            for (int i = count; i <= rocas.Count - 1; i++)
-            {
-                var roca = rocas[i];
-                roca.AutoTransformEnable = false;
-                roca.Scale = new Vector3(4.0f, 4.0f, 4.0f);
-                roca.Transform = Matrix.Scaling(roca.Scale) * roca.Transform;
-            }
-            terreno.corregirAltura(rocas);
-
             //barriles - son explosivos
             barril = cargarMesh(MediaDir + "Meshes\\Objetos\\BarrilPolvora\\BarrilPolvora-TgcScene.xml");
             barril.Position = new Vector3(-6802, 8, 10985);
@@ -432,9 +420,10 @@ namespace TGC.Group.Model
             piso = cargarMesh(MediaDir + "Meshes\\Piso\\Agua-TgcScene.xml");
             nivel_mar = 8;
             piso.Scale = new Vector3(20f, 1f, 20f);
-            //piso.Position = new Vector3(0f, nivel_mar, 0f);
-
             piso.Position = new Vector3(11382, nivel_mar + 40, 8885);
+            piso.AutoTransformEnable = false;
+            piso.Transform = Matrix.Scaling(piso.Scale) * Matrix.Translation(piso.Position);
+            piso.updateBoundingBox();
         }
 
         private void initializeList()
@@ -447,6 +436,7 @@ namespace TGC.Group.Model
             meshes.Add(helicopter);
             meshes.Add(camionCisterna);
             meshes.Add(tractor);
+            meshes.Add(piso);
             //meshes.Add(barril.Mesh);
             //meshes.Add(faraon);
             meshes.Add(avionMilitar);
@@ -623,6 +613,12 @@ namespace TGC.Group.Model
 
         public void restoreEffect()
         {
+            foreach (var mesh in meshes)
+            {
+                mesh.Effect = envmap;
+                mesh.Technique = "RenderScene";
+            }
+
             foreach (var pasto in pastitos)
             {
                 pasto.Effect = viento;
@@ -744,7 +740,7 @@ namespace TGC.Group.Model
                     {
                         if (FastMath.Pow2(mesh.Position.X - meshcito.Position.X) +
                             FastMath.Pow2(mesh.Position.Z - meshcito.Position.Z)
-                            <= FastMath.Pow2(500))
+                            <= FastMath.Pow2(500)  && meshcito.Position != mesh.Position)
                         {
                             meshcito.render();
                         }
@@ -763,7 +759,7 @@ namespace TGC.Group.Model
 
                 // Cargo las var. del shader:
                 envmap.SetValue("g_txCubeMap", g_pCubeMap);
-                envmap.SetValue("fvLightPosition", new Vector4(4000f, 6000f, 3000f, 0f));
+                envmap.SetValue("fvLightPosition", new Vector4(4000f, 8000f, 3000f, 0f));
                 envmap.SetValue("fvEyePosition",
                     TgcParserUtils.vector3ToFloat3Array(camera.Position));
                 envmap.SetValue("time", time);
@@ -779,7 +775,7 @@ namespace TGC.Group.Model
             piso.Effect = envmap;
             piso.Technique = "RenderScene";
 
-            if (g_pCubeMapAgua == null && RenderUtils.estaDentroDelFrustum(piso,frustum))
+            if (RenderUtils.estaDentroDelFrustum(piso,frustum) && g_pCubeMapAgua == null )
             {
                 // solo la primera vez crea el env map del agua
                 CrearEnvMapAgua(skyBox);
@@ -877,7 +873,7 @@ namespace TGC.Group.Model
                     {
                         if (FastMath.Pow2(piso.Position.X - mesh.Position.X) +
                             FastMath.Pow2(piso.Position.Z - mesh.Position.Z)
-                            < FastMath.Pow2(800))
+                            < FastMath.Pow2(800) && mesh.Position != piso.Position)
                         {
                             
                             //mesh.Effect = envmap;
@@ -901,7 +897,7 @@ namespace TGC.Group.Model
             {
 
                 var aspectRatio = D3DDevice.Instance.AspectRatio;
-                var g_LightPos = new Vector3(4000f , 6000f ,3000f);
+                var g_LightPos = new Vector3(4000f , 8000f ,3000f);
                 var g_LightDir = piso.Position - g_LightPos;
                 g_LightDir.Normalize();
     
@@ -915,7 +911,7 @@ namespace TGC.Group.Model
                             1f, 100000f);
                 // Cargo las var. del shader:
                 //envmap.SetValue("g_txCubeMap", g_pCubeMap);
-                envmap.SetValue("fvLightPosition", new Vector4(4000f, 6000f, 3000f, 0f));
+                envmap.SetValue("fvLightPosition", new Vector4(4000f, 8000f, 3000f, 0f));
                 envmap.SetValue("fvEyePosition", TgcParserUtils.vector3ToFloat3Array(camara.Position));
 
                 //Doy posicion a la luz
@@ -926,7 +922,7 @@ namespace TGC.Group.Model
 
                 // inicializacion standard:
                 //envmap.SetValue("g_mProjLight", g_mShadowProj);
-               // envmap.SetValue("g_mViewLightProj", g_LightView * g_mShadowProj);
+                //envmap.SetValue("g_mViewLightProj", g_LightView * g_mShadowProj);
 
 
                 //D3DDevice.Instance.Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
@@ -946,9 +942,37 @@ namespace TGC.Group.Model
             //g_pCubeMap.Dispose();
         }
 
+        public void applyShadowMap()
+        {
+            piso.Effect = envmap;
+            //piso.Technique = envmap;
+        }
+
         public void renderWorld(TgcFrustum frustum)
         {
             RenderUtils.renderFromFrustum(meshes, frustum);
+        }
+
+        public void renderAll(TgcFrustum Frustum, float ElapsedTime)
+        {
+            //envmap.Technique = "RenderSceneShadows";
+            //terreno.executeRender(envmap);
+            //terreno.render();
+            RenderUtils.renderFromFrustum(Meshes, Frustum);
+            RenderUtils.renderFromFrustum(BarrilesExplosivos, Frustum, ElapsedTime);
+            envmap.Technique = "RenderScene";
+        }
+
+
+        public void renderShadowMap(TgcFrustum frustum, Effect shadowMap)
+        {         
+            foreach (var mesh in palmeras)
+            {
+                mesh.Effect = shadowMap;
+                mesh.Technique = "RenderScene";
+            }
+
+            RenderUtils.renderFromFrustum(palmeras, frustum);
         }
 
         TgcMesh cargarMesh(string unaDireccion)

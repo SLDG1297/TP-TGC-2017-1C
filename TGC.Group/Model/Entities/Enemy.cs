@@ -94,7 +94,7 @@ namespace TGC.Group.Model.Entities
                                              Utils.proyectadoY(Position));
 
             esqueleto.rotateY(rotation);
-            direccion = desplazamiento;
+            if (moving) direccion = desplazamiento;
             //Vector3.Multiply(direccion, 100f);
             //TODO: rotar la direccion y el rayito
             //if (moving) direccion = new Vector3(direccion.X * FastMath.Cos(rotation), direccion.Y, direccion.Z * FastMath.Sin(rotation)) *1000;

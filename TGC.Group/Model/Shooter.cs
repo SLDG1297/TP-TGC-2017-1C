@@ -35,7 +35,7 @@ namespace TGC.Group.Model
         private readonly float far_plane = 10000f;
         private readonly float near_plane = 1f;
 
-        private readonly int SHADOWMAP_SIZE = 512;
+        private readonly int SHADOWMAP_SIZE = 1024;
         private const int FACTOR = 8;
         // Constantes de escenario
         // Menu
@@ -77,7 +77,7 @@ namespace TGC.Group.Model
         //otros
         private CollisionManager collisionManager;
 
-		private bool FPSCamera = true;
+		private bool FPSCamera = false;
         private Quadtree quadtree;
 
         //efectos
@@ -86,6 +86,7 @@ namespace TGC.Group.Model
         private Effect alarmaEffect;
         private Surface depthStencil; // Depth-stencil buffer
         private Surface depthStencilOld;
+        private TgcArrow arrow;
 
         private Surface pOldRT;
         private Surface pOldDS;
@@ -113,7 +114,6 @@ namespace TGC.Group.Model
         private Vector3 g_LightPos; // posicion de la luz actual (la que estoy analizando)
         private Matrix g_LightView; // matriz de view del light
         private Matrix g_mShadowProj; // Projection matrix for shadow map
-        private CubeTexture g_pCubeMapAgua;
         private Surface g_pDSShadow; // Depth-stencil buffer for rendering to shadow map
 
         private Texture g_pShadowMap; // Texture to which the shadow map is rendered
@@ -140,17 +140,18 @@ namespace TGC.Group.Model
         {
 			menu.Init();
             world = new World();
-			initHeightmap();
+			
 			Camara = new MenuCamera(windowSize);
 
             loadPostProcessShaders();
+            initHeightmap();
         }
 
 		public void InitGame()
 		{
             var focusWindows = D3DDevice.Instance.Device.CreationParameters.FocusWindow;
             mouseCenter = focusWindows.PointToScreen(new Point(focusWindows.Width / 2, focusWindows.Height / 2));
-
+            initSkyBox();
             //Iniciar jugador
             initJugador();
 			//Iniciar HUD
@@ -159,7 +160,7 @@ namespace TGC.Group.Model
             //Iniciar escenario
             //initHeightmap();
             world.initWorld(MediaDir,ShadersDir, terreno);
-			initSkyBox();
+			
 
 			var pmin = new Vector3(-16893, -2000, 17112);
 			var pmax = new Vector3(18240, 8884, -18876);
@@ -199,7 +200,12 @@ namespace TGC.Group.Model
             mouseEscondido = true;
             Cursor.Hide();
 
-            if(activateShadowMap) createShadowMap();
+            arrow = new TgcArrow();
+            arrow.Thickness = 4f;
+            arrow.HeadSize = new Vector2(4f, 4f);
+            arrow.BodyColor = Color.Blue;
+
+            if (activateShadowMap) createShadowMap();
             //SoundPlayer.Instance.playMusic(MediaDir, DirectSound);
             SoundPlayer.Instance.initAndPlayMusic(MediaDir, DirectSound, jugador);
 
@@ -209,7 +215,7 @@ namespace TGC.Group.Model
 
         public void loadPostProcessShaders()
         {
-            shadowMap =TgcShaders.loadEffect(ShadersDir + "ShadowMap.fx");
+            shadowMap =TgcShaders.loadEffect(ShadersDir + "Demo.fx");
 
             var device = D3DDevice.Instance.Device;
             //Se crean 2 triangulos (o Quad) con las dimensiones de la pantalla con sus posiciones ya transformadas
@@ -303,31 +309,8 @@ namespace TGC.Group.Model
                 aspectRatio, near_plane, far_plane);
             D3DDevice.Instance.Device.Transform.Projection =
                 Matrix.PerspectiveFovLH(Geometry.DegreeToRadian(45.0f),
-                    aspectRatio, near_plane, far_plane);
-            
+                    aspectRatio, near_plane, far_plane);          
 
-        }
-
-        public void loadSounds(string MediaDir, string soundPath)
-        {
-            string currentFile = null;
-
-            var shootingPath = MediaDir + soundPath;
-
-            if (currentFile == null || currentFile != shootingPath)
-            {
-                currentFile = shootingPath;
-
-                //Borrar sonido anterior
-                if (sound != null)
-                {
-                    sound.dispose();
-                    sound = null;
-                }
-                //Cargar sonido
-                sound = new TgcStaticSound();
-                sound.loadSound(currentFile, DirectSound.DsDevice);
-            }
         }
 
         public override void Update()
@@ -436,13 +419,14 @@ namespace TGC.Group.Model
             ClearTextures();
 
             if (gameLoaded) world.initRenderEnvMap(Frustum, ElapsedTime, Camara, skyBox);
+            if (gameLoaded && activateShadowMap) RenderShadowMap();
+
             var device = D3DDevice.Instance.Device;
-            if (seDebeActivarEfecto() && activateShadowMap) RenderShadowMap();
             D3DDevice.Instance.Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
 
             //esto es renderizar todo como viene, sin efectos
-            gaussianBlur.Technique = "DefaultTechnique";
-            alarmaEffect.Technique = "DefaultTechnique";
+            //gaussianBlur.Technique = "DefaultTechnique";
+            //alarmaEffect.Technique = "DefaultTechnique";
 
             //Cargamos el Render Targer al cual se va a dibujar la escena 3D. Antes nos guardamos el surface original 
             //En vez de dibujar a la pantalla, dibujamos a un buffer auxiliar, nuestro Render Target.
@@ -517,20 +501,18 @@ namespace TGC.Group.Model
             }
             else
             {
-
+                if (!FPSCamera) skyBox.render();
                 world.restoreEffect();
-                var lista = world.Meshes;
 
                 // Render escenario
-                terreno.render();
+                //terreno.render();
                 //limits.render();
-                if (!FPSCamera) skyBox.render();
-                
+                shadowMap.Technique = "RenderSceneShadows";
+                terreno.executeRender(shadowMap);
                 D3DDevice.Instance.ParticlesEnabled = true;
                 D3DDevice.Instance.EnableParticles();
 
-                RenderUtils.renderFromFrustum(world.Meshes, Frustum);
-                RenderUtils.renderFromFrustum(world.BarrilesExplosivos, Frustum, ElapsedTime);
+                world.renderAll(Frustum, ElapsedTime);
                 RenderUtils.renderFromFrustum(collisionManager.getPlayers(), Frustum,ElapsedTime);
                 RenderUtils.renderFromFrustum(collisionManager.getBalas(), Frustum);
                 
@@ -706,11 +688,21 @@ namespace TGC.Group.Model
 
         public void RenderShadowMap()
         {
-            g_LightPos = new Vector3(5000, 800, 5000);
-            g_LightDir = g_LightPos - new Vector3(0,0,0) ;
+            g_LightPos = new Vector3(0, 6000, 0);
+            var lookat = new Vector3(0, 0, 0);
+            g_LightDir = lookat-  g_LightPos;
             g_LightDir.Normalize();
+
+            arrow.PStart = g_LightPos;
+            arrow.PEnd = g_LightPos + g_LightDir * 20;
+            arrow.updateValues();
             //Doy posicion a la luz
             // Calculo la matriz de view de la luz
+
+            shadowMap.SetValue("fvLightPosition", new Vector4(g_LightPos.X, g_LightPos.Y, g_LightPos.Z,1));
+            //shadowMap.SetValue("fvEyePosition", TgcParserUtils.vector3ToFloat3Array(Camara.Position));
+            
+
             shadowMap.SetValue("g_vLightPos", new Vector4(g_LightPos.X, g_LightPos.Y, g_LightPos.Z, 1));
             shadowMap.SetValue("g_vLightDir", new Vector4(g_LightDir.X, g_LightDir.Y, g_LightDir.Z, 1));
             g_LightView = Matrix.LookAtLH(g_LightPos, g_LightPos + g_LightDir, new Vector3(0, 0, 1));
@@ -718,6 +710,11 @@ namespace TGC.Group.Model
             // inicializacion standard:
             shadowMap.SetValue("g_mProjLight", g_mShadowProj);
             shadowMap.SetValue("g_mViewLightProj", g_LightView * g_mShadowProj);
+
+            shadowMap.SetValue("g_vLightPos", new Vector4(g_LightPos.X, g_LightPos.Y, g_LightPos.Z, 1));
+            shadowMap.SetValue("g_vLightDir", new Vector4(g_LightDir.X, g_LightDir.Y, g_LightDir.Z, 1));
+
+
 
             // Primero genero el shadow map, para ello dibujo desde el pto de vista de luz
             // a una textura, con el VS y PS que generan un mapa de profundidades.
@@ -731,22 +728,13 @@ namespace TGC.Group.Model
 
             // Hago el render de la escena pp dicha
             // solo los objetos que proyectan sombras:
-            //Renderizar terreno
-           // terreno.getTerrerno().Effect = shadowMap;
-            //erreno.getTerrerno().Technique = "RenderShadow";
-            //terreno.render();
-            // dibujo el wolrd
-            foreach(var mesh in world.Meshes)
-            {
-                mesh.Effect = shadowMap;
-                mesh.Technique = "RenderShadow";
-            }
-            world.renderWorld(Frustum);
-            
-            // el tanque
-            // Seteo la tecnica: estoy generando la sombra o estoy dibujando la escena
-            //mesh.Technique = "RenderShadow";
-            //mesh.render();
+            //Renderizar terreno           
+            //shadowMap.Technique = "RenderShadow";
+            terreno.executeRender(shadowMap);
+            world.renderShadowMap(Frustum, shadowMap);
+
+            //Cargar valores de la flecha
+            arrow.render();
             // Termino
             D3DDevice.Instance.Device.EndScene();
             //TextureLoader.Save("shadowmap.bmp", ImageFileFormat.Bmp, g_pShadowMap);
@@ -756,11 +744,6 @@ namespace TGC.Group.Model
             D3DDevice.Instance.Device.SetRenderTarget(0, pOldRT);
 
             shadowMap.SetValue("g_txShadow", g_pShadowMap);
-
-            foreach (var mesh in world.Meshes)
-            {
-                mesh.Technique = "RenderScene";
-            }
             world.restoreEffect();
         }
 
@@ -842,9 +825,10 @@ namespace TGC.Group.Model
 
         private void initSkyBox(){
             skyBox = new TgcSkyBox();
-            skyBox.Center = jugador.Position;
-            skyBox.Size = new Vector3(10000, 10000, 10000);
-
+            skyBox.Center = PLAYER_INIT_POS;
+            //hay un retardo en renderizar el skybox
+            skyBox.Size = new Vector3(10000, 10000, 10000);            
+            //skyBox.AlphaBlendEnable = true;
 			string skyBoxDir = MediaDir + "Texturas\\Quake\\SkyBoxWhale\\Whale";
 
 			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Up, skyBoxDir + "up.jpg");
