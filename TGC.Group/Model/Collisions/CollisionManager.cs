@@ -512,6 +512,61 @@ namespace TGC.Group.Model.Collisions
             return cilindroMasCercano;
         }
 
+        public TgcBoundingCylinderFixedY cilindroMasCercano(Personaje enemigo)
+        {
+            TgcBoundingCylinderFixedY cilindroMasCercano = null;
+            float distanciamin = 0;
+
+            foreach (var cil in boundingCylinders)
+            {
+                var distancia = Vector3.Subtract(enemigo.Position, cil.Center);
+
+                if (cilindroMasCercano == null)
+                {
+                    cilindroMasCercano = cil;
+                    distanciamin = distancia.Length();
+                }
+                else
+                {
+                    if (distancia.Length() < distanciamin)
+                    {
+                        cilindroMasCercano = cil;
+                        distanciamin = distancia.Length();
+                    }
+                }
+            }
+
+
+            return cilindroMasCercano;
+        }
+
+        public TgcBoundingAxisAlignBox AABBMasCercano(Personaje enemigo)
+        {
+            TgcBoundingAxisAlignBox cilindroMasCercano = null;
+            float distanciamin = 0;
+
+            foreach (var cil in boundingBoxes)
+            {
+                var distancia = Vector3.Subtract(enemigo.Position, cil.calculateBoxCenter());
+
+                if (cilindroMasCercano == null)
+                {
+                    cilindroMasCercano = cil;
+                    distanciamin = distancia.Length();
+                }
+                else
+                {
+                    if (distancia.Length() < distanciamin)
+                    {
+                        cilindroMasCercano = cil;
+                        distanciamin = distancia.Length();
+                    }
+                }
+            }
+
+
+            return cilindroMasCercano;
+        }
 
         #endregion
     }

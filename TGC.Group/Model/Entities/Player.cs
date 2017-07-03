@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ using TGC.Core.Collision;
 using TGC.Core.BoundingVolumes;
 using Microsoft.DirectX;
 using TGC.Core.Utils;
+using TGC.Core.Text;
 using TGC.Group.Model.Collisions;
 
 namespace TGC.Group.Model.Entities
@@ -63,99 +65,119 @@ namespace TGC.Group.Model.Entities
             // Rotar respecto a la posicion del mouse
             Rotacion += Input.XposRelative * 0.05f;
 
-            //Correr
-            if (running = Input.keyDown(Key.LeftShift) && unTerreno.estaEnElPiso(Position)) {
+            if (covering == false)
+            {
+                //Correr
+                if (running = Input.keyDown(Key.LeftShift) && unTerreno.estaEnElPiso(Position))
+                {
 
-                setVelocidad(300f,300f); 
-                //es para que exploremos mas rapido el terreno
-                //setVelocidad(1700f, 1700f);
+                    setVelocidad(300f, 300f);
+                    //es para que exploremos mas rapido el terreno
+                    //setVelocidad(1700f, 1700f);
 
+                }
+                else
+                {
+                    //Agacharse
+                    if (crouching = Input.keyDown(Key.LeftControl))
+                    {
+                        setVelocidad(40f, 40f);
+                    }
+                    else
+                    {
+                        setVelocidad(100f, 100f);
+                    }
+                }
+
+                //Adelante
+                if (Input.keyDown(Key.W))
+                {
+                    moveForward = -velocidadCaminar;
+                    moving = true;
+
+                }
+
+                //Atras
+                if (Input.keyDown(Key.S))
+                {
+                    moveForward = velocidadCaminar - 10f;
+                    moving = true;
+                    rotate = 180;
+                }
+
+                //Derecha
+                if (Input.keyDown(Key.D))
+                {
+                    moveLeftRight = -velocidadIzqDer;
+                    //rotate = velocidadRotacion;
+                    rotate += Input.keyDown(Key.W) ? 45 : Input.keyDown(Key.S) ? 315 : 90;
+                    rotating = true;
+                    moving = true;
+                }
+
+                //Izquierda
+                if (Input.keyDown(Key.A))
+                {
+                    moveLeftRight = velocidadIzqDer;
+                    //rotate = -velocidadRotacion;
+                    rotate = Input.keyDown(Key.W) ? -45 : Input.keyDown(Key.S) ? -135 : -90;
+                    rotating = true;
+                    moving = true;
+                }
+
+                //Saltar
+                if (!jumping && Input.keyPressed(Key.Space) && unTerreno.estaEnElPiso(Position))
+                {
+                    jumping = true;
+                }
+
+                //Recargar
+                if (Input.keyPressed(Key.R))
+                {
+                    arma.recarga();
+                }
+
+                //Actualizar salto
+                if (jumping)
+                {
+                    //El salto dura un tiempo hasta llegar a su fin
+                    jumpingElapsedTime += ElapsedTime;
+                    if (jumpingElapsedTime > tiempoSalto && unTerreno.estaEnElPiso(Position))
+                    {
+                        jumping = false;
+                        jumpingElapsedTime = 0f;
+                    }
+                    else
+                    {
+                        jump = velocidadSalto * (tiempoSalto - jumpingElapsedTime);
+                    }
+                }
+
+                //Disparar
+                if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT) || Input.buttonDown(TgcD3dInput.MouseButtons.BUTTON_LEFT))
+                {
+                    arma.dispara(ElapsedTime, this.Position, Rotacion);
+                }
+
+                //Cubrirse
+                var objeto = CollisionManager.Instance.AABBMasCercano(this);
+                if (Input.keyPressed(Key.C) && TgcCollisionUtils.testAABBCylinder(objeto, BoundingCylinder) && unTerreno.estaEnElPiso(Position))
+                {
+                    covering = true;
+                    setVelocidad(0f, 0f);
+                }
             }
             else
             {
-                //Agacharse
-                if (crouching = Input.keyDown(Key.LeftControl))
-                {
-                    setVelocidad(40f, 40f);
-                }
-                else
+                // Descubrirse
+                if(Input.keyPressed(Key.C))
                 {
                     setVelocidad(100f, 100f);
+                    covering = false;
                 }
-            }
-
-            //Adelante
-            if (Input.keyDown(Key.W))
-            {
-                moveForward = -velocidadCaminar;
-                moving = true;
-
-            }
-
-            //Atras
-            if (Input.keyDown(Key.S))
-            {
-                moveForward = velocidadCaminar - 10f;
-                moving = true;
-                rotate = 180;
-            }
-
-            //Derecha
-            if (Input.keyDown(Key.D))
-            {
-                moveLeftRight = -velocidadIzqDer;
-                //rotate = velocidadRotacion;
-                rotate += Input.keyDown(Key.W) ? 45 : Input.keyDown(Key.S) ? 315 : 90;
-                rotating = true;
-                moving = true;
-            }
-
-            //Izquierda
-            if (Input.keyDown(Key.A))
-            {
-                moveLeftRight = velocidadIzqDer;
-                //rotate = -velocidadRotacion;
-                rotate = Input.keyDown(Key.W) ? -45 : Input.keyDown(Key.S) ? -135 : -90;
-                rotating = true;
-                moving = true;
-            }
-
-            //Saltar
-            if (!jumping && Input.keyPressed(Key.Space) && unTerreno.estaEnElPiso(Position))
-            {
-                jumping = true;
-            }
-
-            //Recargar
-            if (Input.keyPressed(Key.R))
-            {
-                arma.recarga();
             }
 
             displayAnimations();
-
-            //Actualizar salto
-            if (jumping)
-            {
-                esqueleto.playAnimation("Jump", true);
-                //El salto dura un tiempo hasta llegar a su fin
-                jumpingElapsedTime += ElapsedTime;
-                if (jumpingElapsedTime > tiempoSalto && unTerreno.estaEnElPiso(Position))
-                {
-                    jumping = false;
-                    jumpingElapsedTime = 0f;
-                }
-                else
-                {
-                    jump = velocidadSalto * (tiempoSalto - jumpingElapsedTime);
-                }
-            }
-
-            //Disparar
-            if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT) || Input.buttonDown(TgcD3dInput.MouseButtons.BUTTON_LEFT))
-            {
-                arma.dispara(ElapsedTime, this.Position, Rotacion);
-            }
 
             esqueleto.rotateY(rotate);
             var desplazamiento = new Vector3(moveLeftRight * ElapsedTime,

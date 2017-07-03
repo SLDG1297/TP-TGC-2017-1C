@@ -10,6 +10,7 @@ using TGC.Core.SkeletalAnimation;
 using TGC.Core.Utils;
 using TGC.Core.BoundingVolumes;
 using TGC.Core.Collision;
+using TGC.Group.Model.Collisions;
 
 namespace TGC.Group.Model.Entities
 {
@@ -37,6 +38,7 @@ namespace TGC.Group.Model.Entities
         protected bool rotating;
         protected bool running;
         protected bool crouching;
+        protected bool covering;
 
         //CONSTRUCTORES
         public Personaje(string mediaDir, string skin, Vector3 initPosition)
@@ -117,46 +119,53 @@ namespace TGC.Group.Model.Entities
 
         protected void displayAnimations()
         {
-            if (moving)
+            if (jumping)
             {
-                if (jumping)
+                esqueleto.playAnimation("Jump", true, 20);
+            }
+            else
+            {
+                if (covering)
                 {
-                    esqueleto.playAnimation("Jump", true, 20);
+                    esqueleto.stopAnimation();
+                    esqueleto.playAnimation("CrouchWalk", false);
                 }
                 else
                 {
-                    if (running)
+                    if (moving)
                     {
-                        esqueleto.playAnimation("Run", true);
+                        if (running)
+                        {
+                            esqueleto.playAnimation("Run", true);
+                        }
+                        else
+                        {
+                            if (crouching)
+                            {
+                                esqueleto.playAnimation("CrouchWalk", true);
+                            }
+                            else
+                            {
+                                esqueleto.playAnimation("Walk", true);
+                            }
+                        }
                     }
                     else
                     {
                         if (crouching)
                         {
-                            esqueleto.playAnimation("CrouchWalk", true);
+                            esqueleto.stopAnimation();
+                            esqueleto.playAnimation("CrouchWalk", false);
+
                         }
                         else
                         {
-                            esqueleto.playAnimation("Walk", true);
+                            esqueleto.playAnimation("StandBy", true);
                         }
                     }
                 }
             }
-            else
-            {
-                if (crouching)
-                {
-                    esqueleto.stopAnimation();
-                    esqueleto.playAnimation("CrouchWalk", false);
-
-                }
-                else
-                {
-                    esqueleto.playAnimation("StandBy", true);
-                }
-            }
         }
-
 
         public void updateBoundingBoxes()
         {
@@ -292,7 +301,6 @@ namespace TGC.Group.Model.Entities
         {
             get { return esqueleto.BoundingBox;  }
         }
-
 
     }
 }
