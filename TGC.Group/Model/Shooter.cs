@@ -319,6 +319,8 @@ namespace TGC.Group.Model
 			if (!menu.GameStarted)
 			{
 				menu.Update(ElapsedTime, Input);
+
+                FPSCamera = menu.FPScamera;
 			}
 			else if (!gameLoaded)
 			{

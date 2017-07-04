@@ -28,13 +28,14 @@ namespace TGC.Group.Model
 
 		private TgcText2D optionJugar;
 		private TgcText2D optionSalir;
+        private TgcText2D optionSpectate;
 
-		private Player player;
+        private Player player;        
 
+        public bool GameStarted { get; private set; }
+        public bool FPScamera { get; private set; }
 
-		public bool GameStarted { get; private set; }
-
-		public Menu(string MediaDir, Size windowSize)
+        public Menu(string MediaDir, Size windowSize)
 		{
 			this.MediaDir = MediaDir;
 			this.windowSize = windowSize;
@@ -67,15 +68,25 @@ namespace TGC.Group.Model
 			font.AddFontFile(MediaDir + "Fonts\\pdark.ttf");
 			optionJugar.changeFont(new Font(font.Families[0], 24, FontStyle.Bold));
 
-			optionSalir = new TgcText2D();
+            
+            optionSpectate = new TgcText2D();
+            optionSpectate.Text = "MODO ESPECTADOR";
+            optionSpectate.Color = Color.White;
+            optionSpectate.Position = new Point(windowSize.Width / 4, windowSize.Height / 4 + 50);
+            optionSpectate.Size = new Size(optionSpectate.Text.Length * 48, 24);
+            optionSpectate.Align = TgcText2D.TextAlign.LEFT;
 
-			optionSalir.Text = "SALIR";
-			optionSalir.Color = Color.White;
-			optionSalir.Position = new Point(windowSize.Width / 4, windowSize.Height / 4 + 50);
-			optionSalir.Size = new Size(optionJugar.Text.Length* 48, 24);
-			optionSalir.Align = TgcText2D.TextAlign.LEFT;
-			optionSalir.changeFont(new Font(font.Families[0], 24, FontStyle.Bold));
-		}
+            optionSpectate.changeFont(new Font(font.Families[0], 24, FontStyle.Bold));
+
+
+            optionSalir = new TgcText2D();
+            optionSalir.Text = "SALIR";
+            optionSalir.Color = Color.White;
+            optionSalir.Position = new Point(windowSize.Width / 4, windowSize.Height / 4 + 100);
+            optionSalir.Size = new Size(optionJugar.Text.Length * 48, 24);
+            optionSalir.Align = TgcText2D.TextAlign.LEFT;
+            optionSalir.changeFont(new Font(font.Families[0], 24, FontStyle.Bold));
+        }
 
 		private void InitTextures()
 		{
@@ -120,6 +131,7 @@ namespace TGC.Group.Model
 				if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT))
 				{
 					GameStarted = true;
+                    FPScamera = false;
 				}
 			}
 			else
@@ -139,7 +151,22 @@ namespace TGC.Group.Model
 			{
 				optionSalir.Color = Color.White;
 			}
-		}
+
+
+            if (TextCollision(Input, optionSpectate))
+            {
+                optionSpectate.Color = Color.Yellow;
+                if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT))
+                {
+                    GameStarted = true;
+                    FPScamera = true;
+                }
+            }
+            else
+            {
+                optionSpectate.Color = Color.White;
+            }
+        }
 
 		private bool TextCollision(TgcD3dInput Input, TgcText2D Text)
 		{
@@ -162,6 +189,7 @@ namespace TGC.Group.Model
 			background.render();
 			optionJugar.render();
 			optionSalir.render();
+            optionSpectate.render();
 			player.render(0);
 		}
 
@@ -176,6 +204,7 @@ namespace TGC.Group.Model
 			player.dispose();
 			optionJugar.Dispose();
 			optionSalir.Dispose();
+            optionSpectate.Dispose();
 		}
 	}
 }
