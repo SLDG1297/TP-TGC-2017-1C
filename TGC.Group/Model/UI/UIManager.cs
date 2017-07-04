@@ -20,7 +20,7 @@ namespace TGC.Group.Model.UI
         private CustomSprite healthBar;
         private CustomSprite healthBarBorder;
         private CustomSprite reloadsIcon;
-        private CustomSprite crosshair;
+        //private CustomSprite crosshair;
 
         // HUD
         private TgcText2D textoAmmo = new TgcText2D();
@@ -30,7 +30,7 @@ namespace TGC.Group.Model.UI
 
         private TgcText2D sombraTexto = new TgcText2D();
         private bool healthBarEnabled = true;
-
+        private bool finDelJuego = false;
         private string MediaDir;
 
         public void Init(string MediaDir)
@@ -46,31 +46,34 @@ namespace TGC.Group.Model.UI
         }
 
         public void Render()
-        {   
-            //Iniciar dibujado de todos los Sprites de la escena (en este caso es solo uno)
+        {
+            if (finDelJuego)
+            {
+                textoPerdiste.render();
+            }
+            
+            textoAmmo.render();
+            textoHealth.render();
+            sombraTexto.render();
+            textoRecargas.render();
+
+            //Iniciar dibujado de todos los Sprites de la escena
             drawer2D.BeginDrawSprite();
 
             //Dibujar sprite (si hubiese mas, deberian ir todos aquí)
             drawer2D.DrawSprite(ammoIcon);
             drawer2D.DrawSprite(healthIcon);
 
-            if(healthBarEnabled) drawer2D.DrawSprite(healthBar);
+            if (healthBarEnabled)
+            {
+                drawer2D.DrawSprite(healthBar);
+            }
 
             drawer2D.DrawSprite(healthBarBorder);
             drawer2D.DrawSprite(reloadsIcon);
             //drawer2D.DrawSprite(crosshair);
             //Finalizar el dibujado de Sprites
             drawer2D.EndDrawSprite();
-
-            if(textoPerdiste != null)
-            {
-                textoPerdiste.render();
-            }
-
-            textoAmmo.render();
-            textoHealth.render();
-            sombraTexto.render();
-            textoRecargas.render();
         }
 
         public void Dispose()
@@ -217,6 +220,21 @@ namespace TGC.Group.Model.UI
             font = new System.Drawing.Text.PrivateFontCollection();
             font.AddFontFile(MediaDir + "Fonts\\pdark.ttf");
             textoRecargas.changeFont(new System.Drawing.Font(font.Families[0], 24, FontStyle.Bold));
+
+
+            textoPerdiste = new TgcText2D();
+
+            //texto de cuantas balas le quedan al jugador
+            textoPerdiste.Color = Color.Red;
+            //var des = ammoIcon.Position + new Vector2(60, 10);
+            textoPerdiste.Position = new Point(D3DDevice.Instance.Width / 2 - 400, D3DDevice.Instance.Height / 2 -150);
+            textoPerdiste.Size = new Size(3 * 400, 150);
+            textoPerdiste.Align = TgcText2D.TextAlign.LEFT;
+            textoPerdiste.Text = "             PERDISTE        \n " + "Presiona ENTER para volver a intentarlo";
+
+            var otherfont = new System.Drawing.Text.PrivateFontCollection();
+            otherfont.AddFontFile(MediaDir + "Fonts\\pdark.ttf");
+            textoPerdiste.changeFont(new System.Drawing.Font(font.Families[0], 24, FontStyle.Bold));
         }
         
         private void updateHealthBar(Player player)
@@ -251,23 +269,7 @@ namespace TGC.Group.Model.UI
             textoAmmo.Text = "" + player.Arma.Balas;
             textoRecargas.Text = "" + player.Arma.Recargas;
 
-            if(player.Health <= 0)
-            {
-                textoPerdiste = new TgcText2D();
-
-                //texto de cuantas balas le quedan al jugador
-                textoPerdiste.Color = Color.DarkOrange;
-                //var des = ammoIcon.Position + new Vector2(60, 10);
-                textoPerdiste.Position = new Point(D3DDevice.Instance.Width/2, D3DDevice.Instance.Height / 2);
-                textoPerdiste.Size = new Size(3 * 24, 24);
-                textoPerdiste.Align = TgcText2D.TextAlign.LEFT;
-                textoPerdiste.Text = "PERDISTE!\n Presiona ENTER para volver a intentarlo";
-
-                var font = new System.Drawing.Text.PrivateFontCollection();
-                font.AddFontFile(MediaDir + "Fonts\\pdark.ttf");
-                textoPerdiste.changeFont(new System.Drawing.Font(font.Families[0], 24, FontStyle.Bold));
-
-            }
+            if (player.Health == 0) finDelJuego = true;
         }
 
     }

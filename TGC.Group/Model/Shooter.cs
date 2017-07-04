@@ -35,7 +35,7 @@ namespace TGC.Group.Model
         private readonly float far_plane = 10000f;
         private readonly float near_plane = 1f;
 
-        private readonly int SHADOWMAP_SIZE = 1024;
+        private readonly int SHADOWMAP_SIZE = 2048;
         private const int FACTOR = 8;
         // Constantes de escenario
         // Menu
@@ -365,14 +365,24 @@ namespace TGC.Group.Model
                     {                      
                         collisionManager.getPlayers().Remove(jugador);
                     }
-					// Update SkyBox
-					// Cuando se quiera probar cámara en tercera persona
-					skyBox.Center = jugador.Position;
+
+                    UIManager.Update(jugador, ElapsedTime);
+                    // Update SkyBox
+                    // Cuando se quiera probar cámara en tercera persona
+                    skyBox.Center = jugador.Position;
 
 				}
 				else
 				{
 					skyBox.Center = Camara.Position;
+
+                    if (Input.keyPressed(Microsoft.DirectX.DirectInput.Key.F2))
+                    {
+
+                        camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40, 50, -50), 60, 180, Input);
+                        Camara = camaraInterna;
+                        FPSCamera = false;
+                    }
 				}
 
                 SoundPlayer.Instance.playAmbientSound(ElapsedTime);
@@ -470,12 +480,13 @@ namespace TGC.Group.Model
             if (gameLoaded)
             {
                 RenderAxis();
-                sombraTexto.render();
-                texto.render();
+
 
                 if (FPSCamera)
                 {
                     DrawText.drawText(Convert.ToString(Camara.Position), 10, 1000, Color.OrangeRed);
+                    sombraTexto.render();
+                    texto.render();
                 }
                 else
                 {
@@ -855,11 +866,11 @@ namespace TGC.Group.Model
 		}
 
 		private void updateText() {
-			//texto.Text = "HEALTH: " + jugador.Health;
-			//texto.Text += "\tBALAS: " + jugador.Arma.Balas;
-			//texto.Text += "\tRECARGAS: " + jugador.Arma.Recargas;
-            texto.Text = "\nPosition\n" + jugador.Position;
-
+            //texto.Text = "HEALTH: " + jugador.Health;
+            //texto.Text += "\tBALAS: " + jugador.Arma.Balas;
+            //texto.Text += "\tRECARGAS: " + jugador.Arma.Recargas;
+            //texto.Text = "\nPosition\n" + jugador.Position;
+            texto.Text = "Presiona F2 para inciar";
             sombraTexto.Text = texto.Text;
 		}
 

@@ -18,7 +18,7 @@ namespace TGC.Group.Model
     public class Terreno
     {
         // Constantes de escenario
-        private const float MAP_SCALE_XZ = 160.0f; // Original = 20
+        private const float MAP_SCALE_XZ = 160.0f; // Original = 20 160
         private const float MAP_SCALE_Y = 10.4f; // Original = 1.3
         //private TgcSimpleTerrain heightmap;
         public Texture terrainTexture;
@@ -280,10 +280,15 @@ namespace TGC.Group.Model
         {
             foreach (var mesh in meshes)
             {
-                float posicionY = posicionEnTerreno(mesh.Position.X, mesh.Position.Z);
-                mesh.Position = new Vector3(mesh.Position.X, posicionY, mesh.Position.Z);
-                mesh.Transform = Matrix.Translation(0, posicionY, 0) * mesh.Transform;
+                corregirAltura(mesh);
             }
+        }
+
+        public void corregirAltura(TgcMesh mesh)
+        {
+            float posicionY = posicionEnTerreno(mesh.Position.X, mesh.Position.Z);
+            mesh.Position = new Vector3(mesh.Position.X, posicionY, mesh.Position.Z);
+            mesh.Transform = Matrix.Translation(0, posicionY, 0) * mesh.Transform;
         }
 
         public void corregirAltura(List<Barril> barriles)
@@ -296,12 +301,7 @@ namespace TGC.Group.Model
                 //barril.Mesh.Transform = Matrix.Translation(barril.Mesh.Position);
             }
         }
-
-        //public void render()
-        //{
-        //    heightmap.render();
-        //}
-
+        
         public void render()
         {
             D3DDevice.Instance.Device.Transform.World = Matrix.Identity;
@@ -335,11 +335,7 @@ namespace TGC.Group.Model
             }
             effect.End();
         }
-
-        //public void dispose()
-        //{
-        //    heightmap.dispose();
-        //}
+        
         public void dispose()
         {
             if (vbTerrain != null)

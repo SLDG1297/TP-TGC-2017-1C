@@ -26,7 +26,7 @@ namespace TGC.Group.Model
         private const int FACTOR = 8;
 
         // Constantes de escenario
-        private const float MAP_SCALE_XZ = 160.0f; // Original = 20
+        private const float MAP_SCALE_XZ = 80f; // Original = 20
         private const float MAP_SCALE_Y = 10.4f; // Original = 1.3
         // Esto se hace así porque ya hay valores hardcodeados de posiciones que no quiero cambiar.
         // Habría que ver una forma de ubicar meshes en posición relativa en el espacio.
@@ -84,6 +84,7 @@ namespace TGC.Group.Model
         private Effect envmap;
 
         private float time;
+        private TgcMesh helicopter2;
 
         public void initWorld(string MediaDir, string ShadersDir, Terreno terreno)
         {
@@ -154,7 +155,7 @@ namespace TGC.Group.Model
             // Creación de palmeras dispuestas circularmente.
             string palmeraDir = MediaDir + "Meshes\\Vegetation\\Palmera\\Palmera-TgcScene.xml";
             palmeraOriginal = cargarMesh(palmeraDir);
-            Utils.disponerEnCirculoXZ(palmeraOriginal, palmeras, 200, 820 * FACTOR, 1);
+            Utils.disponerEnCirculoXZ(palmeraOriginal, palmeras, 100, 820 * FACTOR, 100/ FastMath.ToRad(30) );
             foreach (var palmera in palmeras)
             {
                 palmera.AutoTransformEnable = false;
@@ -224,7 +225,7 @@ namespace TGC.Group.Model
             cajaFuturistica.createBoundingBox();
             cajaFuturistica.updateBoundingBox();
             var cantCajitas = cajitas.Count;
-            Utils.aleatorioXZExceptoRadioInicial(cajaFuturistica, cajitas, 25);
+            Utils.aleatorioXZExceptoRadioInicial(cajaFuturistica, cajitas, 50);
             terreno.corregirAltura(cajitas);
 
             for (int i = cantCajitas; i < cajitas.Count; i++)
@@ -258,17 +259,17 @@ namespace TGC.Group.Model
 
             //TODO: ajustar posicion segun heightmap (Hecho, aunque funciona mal todavía)
             // Frontera este de árboles
-            Utils.disponerEnLineaX(arbolSelvatico, arbolesSelvaticos, 50, 450, new Vector3(-6000, terreno.posicionEnTerreno(-6000, 15200), 15200));
+            Utils.disponerEnLineaX(arbolSelvatico, arbolesSelvaticos, 25, 900, new Vector3(-6000, terreno.posicionEnTerreno(-6000, 15200), 15200));
 
             //frontera sur de arboles
             var pos = arbolesSelvaticos.Last().Position;
-            Utils.disponerEnLineaZ(arbolSelvatico, arbolesSelvaticos, 70, -450, arbolesSelvaticos.Last().Position);
+            Utils.disponerEnLineaZ(arbolSelvatico, arbolesSelvaticos, 35, -900, arbolesSelvaticos.Last().Position);
 
             //frontera oeste
-            Utils.disponerEnLineaX(arbolSelvatico, arbolesSelvaticos, 72, -450, arbolesSelvaticos.Last().Position);
+            Utils.disponerEnLineaX(arbolSelvatico, arbolesSelvaticos, 36, -900, arbolesSelvaticos.Last().Position);
 
             //frontera norte
-            Utils.disponerEnLineaZ(arbolSelvatico, arbolesSelvaticos, 68, 450, arbolesSelvaticos.Last().Position);
+            Utils.disponerEnLineaZ(arbolSelvatico, arbolesSelvaticos, 34, 900, arbolesSelvaticos.Last().Position);
             foreach (var arbol in arbolesSelvaticos)
             {
                 arbol.Scale = new Vector3(3.0f, 3.0f, 3.0f);
@@ -310,7 +311,7 @@ namespace TGC.Group.Model
             //barril = new Barril(MediaDir , new Vector3(-6802, 8, 10985),
             barriles.Add(barril);
 
-            Utils.aleatorioXZExceptoRadioInicial(barril,barriles, 25);
+            Utils.aleatorioXZExceptoRadioInicial(barril,barriles, 35);
             terreno.corregirAltura(barriles);
 
             foreach (var barril in barriles)
@@ -400,6 +401,31 @@ namespace TGC.Group.Model
             avionCaza.Transform = Matrix.Translation(avionCaza.Position);
             avionCaza.updateBoundingBox();
 
+
+            helicopter2 = cargarMesh(MediaDir + "Meshes\\Vehiculos\\HelicopteroMilitar2\\HelicopteroMilitar2-TgcScene.xml");
+            helicopter2.Position = new Vector3(-11900, 2090, 11960);
+            helicopter2.rotateY(-FastMath.PI_HALF);
+            helicopter2.Scale = new Vector3(3f,3f,3f);
+            helicopter2.AutoTransformEnable = false;
+            terreno.corregirAltura(helicopter2);
+            helicopter2.Transform = Matrix.RotationY(helicopter2.Rotation.Y)
+                                    * Matrix.Scaling(helicopter2.Scale)
+                                    * Matrix.Translation(helicopter2.Position);
+
+            helicopter2.createBoundingBox();
+            helicopter.BoundingBox.transform(Matrix.RotationY(helicopter2.Rotation.Y)
+                                    * Matrix.Scaling(helicopter2.Scale)
+                                    * Matrix.Translation(helicopter2.Position));
+            helicopter2.updateBoundingBox();
+
+
+            //helicopter3 = cargarMesh(MediaDir + "Meshes\\Vehiculos\\HelicopteroMilitar2\\HelicopteroMilitar2-TgcScene.xml");
+            //helicopter3.Position = new Vector3(-12410, 2090, 14193);
+            //helicopter3.AutoTransformEnable = false;
+            //terreno.corregirAltura(helicopter3);
+            //helicopter2.Transform = Matrix.Translation(helicopter3.Position);
+            //helicopter3.updateBoundingBox();
+
             //tractor
             tractor = cargarMesh(MediaDir + "Meshes\\Vehiculos\\Tractor\\Tractor-TgcScene.xml");
             tractor.Position = new Vector3(-6802, 0, 10385);
@@ -424,12 +450,14 @@ namespace TGC.Group.Model
             //agua
             piso = cargarMesh(MediaDir + "Meshes\\Piso\\Agua-TgcScene.xml");
             nivel_mar = 8;
-            piso.Scale = new Vector3(50f, 1f, 50f);
-            //piso.Position = new Vector3(11382, nivel_mar + 40, 8885);
-            piso.Position = new Vector3(0, nivel_mar, 0);
+            //piso.Scale = new Vector3(50f, 1f, 50f);
+            piso.Scale = new Vector3(20f, 1f, 20f);
+            piso.Position = new Vector3(11382, nivel_mar + 40, 8885);
+            //piso.Position = new Vector3(0, 15, 0);
             piso.AutoTransformEnable = false;
             piso.Transform = Matrix.Scaling(piso.Scale) * Matrix.Translation(piso.Position);
             piso.updateBoundingBox();
+
         }
 
         private void initializeList()
@@ -442,9 +470,10 @@ namespace TGC.Group.Model
             meshes.Add(helicopter);
             meshes.Add(camionCisterna);
             meshes.Add(tractor);
-            meshes.Add(piso);
+            //meshes.Add(piso);
             //meshes.Add(barril.Mesh);
             //meshes.Add(faraon);
+            meshes.Add(helicopter2);
             meshes.Add(avionMilitar);
             meshes.Add(tanqueFuturista);
             meshes.Add(avionCaza);
@@ -473,6 +502,7 @@ namespace TGC.Group.Model
             ametralladora2.dispose();
             camionCisterna.dispose();
             helicopter.dispose();
+            helicopter2.dispose();
             avionMilitar.dispose();
             tractor.dispose();
             barril.dispose();
@@ -554,6 +584,7 @@ namespace TGC.Group.Model
 
             collisionManager.agregarAABB(canoa.BoundingBox);
             collisionManager.agregarAABB(helicopter.BoundingBox);
+            collisionManager.agregarAABB(helicopter2.BoundingBox);
             collisionManager.agregarAABB(camionCisterna.BoundingBox);
             collisionManager.agregarAABB(tractor.BoundingBox);            
             collisionManager.agregarAABB(avionCaza.BoundingBox);
@@ -877,7 +908,7 @@ namespace TGC.Group.Model
                     {
                         if (FastMath.Pow2(piso.Position.X - mesh.Position.X) +
                             FastMath.Pow2(piso.Position.Z - mesh.Position.Z)
-                            < FastMath.Pow2(1800) && mesh.Position != piso.Position)
+                            < FastMath.Pow2(400) && mesh.Position != piso.Position)
                         {
                             
                             mesh.Effect = envmap;
@@ -899,10 +930,10 @@ namespace TGC.Group.Model
         {
             if (RenderUtils.estaDentroDelFrustum(piso, frustum))
             {
-
                 var aspectRatio = D3DDevice.Instance.AspectRatio;
-                var g_LightPos = new Vector3(4000f , 8000f ,3000f);
-                var g_LightDir = piso.Position - g_LightPos;
+                var g_LightPos = new Vector3(4000f , 6000f, 3000f);
+                var lookat = new Vector3(0, 0, 0);
+                var g_LightDir = lookat - g_LightPos;
                 g_LightDir.Normalize();
     
                 //D3DDevice.Instance.Device.Transform.View = camara.GetViewMatrix();
