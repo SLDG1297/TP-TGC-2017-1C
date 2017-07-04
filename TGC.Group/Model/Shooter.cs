@@ -700,23 +700,17 @@ namespace TGC.Group.Model
             //Doy posicion a la luz
             // Calculo la matriz de view de la luz
 
-            shadowMap.SetValue("fvLightPosition", new Vector4(g_LightPos.X, g_LightPos.Y, g_LightPos.Z,1));
-            //shadowMap.SetValue("fvEyePosition", TgcParserUtils.vector3ToFloat3Array(Camara.Position));
-            
+            //shadowMap.SetValue("fvLightPosition", new Vector4(g_LightPos.X, g_LightPos.Y, g_LightPos.Z,1));
+            //shadowMap.SetValue("fvEyePosition", TgcParserUtils.vector3ToFloat3Array(Camara.Position));           
 
-            shadowMap.SetValue("g_vLightPos", new Vector4(g_LightPos.X, g_LightPos.Y, g_LightPos.Z, 1));
-            shadowMap.SetValue("g_vLightDir", new Vector4(g_LightDir.X, g_LightDir.Y, g_LightDir.Z, 1));
+            shadowMap.SetValue("g_vLightPos", new Vector4(g_LightPos.X, g_LightPos.Y, g_LightPos.Z, 0));
+            shadowMap.SetValue("g_vLightDir", new Vector4(g_LightDir.X, g_LightDir.Y, g_LightDir.Z, 0));
             g_LightView = Matrix.LookAtLH(g_LightPos, g_LightPos + g_LightDir, new Vector3(0, 0, 1));
 
             // inicializacion standard:
             shadowMap.SetValue("g_mProjLight", g_mShadowProj);
-            shadowMap.SetValue("g_mViewLightProj", g_LightView * g_mShadowProj);
-
-            shadowMap.SetValue("g_vLightPos", new Vector4(g_LightPos.X, g_LightPos.Y, g_LightPos.Z, 1));
-            shadowMap.SetValue("g_vLightDir", new Vector4(g_LightDir.X, g_LightDir.Y, g_LightDir.Z, 1));
-
-
-
+            shadowMap.SetValue("g_mViewLightProj", g_LightView * g_mShadowProj);       
+                        
             // Primero genero el shadow map, para ello dibujo desde el pto de vista de luz
             // a una textura, con el VS y PS que generan un mapa de profundidades.
             var pOldRT = D3DDevice.Instance.Device.GetRenderTarget(0);
@@ -733,7 +727,7 @@ namespace TGC.Group.Model
             //shadowMap.Technique = "RenderShadow";
             terreno.executeRender(shadowMap);
             world.renderShadowMap(Frustum, shadowMap);
-
+            shadowMap.SetValue("g_txShadow", g_pShadowMap);
             //Cargar valores de la flecha
             arrow.render();
             // Termino
@@ -743,8 +737,7 @@ namespace TGC.Group.Model
             // restuaro el render target y el stencil
             D3DDevice.Instance.Device.DepthStencilSurface = pOldDS;
             D3DDevice.Instance.Device.SetRenderTarget(0, pOldRT);
-
-            shadowMap.SetValue("g_txShadow", g_pShadowMap);
+                      
             //world.restoreEffect();
         }
 
@@ -765,10 +758,8 @@ namespace TGC.Group.Model
 
                 limits.dispose();
                 // Dispose jugador
-                //jugador.dispose();
 
                 // Dispose enemigos
-                //enemigos.ForEach(e => e.dispose());
                 collisionManager.disposeAll();
 
                 // Dispose HUD
@@ -780,12 +771,12 @@ namespace TGC.Group.Model
             gaussianBlur.Dispose();
             alarmaEffect.Dispose();
             renderTarget2D.Dispose();
+            shadowMap.Dispose();
             g_pRenderTarget4Aux.Dispose();
             g_pRenderTarget4.Dispose();
             screenQuadVB.Dispose();
             depthStencil.Dispose();
-            depthStencilOld.Dispose();
-            
+            depthStencilOld.Dispose();            
         }
 
 #region Métodos Auxiliares
@@ -828,9 +819,10 @@ namespace TGC.Group.Model
             skyBox = new TgcSkyBox();
             skyBox.Center = PLAYER_INIT_POS;
             //hay un retardo en renderizar el skybox
-            skyBox.Size = new Vector3(10000, 10000, 10000);            
+            //skyBox.Size = new Vector3(10000, 10000, 10000);
+            skyBox.Size = new Vector3(60000, 60000, 60000);
             //skyBox.AlphaBlendEnable = true;
-			string skyBoxDir = MediaDir + "Texturas\\Quake\\SkyBoxWhale\\Whale";
+            string skyBoxDir = MediaDir + "Texturas\\Quake\\SkyBoxWhale\\Whale";
 
 			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Up, skyBoxDir + "up.jpg");
 			skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Down, skyBoxDir + "dn.jpg");

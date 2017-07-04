@@ -261,7 +261,7 @@ namespace TGC.Group.Model.UI
                 textoPerdiste.Position = new Point(D3DDevice.Instance.Width/2, D3DDevice.Instance.Height / 2);
                 textoPerdiste.Size = new Size(3 * 24, 24);
                 textoPerdiste.Align = TgcText2D.TextAlign.LEFT;
-                textoPerdiste.Text = "PERDISTE!";
+                textoPerdiste.Text = "PERDISTE!\n Presiona ENTER para volver a intentarlo";
 
                 var font = new System.Drawing.Text.PrivateFontCollection();
                 font.AddFontFile(MediaDir + "Fonts\\pdark.ttf");

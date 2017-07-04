@@ -41,7 +41,7 @@ namespace TGC.Group.Model
         private TgcMesh palmeraOriginal;
         private TgcMesh pastito;
         private TgcMesh arbusto;
-        //private TgcMesh faraon;
+        private TgcMesh faraon;
         private TgcMesh arbolSelvatico;
         private TgcMesh hummer;
 
@@ -191,12 +191,12 @@ namespace TGC.Group.Model
             terreno.corregirAltura(arbustitos);
 
             // Creación de faraón.
-            //string faraonDir = MediaDir + "Meshes\\Objetos\\EstatuaFaraon\\EstatuaFaraon-TgcScene.xml";
-            //faraon = cargarMesh(faraonDir);
-            //faraon.AutoTransformEnable = false;
-            //faraon.Scale = new Vector3(FACTOR, FACTOR, FACTOR);
-            //faraon.Transform = Matrix.Scaling(faraon.Scale) * faraon.Transform;
-            //faraon.updateBoundingBox();
+            string faraonDir = MediaDir + "Meshes\\Objetos\\EstatuaFaraon\\EstatuaFaraon-TgcScene.xml";
+            faraon = cargarMesh(faraonDir);
+            faraon.AutoTransformEnable = false;
+            faraon.Scale = new Vector3(FACTOR, FACTOR, FACTOR);
+            faraon.Transform = Matrix.Scaling(faraon.Scale) * faraon.Transform;
+            faraon.updateBoundingBox();
 
             // Creación de cajitas.
             cajita = TgcBox.fromSize(new Vector3(30 * FACTOR, 30 * FACTOR, 30 * FACTOR), TgcTexture.createTexture(MediaDir + "Texturas\\paja4.jpg"));
@@ -424,8 +424,9 @@ namespace TGC.Group.Model
             //agua
             piso = cargarMesh(MediaDir + "Meshes\\Piso\\Agua-TgcScene.xml");
             nivel_mar = 8;
-            piso.Scale = new Vector3(20f, 1f, 20f);
-            piso.Position = new Vector3(11382, nivel_mar + 40, 8885);
+            piso.Scale = new Vector3(50f, 1f, 50f);
+            //piso.Position = new Vector3(11382, nivel_mar + 40, 8885);
+            piso.Position = new Vector3(0, nivel_mar, 0);
             piso.AutoTransformEnable = false;
             piso.Transform = Matrix.Scaling(piso.Scale) * Matrix.Translation(piso.Position);
             piso.updateBoundingBox();
@@ -464,7 +465,7 @@ namespace TGC.Group.Model
             rocaOriginal.dispose();
             palmeraOriginal.dispose();
             pastito.dispose();
-            //faraon.dispose();
+            faraon.dispose();
             arbolSelvatico.dispose();
             cajita.dispose();
             hummer.dispose();
@@ -548,8 +549,8 @@ namespace TGC.Group.Model
             };
 
             //cilindro del faraon del mesio
-            //var faraonCylinder = new TgcBoundingCylinderFixedY(faraon.BoundingBox.calculateBoxCenter(), faraon.BoundingBox.calculateBoxRadius() * 0.15f, 1500);
-            //collisionManager.agregarCylinder(faraonCylinder);
+            var faraonCylinder = new TgcBoundingCylinderFixedY(faraon.BoundingBox.calculateBoxCenter(), faraon.BoundingBox.calculateBoxRadius() * 0.15f, 1500);
+            collisionManager.agregarCylinder(faraonCylinder);
 
             collisionManager.agregarAABB(canoa.BoundingBox);
             collisionManager.agregarAABB(helicopter.BoundingBox);
@@ -650,27 +651,22 @@ namespace TGC.Group.Model
 
             avionCaza.Effect = vaiven;
             avionCaza.Technique = "CirculoXZ";
+
+            piso.Effect = envmap;
+            piso.Technique = "RenderAgua";
         }
-
-
+        
         public void initRenderEnvMap(TgcFrustum Frustum, float ElapsedTime, TgcCamera camera, TgcSkyBox skybox)
         {
             initRenderLagos(skybox, Frustum);
             //if (RenderUtils.estaDentroDelFrustum(tanqueFuturista, Frustum))
             //{
             //        renderEnvMap(tanqueFuturista, ElapsedTime, camera, skybox);
-            //}
-
-           // if (RenderUtils.estaDentroDelFrustum(avionMilitar, Frustum))
-           // {
-           //     renderEnvMap(avionMilitar, ElapsedTime, camera, skybox);
-           // }
-           
+            //}   
         }
-
-
+        
         public void renderEnvMap(TgcMesh mesh, float ElapsedTime, TgcCamera camera, TgcSkyBox skybox)
-        {
+        {           
                 var aspectRatio = D3DDevice.Instance.AspectRatio;
                  // Creo el env map del tanque:
                  var g_pCubeMap = new CubeTexture(D3DDevice.Instance.Device, 256, 1, Usage.RenderTarget,
@@ -776,7 +772,7 @@ namespace TGC.Group.Model
 
                 envmap.SetValue("g_txCubeMap", g_pCubeMap);
                 g_pCubeMap.Dispose();
-            }
+        }
 
         public void initRenderLagos(TgcSkyBox skyBox, TgcFrustum frustum)
         {
@@ -881,11 +877,11 @@ namespace TGC.Group.Model
                     {
                         if (FastMath.Pow2(piso.Position.X - mesh.Position.X) +
                             FastMath.Pow2(piso.Position.Z - mesh.Position.Z)
-                            < FastMath.Pow2(800) && mesh.Position != piso.Position)
+                            < FastMath.Pow2(1800) && mesh.Position != piso.Position)
                         {
                             
-                            //mesh.Effect = envmap;
-                            //mesh.Technique = "RenderScene";
+                            mesh.Effect = envmap;
+                            mesh.Technique = "RenderScene";
                             mesh.render();
                         }
                     }
@@ -978,7 +974,7 @@ namespace TGC.Group.Model
             foreach (var mesh in palmeras)
             {
                 mesh.Effect = shadowMap;
-                mesh.Technique = "RenderScene";
+                mesh.Technique = "RenderSceneShadows";
             }
 
             RenderUtils.renderFromFrustum(palmeras, frustum);
