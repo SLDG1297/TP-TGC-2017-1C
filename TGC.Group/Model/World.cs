@@ -220,6 +220,9 @@ namespace TGC.Group.Model
 
             //cajas futuristicas    
             cajaFuturistica = cargarMesh(MediaDir + "Meshes\\Objetos\\CajaMetalFuturistica2\\CajaMetalFuturistica2-TgcScene.xml");
+            cajaFuturistica.AutoTransformEnable = false;
+            cajaFuturistica.createBoundingBox();
+            cajaFuturistica.updateBoundingBox();
             var cantCajitas = cajitas.Count;
             Utils.aleatorioXZExceptoRadioInicial(cajaFuturistica, cajitas, 25);
             terreno.corregirAltura(cajitas);
@@ -228,6 +231,7 @@ namespace TGC.Group.Model
             {
                 var mesh = cajitas[i];
                 mesh.Position += new Vector3(0, 50f, 0);
+                //mesh.Transform = Matrix.Translation(mesh.Position) * Matrix.Scaling(mesh.Scale);
             }
 
             //ametralladora
@@ -311,6 +315,7 @@ namespace TGC.Group.Model
 
             foreach (var barril in barriles)
             {
+                barril.AutoTransformEnable = false;
                 //lo hago antes porque necesito el mediaDir
                 barril.createBoundingBox();
                 barril.updateBoundingBox();
@@ -585,7 +590,7 @@ namespace TGC.Group.Model
             foreach (var caja in cajitas)
             {
                 caja.Transform = Matrix.Scaling(caja.Scale) * Matrix.Translation(caja.Position);
-                caja.createBoundingBox();
+                //caja.createBoundingBox();
                 caja.updateBoundingBox();
                 collisionManager.agregarAABB(caja.BoundingBox);
             }
@@ -615,9 +620,12 @@ namespace TGC.Group.Model
         {
             foreach (var mesh in meshes)
             {
-                mesh.Effect = envmap;
-                mesh.Technique = "RenderScene";
+                mesh.Effect = viento;
+                mesh.Technique = "DefaultTechnique";
             }
+
+            //tanqueFuturista.Effect = envmap;
+            //tanqueFuturista.Technique = "RenderSceme";
 
             foreach (var pasto in pastitos)
             {
@@ -934,6 +942,7 @@ namespace TGC.Group.Model
                 //envmap.SetValue("canoa_x", canoa.Position.X / 10.0f);
                 //envmap.SetValue("canoa_y", canoa.Position.Z / 10.0f);
                 envmap.SetValue("time", time);
+                piso.Effect = envmap;
                 piso.Technique = "RenderAgua";
                          
                 piso.render();
@@ -958,7 +967,7 @@ namespace TGC.Group.Model
             //envmap.Technique = "RenderSceneShadows";
             //terreno.executeRender(envmap);
             //terreno.render();
-            RenderUtils.renderFromFrustum(Meshes, Frustum);
+            RenderUtils.renderFromFrustum(meshes, Frustum);
             RenderUtils.renderFromFrustum(BarrilesExplosivos, Frustum, ElapsedTime);
             envmap.Technique = "RenderScene";
         }

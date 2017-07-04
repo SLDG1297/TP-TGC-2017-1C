@@ -26,9 +26,12 @@ namespace TGC.Group.Model.UI
         private TgcText2D textoAmmo = new TgcText2D();
         private TgcText2D textoHealth = new TgcText2D();
         private TgcText2D textoRecargas = new TgcText2D();
+        private TgcText2D textoPerdiste;
 
         private TgcText2D sombraTexto = new TgcText2D();
         private bool healthBarEnabled = true;
+
+        private string MediaDir;
 
         public void Init(string MediaDir)
         {
@@ -59,6 +62,10 @@ namespace TGC.Group.Model.UI
             //Finalizar el dibujado de Sprites
             drawer2D.EndDrawSprite();
 
+            if(textoPerdiste != null)
+            {
+                textoPerdiste.render();
+            }
 
             textoAmmo.render();
             textoHealth.render();
@@ -79,6 +86,11 @@ namespace TGC.Group.Model.UI
             sombraTexto.Dispose();
             textoHealth.Dispose();
             textoRecargas.Dispose();
+
+            if(textoPerdiste != null)
+            {
+                textoPerdiste.Dispose();
+            }
         }
 
         public CustomSprite initSprite(string direccion)
@@ -92,6 +104,7 @@ namespace TGC.Group.Model.UI
 
         private void initHUD(string MediaDir)
         {
+            this.MediaDir = MediaDir;
             var device = D3DDevice.Instance;
             drawer2D = new Drawer2D();
 
@@ -161,8 +174,7 @@ namespace TGC.Group.Model.UI
             //crosshair.Position = new Vector2(device.Width / 2, device.Height / 2);
 
         }
-
-
+        
         private void initText(string MediaDir)
         {
             //texto de cuantas balas le quedan al jugador
@@ -206,8 +218,7 @@ namespace TGC.Group.Model.UI
             font.AddFontFile(MediaDir + "Fonts\\pdark.ttf");
             textoRecargas.changeFont(new System.Drawing.Font(font.Families[0], 24, FontStyle.Bold));
         }
-
-
+        
         private void updateHealthBar(Player player)
         {
             var rectangulo = new Rectangle();
@@ -233,13 +244,30 @@ namespace TGC.Group.Model.UI
             healthBar.Scaling = new Vector2(0.75f, 0.22f);
             healthBar.SrcRect = rectangulo;
         }
-
-
+        
         private void updateText(Player player)
         {
             textoHealth.Text = "" + player.Health;
             textoAmmo.Text = "" + player.Arma.Balas;
             textoRecargas.Text = "" + player.Arma.Recargas;
+
+            if(player.Health <= 0)
+            {
+                textoPerdiste = new TgcText2D();
+
+                //texto de cuantas balas le quedan al jugador
+                textoPerdiste.Color = Color.DarkOrange;
+                //var des = ammoIcon.Position + new Vector2(60, 10);
+                textoPerdiste.Position = new Point(D3DDevice.Instance.Width/2, D3DDevice.Instance.Height / 2);
+                textoPerdiste.Size = new Size(3 * 24, 24);
+                textoPerdiste.Align = TgcText2D.TextAlign.LEFT;
+                textoPerdiste.Text = "PERDISTE!";
+
+                var font = new System.Drawing.Text.PrivateFontCollection();
+                font.AddFontFile(MediaDir + "Fonts\\pdark.ttf");
+                textoPerdiste.changeFont(new System.Drawing.Font(font.Families[0], 24, FontStyle.Bold));
+
+            }
         }
 
     }

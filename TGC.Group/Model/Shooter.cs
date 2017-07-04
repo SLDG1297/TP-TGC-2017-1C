@@ -77,7 +77,7 @@ namespace TGC.Group.Model
         //otros
         private CollisionManager collisionManager;
 
-		private bool FPSCamera = false;
+		private bool FPSCamera = true;
         private Quadtree quadtree;
 
         //efectos
@@ -108,7 +108,7 @@ namespace TGC.Group.Model
 
         //sombras
         private Effect shadowMap;
-        private bool activateShadowMap = false;
+        private bool activateShadowMap = true;
         private float alfa_sol; // pos. del sol
         private Vector3 g_LightDir; // direccion de la luz actual
         private Vector3 g_LightPos; // posicion de la luz actual (la que estoy analizando)
@@ -511,6 +511,7 @@ namespace TGC.Group.Model
                 terreno.executeRender(shadowMap);
                 D3DDevice.Instance.ParticlesEnabled = true;
                 D3DDevice.Instance.EnableParticles();
+                world.restoreEffect();
 
                 world.renderAll(Frustum, ElapsedTime);
                 RenderUtils.renderFromFrustum(collisionManager.getPlayers(), Frustum,ElapsedTime);
@@ -744,7 +745,7 @@ namespace TGC.Group.Model
             D3DDevice.Instance.Device.SetRenderTarget(0, pOldRT);
 
             shadowMap.SetValue("g_txShadow", g_pShadowMap);
-            world.restoreEffect();
+            //world.restoreEffect();
         }
 
         public override void Dispose()
