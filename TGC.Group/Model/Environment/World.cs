@@ -13,13 +13,12 @@ using TGC.Core.Textures;
 using TGC.Core.Utils;
 using TGC.Group.Model.Collisions;
 using Microsoft.DirectX.Direct3D;
-using TGC.Group.Model.Environment;
 using TGC.Group.Model.Optimization;
 using TGC.Core.Camara;
 using TGC.Core.Direct3D;
 using System.Drawing;
 
-namespace TGC.Group.Model
+namespace TGC.Group.Model.Environment
 {
     public class World
     {
@@ -36,7 +35,7 @@ namespace TGC.Group.Model
         // Escenario
         private Terreno terreno;
 
-        private TgcScene casa;
+        private TgcScene isla;
         private TgcMesh rocaOriginal;
         private TgcMesh palmeraOriginal;
         private TgcMesh pastito;
@@ -142,23 +141,15 @@ namespace TGC.Group.Model
         private void initObjects(string MediaDir)
         {
             // Ubicación de la casa.
-            /*string casaDir = MediaDir + "Meshes\\Edificios\\Casa\\Casa-TgcScene.xml";
-            casa = cargarScene(casaDir);
-            foreach (var mesh in casa.Meshes)
+            string islaDir = MediaDir + "Meshes\\Scenes\\Isla\\Isla-TgcScene.xml";
+            isla = cargarScene(islaDir);
+            foreach (var mesh in isla.Meshes)
             {
-                var position = new Vector3(-800 * FACTOR, 0, 1200 * FACTOR);
-                mesh.Position = position;
-                mesh.AutoTransformEnable = false;
-                mesh.Transform = Matrix.Scaling(3.5f, 2f, 1.75f) * Matrix.RotationY(FastMath.PI_HALF + FastMath.PI) * Matrix.Translation(mesh.Position);
-
-                mesh.BoundingBox.transform(Matrix.Scaling(1.5f, 2f, 1.75f)
-                                           * Matrix.RotationY(FastMath.PI_HALF + FastMath.PI)
-                                           * Matrix.Translation(mesh.Position));
-                mesh.createBoundingBox();
+                mesh.Scale = new Vector3(8, 8, 8);
                 mesh.updateBoundingBox();
             }
-            terreno.corregirAltura(casa.Meshes);
-            */
+            //terreno.corregirAltura(casa.Meshes);
+            
 
             // Creación de palmeras dispuestas circularmente.
             string palmeraDir = MediaDir + "Meshes\\Vegetation\\Palmera\\Palmera-TgcScene.xml";
@@ -430,7 +421,7 @@ namespace TGC.Group.Model
             helicopter3 = cargarMesh(MediaDir + "Meshes\\Vehiculos\\HelicopteroMilitar3\\HelicopteroMilitar3-TgcScene.xml");
             helicopter3.Position = new Vector3(-12410, 3090, 14193);
             helicopter3.AutoTransformEnable = false;
-            terreno.corregirAltura(helicopter3);
+            //terreno.corregirAltura(helicopter3);
             helicopter3.Transform = Matrix.Translation(helicopter3.Position);
             helicopter3.updateBoundingBox();
 
@@ -495,11 +486,12 @@ namespace TGC.Group.Model
             meshes.AddRange(arbustitos);
             meshes.AddRange(cajitas);
             meshes.AddRange(barriles);
+            meshes.AddRange(isla.Meshes);
         }
 
         public void disposeWorld()
         {
-            casa.disposeAll();
+            isla.disposeAll();
 
             rocaOriginal.dispose();
             palmeraOriginal.dispose();
@@ -532,6 +524,8 @@ namespace TGC.Group.Model
             palmeras.Clear();
             cajitas.Clear();
             piso.dispose();
+
+            isla.disposeAll();
             foreach(var barril in barrilesExplosivos)
             {
                barril.dispose();

@@ -119,8 +119,7 @@ namespace TGC.Group.Model.Entities
         }
 
         public void updateRay()
-        {
-            
+        {            
             //el mismo que la bala!
             ray.Origin = esqueleto.Position + new Vector3(0, 40, 0);
             var dir = new Vector3(direccion.X, direccion.Y, direccion.Z);

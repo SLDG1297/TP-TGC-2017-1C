@@ -22,11 +22,11 @@ using TGC.Core.Shaders;
 using Microsoft.DirectX.Direct3D;
 using TGC.Core.Interpolation;
 using System.Windows.Forms;
-using TGC.Core.Sound;
 using System.IO;
 using TGC.Core.Input;
 using TGC.Group.Model.UI;
 using TGC.Group.Model.Optimization;
+using TGC.Group.Model.Environment;
 
 namespace TGC.Group.Model
 {
@@ -103,9 +103,6 @@ namespace TGC.Group.Model
         public Point mouseCenter;
         public bool mouseEscondido;
         
-        //sonidos
-        public TgcStaticSound sound;
-
         //sombras
         private Effect shadowMap;
         private bool activateShadowMap = true;
@@ -329,18 +326,6 @@ namespace TGC.Group.Model
 
 			else
 			{
-
-
-                alfa_sol += ElapsedTime * Geometry.DegreeToRadian(1.0f);
-                if (alfa_sol > 2.5)
-                    alfa_sol = 1.5f;
-                // animo la posicion del sol
-                //g_LightPos = new Vector3(1500f * (float)Math.Cos(alfa_sol), 1500f * (float)Math.Sin(alfa_sol), 0f);
-                g_LightPos = new Vector3(5000 * (float)Math.Cos(alfa_sol), 5000 * (float)Math.Sin(alfa_sol),
-                    5000f);
-                g_LightDir = -g_LightPos;
-                g_LightDir.Normalize();
-
                 if (!FPSCamera)
 				{
                     // Update jugador
@@ -372,7 +357,6 @@ namespace TGC.Group.Model
                     // Update SkyBox
                     // Cuando se quiera probar cámara en tercera persona
                     skyBox.Center = jugador.Position;
-
 				}
 				else
 				{
@@ -388,7 +372,6 @@ namespace TGC.Group.Model
 				}
 
                 SoundPlayer.Instance.playAmbientSound(ElapsedTime);
-
 
                 var enemigosASacar = new List<Enemy>();
                 // Update enemigos.
@@ -410,7 +393,6 @@ namespace TGC.Group.Model
                 collisionManager.checkCollisions(ElapsedTime);
 
                 // Update HUD
-                //TODO : Borrar - Es solo para ver la posicion
                 updateText();
                 
                 //TODO: hacer que ESC sea pausar! u otro!
@@ -875,16 +857,7 @@ namespace TGC.Group.Model
             texto.Text = "Presiona F2 para inciar";
             sombraTexto.Text = texto.Text;
 		}
-
-		private void renderAABB() {
-            // Del Jugador
-            //jugador.Esqueleto.BoundingBox.render();
-            //foreach (var roca in rocas) roca.BoundingBox.render();
-
-            // De todos los obstáculos
-            obstaculos.ForEach(o => o.render());
-		}       
-
+        
         TgcScene cargarScene(string unaDireccion)
         {
             return new TgcSceneLoader().loadSceneFromFile(unaDireccion);
