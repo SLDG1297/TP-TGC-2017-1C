@@ -85,6 +85,7 @@ namespace TGC.Group.Model
 
         private float time;
         private TgcMesh helicopter2;
+        private TgcMesh helicopter3;
 
         public void initWorld(string MediaDir, string ShadersDir, Terreno terreno)
         {
@@ -141,16 +142,23 @@ namespace TGC.Group.Model
         private void initObjects(string MediaDir)
         {
             // Ubicación de la casa.
-            string casaDir = MediaDir + "Meshes\\Edificios\\Casa\\Casa-TgcScene.xml";
+            /*string casaDir = MediaDir + "Meshes\\Edificios\\Casa\\Casa-TgcScene.xml";
             casa = cargarScene(casaDir);
             foreach (var mesh in casa.Meshes)
             {
                 var position = new Vector3(-800 * FACTOR, 0, 1200 * FACTOR);
                 mesh.Position = position;
                 mesh.AutoTransformEnable = false;
-                mesh.Transform = Matrix.Scaling(1.5f, 2f, 1.75f) * Matrix.RotationY(FastMath.PI_HALF + FastMath.PI) * Matrix.Translation(mesh.Position);
+                mesh.Transform = Matrix.Scaling(3.5f, 2f, 1.75f) * Matrix.RotationY(FastMath.PI_HALF + FastMath.PI) * Matrix.Translation(mesh.Position);
+
+                mesh.BoundingBox.transform(Matrix.Scaling(1.5f, 2f, 1.75f)
+                                           * Matrix.RotationY(FastMath.PI_HALF + FastMath.PI)
+                                           * Matrix.Translation(mesh.Position));
+                mesh.createBoundingBox();
+                mesh.updateBoundingBox();
             }
-            //terreno.corregirAltura(casa.Meshes);
+            terreno.corregirAltura(casa.Meshes);
+            */
 
             // Creación de palmeras dispuestas circularmente.
             string palmeraDir = MediaDir + "Meshes\\Vegetation\\Palmera\\Palmera-TgcScene.xml";
@@ -225,7 +233,7 @@ namespace TGC.Group.Model
             cajaFuturistica.createBoundingBox();
             cajaFuturistica.updateBoundingBox();
             var cantCajitas = cajitas.Count;
-            Utils.aleatorioXZExceptoRadioInicial(cajaFuturistica, cajitas, 50);
+            Utils.aleatorioXZExceptoRadioInicial(cajaFuturistica, cajitas, 75);
             terreno.corregirAltura(cajitas);
 
             for (int i = cantCajitas; i < cajitas.Count; i++)
@@ -307,7 +315,7 @@ namespace TGC.Group.Model
             //barriles - son explosivos
             barril = cargarMesh(MediaDir + "Meshes\\Objetos\\BarrilPolvora\\BarrilPolvora-TgcScene.xml");
             barril.Position = new Vector3(-6802, 8, 10985);
-            //barril.updateBoundingBox();
+            barril.updateBoundingBox();
             //barril = new Barril(MediaDir , new Vector3(-6802, 8, 10985),
             barriles.Add(barril);
 
@@ -419,12 +427,12 @@ namespace TGC.Group.Model
             helicopter2.updateBoundingBox();
 
 
-            //helicopter3 = cargarMesh(MediaDir + "Meshes\\Vehiculos\\HelicopteroMilitar2\\HelicopteroMilitar2-TgcScene.xml");
-            //helicopter3.Position = new Vector3(-12410, 2090, 14193);
-            //helicopter3.AutoTransformEnable = false;
-            //terreno.corregirAltura(helicopter3);
-            //helicopter2.Transform = Matrix.Translation(helicopter3.Position);
-            //helicopter3.updateBoundingBox();
+            helicopter3 = cargarMesh(MediaDir + "Meshes\\Vehiculos\\HelicopteroMilitar3\\HelicopteroMilitar3-TgcScene.xml");
+            helicopter3.Position = new Vector3(-12410, 3090, 14193);
+            helicopter3.AutoTransformEnable = false;
+            terreno.corregirAltura(helicopter3);
+            helicopter3.Transform = Matrix.Translation(helicopter3.Position);
+            helicopter3.updateBoundingBox();
 
             //tractor
             tractor = cargarMesh(MediaDir + "Meshes\\Vehiculos\\Tractor\\Tractor-TgcScene.xml");
@@ -470,6 +478,8 @@ namespace TGC.Group.Model
             meshes.Add(helicopter);
             meshes.Add(camionCisterna);
             meshes.Add(tractor);
+            meshes.Add(helicopter3);
+
             //meshes.Add(piso);
             //meshes.Add(barril.Mesh);
             //meshes.Add(faraon);
@@ -477,7 +487,7 @@ namespace TGC.Group.Model
             meshes.Add(avionMilitar);
             meshes.Add(tanqueFuturista);
             meshes.Add(avionCaza);
-
+            
             meshes.AddRange(pastitos);
             meshes.AddRange(rocas);
             meshes.AddRange(palmeras);
@@ -494,19 +504,23 @@ namespace TGC.Group.Model
             rocaOriginal.dispose();
             palmeraOriginal.dispose();
             pastito.dispose();
-            faraon.dispose();
             arbolSelvatico.dispose();
+            arbusto.dispose();
+            faraon.dispose();
+
             cajita.dispose();
+
             hummer.dispose();
             canoa.dispose();
             ametralladora2.dispose();
             camionCisterna.dispose();
             helicopter.dispose();
             helicopter2.dispose();
+            helicopter3.dispose();
             avionMilitar.dispose();
             tractor.dispose();
+
             barril.dispose();
-            arbusto.dispose();
             ametralladora.dispose();
             tanqueFuturista.dispose();
             avionCaza.dispose();
@@ -592,6 +606,7 @@ namespace TGC.Group.Model
             collisionManager.agregarAABB(tanqueFuturista.BoundingBox);
             foreach (var mesh in tanqueFuturista.MeshInstances)
             {
+                tanqueFuturista.updateBoundingBox();
                 collisionManager.agregarAABB(mesh.BoundingBox);
             }
 
@@ -974,8 +989,6 @@ namespace TGC.Group.Model
                          
                 piso.render();
             }
-
-            //g_pCubeMap.Dispose();
         }
 
         public void applyShadowMap()

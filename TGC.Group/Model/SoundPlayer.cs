@@ -23,7 +23,7 @@ namespace TGC.Group.Model
         public Tgc3dSound ambientSound;
 
         public float time = 0;
-
+        public bool mute = true;
 
         //Constructor privado para que nadie pueda instanciarlo
         private SoundPlayer() { }
@@ -53,15 +53,18 @@ namespace TGC.Group.Model
 
         public void playMusic(string MediaDir, TgcDirectSound directsound)
         {
-            this.DirectSound = directsound;
-           
-            var filePath = MediaDir + "Sound\\music\\Military.mp3";
+            if (!mute)
+            {
+                this.DirectSound = directsound;
 
-            mp3Player.closeFile();
-            mp3Player.FileName = filePath;
+                var filePath = MediaDir + "Sound\\music\\Military.mp3";
 
-            //mp3Player.play(true);
-            mediaDir = MediaDir;
+                mp3Player.closeFile();
+                mp3Player.FileName = filePath;
+
+                mp3Player.play(true);
+                mediaDir = MediaDir;
+            }
         }
 
         public void dispose()

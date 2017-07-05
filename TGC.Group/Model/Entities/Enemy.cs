@@ -78,41 +78,37 @@ namespace TGC.Group.Model.Entities
 
         public void mover(Vector3 posicionJugador, List<TgcBoundingAxisAlignBox> obstaculos, float elapsedTime, float posicionY)
         {
-            var aux = direccion;
-            movimiento.updateStatus(this, posicionJugador);
-
-            var desplazamiento = movimiento.mover(this, posicionJugador) * elapsedTime;
             resetBooleans();
 
+            var aux = direccion;
+            //actualizo el tipo de movimiento
+            movimiento.updateStatus(this, posicionJugador);
+
+            //calculo el desplazamiento segun el tipo de movimiento
+            var desplazamiento = movimiento.mover(this, posicionJugador) * elapsedTime;
+            
             float rotation = 0f;
-
             moving = desplazamiento != new Vector3(0, 0, 0);
-
             esqueleto.AutoTransformEnable = false;
 
+            //calculo el angulo de rotacion -ESTE ES EL QUE ESTA BIEN! NO CAMBIAR!!
             rotation = Utils.anguloEntre(Utils.proyectadoY(desplazamiento),
-                                             Utils.proyectadoY(Position));
-
+                                             Utils.proyectadoY(direccion));
+            //roto
             esqueleto.rotateY(rotation);
-            if (moving) direccion = desplazamiento;
-            //Vector3.Multiply(direccion, 100f);
-            //TODO: rotar la direccion y el rayito
-            //if (moving) direccion = new Vector3(direccion.X * FastMath.Cos(rotation), direccion.Y, direccion.Z * FastMath.Sin(rotation)) *1000;
-
-            //desplazamiento.TransformCoordinate(Matrix.RotationY(rotation));
             var realmovement = CollisionManager.Instance.adjustPosition(this, desplazamiento);
             esqueleto.Position += realmovement;
-            CollisionManager.Instance.applyGravity(elapsedTime,this);
-            //direccion = realmovement;
-            
+
+            CollisionManager.Instance.applyGravity(elapsedTime, this);
+
             displayAnimations();
 
             updateBoundingBoxes();
             lastPos = esqueleto.Position;
-            esqueleto.Transform = Matrix.RotationY(rotation) 
+            esqueleto.Transform = Matrix.RotationY(rotation)
                                   * Matrix.Translation(esqueleto.Position);
 
-            arma.setPosition(esqueleto.Position);           
+            arma.setPosition(esqueleto.Position);
             if (debeDisparar())
             {
                 if (arma.Balas <= 0) arma.recarga();
