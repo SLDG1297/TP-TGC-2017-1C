@@ -136,6 +136,11 @@ namespace TGC.Group.Model.Environment
 
             tanqueFuturista.Effect = envmap;
             tanqueFuturista.Technique = "RenderScene";
+
+
+            helicopter3.Effect = vaiven;
+            helicopter3.Technique = "OndulacionZ";
+            vaiven.SetValue("amplitud_vaiven", 100);
         }
 
         private void initObjects(string MediaDir)
@@ -146,6 +151,7 @@ namespace TGC.Group.Model.Environment
             foreach (var mesh in isla.Meshes)
             {
                 mesh.Scale = new Vector3(8, 8, 8);
+                mesh.move(0, -15, 0);
                 mesh.updateBoundingBox();
             }
             //terreno.corregirAltura(casa.Meshes);

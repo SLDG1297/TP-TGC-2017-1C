@@ -168,14 +168,7 @@ namespace TGC.Group.Model
 
             //Iniciar bounding boxes
             world.initObstaculos();
-            CollisionManager.Instance.setPlayer(jugador);
-
-            foreach(var mesh in world.Meshes)
-            {
-                if(activateShadowMap) mesh.Effect = shadowMap;
-                //mesh.Technique = "RenderScene";
-            }
-
+            CollisionManager.Instance.setPlayer(jugador);           
             // Iniciar cámara
             if (!FPSCamera) {
                 // Configurar cámara en Tercera Persona y la asigno al TGC.
@@ -440,10 +433,7 @@ namespace TGC.Group.Model
             device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
 
             
-            //Dibujamos la escena comun, pero en vez de a la pantalla al Render Target
-           // terreno.getTerrerno().Effect = shadowMap;
-            //terreno.getTerrerno().Technique = "RenderScene";
-        
+            //Dibujamos la escena comun, pero en vez de a la pantalla al Render Target        
             drawScene(device, ElapsedTime);
 
             //Liberar memoria de surface de Render Target

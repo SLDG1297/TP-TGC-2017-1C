@@ -19,6 +19,7 @@ namespace TGC.Group.Model.Entities
 		private float Rotacion = 0f;
         private Movimiento movimiento;
         private Vector3 direccion;
+        private Vector3 direccion_disparo;
 
         private TgcRay ray;
         private TgcArrow arrow;
@@ -42,7 +43,7 @@ namespace TGC.Group.Model.Entities
 
             direccion = initPosition - new Vector3(initPosition.X, initPosition.Y, initPosition.Z + 1);
             //direccion.Normalize();
-            
+            direccion = direccion_disparo;
             var random = new Random();
             var num = random.Next(0,1);
 
@@ -86,21 +87,23 @@ namespace TGC.Group.Model.Entities
 
             //calculo el desplazamiento segun el tipo de movimiento
             var desplazamiento = movimiento.mover(this, posicionJugador) * elapsedTime;
-            
+
             float rotation = 0f;
             moving = desplazamiento != new Vector3(0, 0, 0);
             esqueleto.AutoTransformEnable = false;
 
             //calculo el angulo de rotacion -ESTE ES EL QUE ESTA BIEN! NO CAMBIAR!!
-            rotation = Utils.anguloEntre(Utils.proyectadoY(desplazamiento),
-                                             Utils.proyectadoY(direccion));
+            rotation = Utils.anguloEntre(Utils.proyectadoY(direccion) , Utils.proyectadoY(desplazamiento));
             //roto
             esqueleto.rotateY(rotation);
             var realmovement = CollisionManager.Instance.adjustPosition(this, desplazamiento);
             esqueleto.Position += realmovement;
 
             CollisionManager.Instance.applyGravity(elapsedTime, this);
-
+            if (moving)
+            {
+                direccion_disparo = Vector3.Normalize(Position - lastPos);
+            }
             displayAnimations();
 
             updateBoundingBoxes();
@@ -111,8 +114,12 @@ namespace TGC.Group.Model.Entities
             arma.setPosition(esqueleto.Position);
             if (debeDisparar())
             {
+
+                var angulodisparo = Utils.anguloEntre(Utils.proyectadoY(direccion_disparo), Utils.proyectadoY(desplazamiento));
+
                 if (arma.Balas <= 0) arma.recarga();
-                arma.dispara(elapsedTime, Position, rotation);
+                //arma.dispara(elapsedTime, Position, rotation);
+                arma.dispara(elapsedTime, Position, angulodisparo);
             }
 
             updateRay();
@@ -122,13 +129,15 @@ namespace TGC.Group.Model.Entities
         {            
             //el mismo que la bala!
             ray.Origin = esqueleto.Position + new Vector3(0, 40, 0);
-            var dir = new Vector3(direccion.X, direccion.Y, direccion.Z);
+            //var dir = new Vector3(direccion.X, direccion.Y, direccion.Z);
+
+            var dir = new Vector3(direccion_disparo.X, direccion_disparo.Y, direccion_disparo.Z);
 
             //dir.Normalize();
             ray.Direction = dir;
 
             arrow.PStart = ray.Origin;
-            arrow.PEnd = ray.Origin + direccion * 100f;
+            arrow.PEnd = ray.Origin + direccion_disparo * 100f;
             arrow.updateValues();
         }
 
