@@ -455,10 +455,10 @@ namespace TGC.Group.Model.Environment
             //agua
             piso = cargarMesh(MediaDir + "Meshes\\Piso\\Agua-TgcScene.xml");
             nivel_mar = 8;
-            //piso.Scale = new Vector3(50f, 1f, 50f);
-            piso.Scale = new Vector3(20f, 1f, 20f);
-            piso.Position = new Vector3(11382, nivel_mar + 40, 8885);
-            //piso.Position = new Vector3(0, 15, 0);
+            piso.Scale = new Vector3(50f, 1f, 50f);
+            //piso.Scale = new Vector3(20f, 1f, 20f);
+            //piso.Position = new Vector3(11382, nivel_mar + 40, 8885);
+            piso.Position = new Vector3(0, nivel_mar, 0);
             piso.AutoTransformEnable = false;
             piso.Transform = Matrix.Scaling(piso.Scale) * Matrix.Translation(piso.Position);
             piso.updateBoundingBox();
@@ -545,8 +545,7 @@ namespace TGC.Group.Model.Environment
 
         public void initObstaculos()
         {
-            //Añadir escenario.
-            //aniadirObstaculoAABB(casa.Meshes);            
+            //Añadir escenario.      
 
             //bounging cilinders de las palmeras
             foreach (var palmera in palmeras)
@@ -592,9 +591,9 @@ namespace TGC.Group.Model.Environment
                 collisionManager.agregarCylinder(cilindro);
             };
 
-            //cilindro del faraon del mesio
-            var faraonCylinder = new TgcBoundingCylinderFixedY(faraon.BoundingBox.calculateBoxCenter(), faraon.BoundingBox.calculateBoxRadius() * 0.15f, 1500);
-            collisionManager.agregarCylinder(faraonCylinder);
+            //cilindro de la isla del centro
+            var centerCylinder = new TgcBoundingCylinderFixedY( new Vector3(0,0,0), 1800, 200);
+            collisionManager.agregarCylinder(centerCylinder);
 
             collisionManager.agregarAABB(canoa.BoundingBox);
             collisionManager.agregarAABB(helicopter.BoundingBox);

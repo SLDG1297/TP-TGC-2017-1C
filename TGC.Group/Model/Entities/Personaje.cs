@@ -302,5 +302,9 @@ namespace TGC.Group.Model.Entities
             get { return esqueleto.BoundingBox;  }
         }
 
+        public bool Covering
+        {
+            get { return covering; }
+        }
     }
 }

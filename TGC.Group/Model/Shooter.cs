@@ -35,7 +35,7 @@ namespace TGC.Group.Model
         private readonly float far_plane = 10000f;
         private readonly float near_plane = 1f;
 
-        private readonly int SHADOWMAP_SIZE = 2048;
+        private readonly int SHADOWMAP_SIZE = 1024;
         private const int FACTOR = 8;
         // Constantes de escenario
         // Menu
@@ -53,9 +53,7 @@ namespace TGC.Group.Model
 
         //mundo con objetos
         private World world;
-
-        // Bounding boxes del escenario
-        private List<TgcBoundingAxisAlignBox> obstaculos = new List<TgcBoundingAxisAlignBox>();
+        
         private TgcBoundingAxisAlignBox limits;
 
         // Cámara
@@ -63,7 +61,8 @@ namespace TGC.Group.Model
 
         // Jugador
         private Player jugador;
-        private Vector3 PLAYER_INIT_POS = new Vector3(800, 0, 1000);
+        //private Vector3 PLAYER_INIT_POS = new Vector3(800, 0, 1000);
+        private Vector3 PLAYER_INIT_POS = new Vector3(6400, 0, 8000);
 
         // Enemigos
         private List<Enemy> enemigos = new List<Enemy>();
@@ -106,7 +105,6 @@ namespace TGC.Group.Model
         //sombras
         private Effect shadowMap;
         private bool activateShadowMap = true;
-        private float alfa_sol; // pos. del sol
         private Vector3 g_LightDir; // direccion de la luz actual
         private Vector3 g_LightPos; // posicion de la luz actual (la que estoy analizando)
         private Matrix g_LightView; // matriz de view del light
@@ -114,7 +112,6 @@ namespace TGC.Group.Model
         private Surface g_pDSShadow; // Depth-stencil buffer for rendering to shadow map
 
         private Texture g_pShadowMap; // Texture to which the shadow map is rendered
-
 
         /// <summary>
         ///     Constructor del juego.
@@ -172,7 +169,10 @@ namespace TGC.Group.Model
             // Iniciar cámara
             if (!FPSCamera) {
                 // Configurar cámara en Tercera Persona y la asigno al TGC.
-                camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40, 50, -50), 60, 180, Input);
+
+                //esto estaba antes
+                //camaraInterna = new ThirdPersonCamera(jugador, new Vector3(0, 50, -0), 60, 180, Input);
+                camaraInterna = new ThirdPersonCamera(jugador, new Vector3(0, 100, -0), 22, 200, Input);
                 Camara = camaraInterna;
             }
             else {
@@ -326,18 +326,23 @@ namespace TGC.Group.Model
                     {
                         jugador.mover(Input, ElapsedTime, terreno);
 
+                        //esto estaba antes
                         // updownRot -= Input.YposRelative * 0.05f;
-                        camaraInterna.OffsetHeight += Input.YposRelative;
+                        //camaraInterna.OffsetHeight += Input.YposRelative;
+
                         camaraInterna.rotateY(Input.XposRelative * 0.05f);
-                        camaraInterna.TargetDisplacement *= camaraInterna.RotationY * ElapsedTime;
+
+                           
+                        //camaraInterna.TargetDisplacement *= camaraInterna.RotationY * ElapsedTime;
                         // Hacer que la camara siga al personaje en su nueva posicion
                         camaraInterna.Target = jugador.Position;
 
-                        var forward = camaraInterna.OffsetForward - Input.WheelPos * 10;
-                        if (forward > 10)
-                        {
-                            camaraInterna.OffsetForward -= Input.WheelPos * 10;
-                        }
+                        //var forward = camaraInterna.OffsetForward - Input.WheelPos * 10;
+                        //if (forward > 10)
+                        //{
+                           //esto estaba antes
+                           // camaraInterna.OffsetForward -= Input.WheelPos * 10;
+                        //}
 
                         UIManager.Update(jugador, ElapsedTime);
                     }
@@ -357,8 +362,9 @@ namespace TGC.Group.Model
 
                     if (Input.keyPressed(Microsoft.DirectX.DirectInput.Key.F2))
                     {
+                        camaraInterna = new ThirdPersonCamera(jugador, new Vector3(0, 100, -0), 22, 200, Input);
 
-                        camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40, 50, -50), 60, 180, Input);
+                        //camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40, 50, -50), 60, 180, Input);
                         Camara = camaraInterna;
                         FPSCamera = false;
                     }
@@ -370,7 +376,7 @@ namespace TGC.Group.Model
                 // Update enemigos.
                 foreach (var enemy in enemigos)
 				{
-                    enemy.mover(jugador.Position, obstaculos, ElapsedTime,  terreno.posicionEnTerreno(enemy.Position.X, enemy.Position.Z));
+                    enemy.mover(jugador.Position,ElapsedTime, terreno.posicionEnTerreno(enemy.Position.X, enemy.Position.Z));
                     if (enemy.Muerto) enemigosASacar.Add(enemy);
                 }
 
@@ -406,15 +412,11 @@ namespace TGC.Group.Model
             ClearTextures();
 
             if (gameLoaded) world.initRenderEnvMap(Frustum, ElapsedTime, Camara, skyBox);
-            if (gameLoaded && activateShadowMap) RenderShadowMap();
+            if (gameLoaded) RenderShadowMap();
 
             var device = D3DDevice.Instance.Device;
             D3DDevice.Instance.Device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
-
-            //esto es renderizar todo como viene, sin efectos
-            //gaussianBlur.Technique = "DefaultTechnique";
-            //alarmaEffect.Technique = "DefaultTechnique";
-
+            
             //Cargamos el Render Targer al cual se va a dibujar la escena 3D. Antes nos guardamos el surface original 
             //En vez de dibujar a la pantalla, dibujamos a un buffer auxiliar, nuestro Render Target.
             //p0ldRT : antiguo render target
@@ -444,7 +446,7 @@ namespace TGC.Group.Model
 				device.SetRenderTarget(0, pOldRT);
                 darkening(device);
 				grayscale(device, (float)(100 - jugador.Health) / 100);
-                //drawGaussianBlur(device);
+
                 if (jugador.Health <= 10) drawAlarm(device, ElapsedTime);
                 if (jugador.Muerto) drawGaussianBlur(device);
             }
@@ -455,7 +457,6 @@ namespace TGC.Group.Model
             {
                 RenderAxis();
 
-
                 if (FPSCamera)
                 {
                     DrawText.drawText(Convert.ToString(Camara.Position), 10, 1000, Color.OrangeRed);
@@ -464,6 +465,7 @@ namespace TGC.Group.Model
                 }
                 else
                 {
+                    DrawText.drawText("+", D3DDevice.Instance.Width/2 , D3DDevice.Instance.Height/2, Color.OrangeRed);
                     UIManager.Render();
                 }
             }
@@ -486,11 +488,11 @@ namespace TGC.Group.Model
             }
             else
             {
-                if (!FPSCamera) skyBox.render();
+                //if (!FPSCamera) skyBox.render();
+                skyBox.render();
                 world.restoreEffect();
 
                 // Render escenario
-                //terreno.render();
                 //limits.render();
                 shadowMap.Technique = "RenderSceneShadows";
                 terreno.executeRender(shadowMap);
@@ -623,7 +625,8 @@ namespace TGC.Group.Model
             device.EndScene();
         }
 
-        public void darkening(Device device) {
+        public void darkening(Device device)
+        {
             //device.SetRenderTarget(0, pOldRT);
             device.DepthStencilSurface = depthStencilOld;
             //Arrancamos la escena
@@ -734,13 +737,10 @@ namespace TGC.Group.Model
             {
                 menu.Dispose();
             }
-
             else
             {
                 world.disposeWorld();
                 // Dispose bounding boxes
-                obstaculos.ForEach(o => o.dispose());
-
                 limits.dispose();
                 // Dispose jugador
 
@@ -781,14 +781,8 @@ namespace TGC.Group.Model
                 var enemy_position = new Vector3(enemy_position_X, enemy_position_Y, enemy_position_Z);
                 enemy_position = Vector3.TransformCoordinate(enemy_position, Matrix.RotationY(Utils.DegreeToRadian(rndm.Next(0, 360))));
                 var enemigo = new Enemy(MediaDir, "CS_Arctic", enemy_position, Arma.AK47(MediaDir));
-                if (!enemigo.isCollidingWithObject(obstaculos))
-                {
-                    enemigos.Add(enemigo);
-                }
-                else
-                {
-                    i--;
-                }
+
+                enemigos.Add(enemigo);
             }
 
             foreach (var enemy in enemigos) collisionManager.addEnemy(enemy);
@@ -871,7 +865,7 @@ namespace TGC.Group.Model
         {
             foreach (var enemigo in enemigos)
             {
-                obstaculos.Add(enemigo.Esqueleto.BoundingBox);
+                //obstaculos.Add(enemigo.Esqueleto.BoundingBox);
             }
         }
         #endregion

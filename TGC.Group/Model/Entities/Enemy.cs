@@ -77,7 +77,7 @@ namespace TGC.Group.Model.Entities
 			return collider != null;
 		}
 
-        public void mover(Vector3 posicionJugador, List<TgcBoundingAxisAlignBox> obstaculos, float elapsedTime, float posicionY)
+        public void mover(Vector3 posicionJugador, float elapsedTime, float posicionY)
         {
             resetBooleans();
 
