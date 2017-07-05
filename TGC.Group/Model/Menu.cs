@@ -30,10 +30,15 @@ namespace TGC.Group.Model
 		private TgcText2D optionSalir;
         private TgcText2D optionSpectate;
 
+        private TgcText2D optionInstrucciones;
+        private TgcText2D instrucciones;
+        private TgcText2D optionAtras;
+
         private Player player;        
 
         public bool GameStarted { get; private set; }
         public bool FPScamera { get; private set; }
+        private bool ShowInstructions = false;
 
         public Menu(string MediaDir, Size windowSize)
 		{
@@ -57,8 +62,9 @@ namespace TGC.Group.Model
 
 		private void InitOptions()
 		{
+            //OPCION JUGAR (1RA PERSONA)
 			optionJugar = new TgcText2D();
-			optionJugar.Text = "JUGAR YA";
+			optionJugar.Text = "JUGAR";
 			optionJugar.Color = Color.White;
 			optionJugar.Position = new Point(windowSize.Width / 4, windowSize.Height / 4);
 			optionJugar.Size = new Size(optionJugar.Text.Length * 48, 24);
@@ -68,7 +74,7 @@ namespace TGC.Group.Model
 			font.AddFontFile(MediaDir + "Fonts\\pdark.ttf");
 			optionJugar.changeFont(new Font(font.Families[0], 24, FontStyle.Bold));
 
-            
+            //OPCION JUGAR (3RA PERSONA)
             optionSpectate = new TgcText2D();
             optionSpectate.Text = "MODO ESPECTADOR";
             optionSpectate.Color = Color.White;
@@ -78,14 +84,47 @@ namespace TGC.Group.Model
 
             optionSpectate.changeFont(new Font(font.Families[0], 24, FontStyle.Bold));
 
+            //OPCION INSTRUCCIONES
+            optionInstrucciones = new TgcText2D();
+            optionInstrucciones.Text = "INSTRUCCIONES";
+            optionInstrucciones.Color = Color.White;
+            optionInstrucciones.Position = new Point(windowSize.Width / 4, windowSize.Height / 4 + 100);
+            optionInstrucciones.Size = new Size(optionInstrucciones.Text.Length * 48, 24);
+            optionInstrucciones.Align = TgcText2D.TextAlign.LEFT;
 
+            optionInstrucciones.changeFont(new Font(font.Families[0], 24, FontStyle.Bold));
+
+            //OPCION SALIR
             optionSalir = new TgcText2D();
             optionSalir.Text = "SALIR";
             optionSalir.Color = Color.White;
-            optionSalir.Position = new Point(windowSize.Width / 4, windowSize.Height / 4 + 100);
+            optionSalir.Position = new Point(windowSize.Width / 4, windowSize.Height / 4 + 150);
             optionSalir.Size = new Size(optionJugar.Text.Length * 48, 24);
             optionSalir.Align = TgcText2D.TextAlign.LEFT;
             optionSalir.changeFont(new Font(font.Families[0], 24, FontStyle.Bold));
+
+            //TEXTO DE LAS INSTRUCCIONES
+            instrucciones = new TgcText2D();
+            instrucciones.Text = "Movimiento : WASD \n"
+                                 + "Agacharse: CTRL IZQUIERDO\n"
+                                 + "Correr : SHIFT IZQUIERDO\n"
+                                 + "Saltar : ESPACIO"
+                                 + "Recargar : R\n"
+                                 + "Modo resguardo: C\n";
+            instrucciones.Color = Color.White;
+            instrucciones.Position = new Point(windowSize.Width / 4, windowSize.Height / 4 );
+            instrucciones.Size = new Size(30 * 48, instrucciones.Text.Length * 24);
+            instrucciones.Align = TgcText2D.TextAlign.LEFT;
+            instrucciones.changeFont(new Font(font.Families[0], 24, FontStyle.Bold));
+
+            //OPCION ATRAS (CUANDO SE MUESTRAN INSTRUCCIONES)
+            optionAtras = new TgcText2D();
+            optionAtras.Text = "ATRAS";
+            optionAtras.Color = Color.White;
+            optionAtras.Position = new Point(windowSize.Width / 4, windowSize.Height / 4 + 250);
+            optionAtras.Size = new Size(optionAtras.Text.Length * 48, optionAtras.Text.Length * 24);
+            optionAtras.Align = TgcText2D.TextAlign.LEFT;
+            optionAtras.changeFont(new Font(font.Families[0], 24, FontStyle.Bold));
         }
 
 		private void InitTextures()
@@ -125,34 +164,50 @@ namespace TGC.Group.Model
 				refreshTime = 0;
 			}
 
-			if (TextCollision(Input, optionJugar))
-			{
-				optionJugar.Color = Color.Yellow;
-				if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT))
-				{
-					GameStarted = true;
+
+            if (!ShowInstructions)
+            {
+                updateMainMenu(Input);
+            }
+            else
+            {
+                updateInstructionsMenu(Input);
+            }
+        }
+
+
+        private void updateMainMenu(TgcD3dInput Input)
+        {
+            //el usuario hace click en JUGAR YA
+            if (TextCollision(Input, optionJugar))
+            {
+                optionJugar.Color = Color.Yellow;
+                if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT))
+                {
+                    GameStarted = true;
                     FPScamera = false;
-				}
-			}
-			else
-			{
-				optionJugar.Color = Color.White;
-			}
+                }
+            }
+            else
+            {
+                optionJugar.Color = Color.White;
+            }
 
-			if (TextCollision(Input, optionSalir))
-			{
-				optionSalir.Color = Color.Yellow;
-				if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT))
-				{
-					System.Windows.Forms.Application.Exit();
-				}
-			}
-			else
-			{
-				optionSalir.Color = Color.White;
-			}
+            //el usuario hace click en SALIR
+            if (TextCollision(Input, optionSalir))
+            {
+                optionSalir.Color = Color.Yellow;
+                if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT))
+                {
+                    System.Windows.Forms.Application.Exit();
+                }
+            }
+            else
+            {
+                optionSalir.Color = Color.White;
+            }
 
-
+            //el usuario hace click en MODO ESPECTADOR
             if (TextCollision(Input, optionSpectate))
             {
                 optionSpectate.Color = Color.Yellow;
@@ -166,9 +221,42 @@ namespace TGC.Group.Model
             {
                 optionSpectate.Color = Color.White;
             }
+
+            //el usuario hace click en INSTRUCCIONES
+            if (TextCollision(Input, optionInstrucciones))
+            {
+                optionInstrucciones.Color = Color.Yellow;
+                if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT))
+                {
+                    ShowInstructions = true;
+                }
+            }
+            else
+            {
+                optionInstrucciones.Color = Color.White;
+            }
+
+
         }
 
-		private bool TextCollision(TgcD3dInput Input, TgcText2D Text)
+        private void updateInstructionsMenu(TgcD3dInput Input)
+        {
+            //el usuario hace click en ATRAS
+            if (TextCollision(Input, optionAtras))
+            {
+                optionAtras.Color = Color.Yellow;
+                if (Input.buttonPressed(TgcD3dInput.MouseButtons.BUTTON_LEFT))
+                {
+                    ShowInstructions = false;
+                }
+            }
+            else
+            {
+                optionAtras.Color = Color.White;
+            }
+        }
+
+        private bool TextCollision(TgcD3dInput Input, TgcText2D Text)
 		{
 			var PminX = Text.Position.X;
 			var PmaxX = Text.Position.X + Text.Size.Width;
@@ -186,11 +274,21 @@ namespace TGC.Group.Model
 
 		public void Render()
 		{
-			background.render();
-			optionJugar.render();
-			optionSalir.render();
-            optionSpectate.render();
-			player.render(0);
+            background.render();
+            if (ShowInstructions)
+            {
+                instrucciones.render();
+                optionAtras.render();
+
+            }
+            else
+            {
+                optionJugar.render();
+                optionSalir.render();
+                optionSpectate.render();
+                optionInstrucciones.render();
+                player.render(0);
+            }
 		}
 
 		public void Dispose()
@@ -202,9 +300,15 @@ namespace TGC.Group.Model
 
 			background.dispose();
 			player.dispose();
+
 			optionJugar.Dispose();
 			optionSalir.Dispose();
             optionSpectate.Dispose();
-		}
+            optionInstrucciones.Dispose();
+
+            instrucciones.Dispose();
+            optionAtras.Dispose();
+
+        }
 	}
 }
