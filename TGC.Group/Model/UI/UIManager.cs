@@ -36,6 +36,9 @@ namespace TGC.Group.Model.UI
         private bool finDelJuego = false;
         private string MediaDir;
 
+        private float remainingMinutes = 10;
+        private float remainingSeconds = 59;
+
         public void Init(string MediaDir)
         {
             initHUD(MediaDir);
@@ -44,6 +47,22 @@ namespace TGC.Group.Model.UI
 
         public void Update(Player player, float ElapsedTime)
         {
+
+            if (remainingSeconds >= 0 && remainingMinutes >=0) remainingSeconds -= ElapsedTime /2;
+            if(remainingSeconds < 0)
+            {
+                remainingMinutes--;
+                remainingSeconds = 59;
+            }
+
+            if(remainingMinutes < 0)
+            {
+                finDelJuego = true;
+                remainingMinutes = 0;
+                remainingSeconds = 0;
+            }
+
+
             updateHealthBar(player);
             updateText(player);
         }
@@ -232,7 +251,7 @@ namespace TGC.Group.Model.UI
             textoTiempoRestante.Color = Color.Red;
             //var des = ammoIcon.Position + new Vector2(60, 10);
             textoTiempoRestante.Position = new Point(D3DDevice.Instance.Width /2 - 100,2);
-            textoTiempoRestante.Size = new Size(250, 200);
+            textoTiempoRestante.Size = new Size(350, 200);
             textoTiempoRestante.Align = TgcText2D.TextAlign.LEFT;
             otherfont.AddFontFile(MediaDir + "Fonts\\pdark.ttf");
             textoTiempoRestante.changeFont(new System.Drawing.Font(font.Families[0], 24, FontStyle.Bold));
@@ -270,12 +289,17 @@ namespace TGC.Group.Model.UI
             textoHealth.Text = "" + player.Health;
             textoAmmo.Text = "" + player.Arma.Balas;
             textoRecargas.Text = "" + player.Arma.Recargas;
-            textoTiempoRestante.Text = "TIEMPO: " + 1 +":" + 30;
+            textoTiempoRestante.Text = "TIEMPO: " + (int)remainingMinutes +":" + (int)remainingSeconds;
 
 
             if (player.Health == 0) finDelJuego = true;
         }
 
+
+        public bool GameOver
+        {
+            get { return finDelJuego; }
+        }
     }
 
 }

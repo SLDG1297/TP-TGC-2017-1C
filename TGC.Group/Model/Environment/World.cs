@@ -56,6 +56,8 @@ namespace TGC.Group.Model.Environment
         private TgcMesh avionCaza;
         private TgcMesh barril;
 
+        private TgcMesh baranda;
+
         private TgcMesh piso;
         private float nivel_mar;
         private CubeTexture g_pCubeMapAgua;
@@ -73,6 +75,7 @@ namespace TGC.Group.Model.Environment
         private List<TgcMesh> arbolesSelvaticos = new List<TgcMesh>();
         private List<TgcMesh> arbustitos = new List<TgcMesh>();
         private List<TgcMesh> barriles = new List<TgcMesh>();
+        private List<TgcMesh> barandas = new List<TgcMesh>();
 
         //lista de objetos totales
         private List<TgcMesh> meshes = new List<TgcMesh>();
@@ -145,7 +148,7 @@ namespace TGC.Group.Model.Environment
 
         private void initObjects(string MediaDir)
         {
-            // Ubicación de la casa.
+            // Ubicación de la isla.
             string islaDir = MediaDir + "Meshes\\Scenes\\Isla\\Isla-TgcScene.xml";
             isla = cargarScene(islaDir);
             foreach (var mesh in isla.Meshes)
@@ -446,11 +449,46 @@ namespace TGC.Group.Model.Environment
 
             //camionCisterna
             camionCisterna = cargarMesh(MediaDir + "Meshes\\Vehiculos\\CamionCisterna\\CamionCisterna-TgcScene.xml");
-            helicopter.AutoTransformEnable = false;
+            camionCisterna.AutoTransformEnable = false;
             camionCisterna.Position = new Vector3(227, 0, 10719);
             camionCisterna.Scale = new Vector3(2f, 2f, 2f);
             camionCisterna.Transform = Matrix.Scaling(camionCisterna.Scale) * Matrix.Translation(camionCisterna.Position) * camionCisterna.Transform;
             camionCisterna.updateBoundingBox();
+
+
+            //barandas
+            baranda = cargarMesh(MediaDir + "Meshes\\Objetos\\BarandaMetal\\BarandaMetal-TgcScene.xml");
+            baranda.Position = new Vector3(-10380, 0, 13194);
+            baranda.Scale = new Vector3(8f, 4f, 8f);
+            baranda.rotateY(FastMath.PI_HALF);
+            //baranda.updateBoundingBox();
+            terreno.corregirAltura(baranda);
+
+            baranda.AutoTransformEnable = false;
+            baranda.Transform = Matrix.RotationY(baranda.Rotation.Y) * Matrix.Scaling(baranda.Scale) * Matrix.Translation(baranda.Position);
+            baranda.createBoundingBox();
+            baranda.BoundingBox.transform(Matrix.RotationY(baranda.Rotation.Y)
+                                          *Matrix.Scaling(baranda.Scale)
+                                          * Matrix.Translation(baranda.Position));
+            
+            baranda.updateBoundingBox();
+
+            Utils.disponerEnLineaZ(baranda, barandas, 32, - 35* baranda.BoundingBox.calculateAxisRadius().Z, baranda.Position);
+
+            foreach(var barandita in barandas)
+            {
+                barandita.Scale = new Vector3(8f, 4f, 8f);
+                barandita.rotateY(FastMath.PI_HALF);
+                //baranda.updateBoundingBox();
+                terreno.corregirAltura(barandita);
+                barandita.Position += new Vector3(0, 20, 0);
+                barandita.AutoTransformEnable = false;
+                barandita.Transform = Matrix.RotationY(barandita.Rotation.Y) * Matrix.Scaling(barandita.Scale) * Matrix.Translation(barandita.Position);
+                barandita.createBoundingBox();
+                barandita.BoundingBox.transform(Matrix.RotationY(barandita.Rotation.Y)
+                                              * Matrix.Scaling(barandita.Scale)
+                                              * Matrix.Translation(barandita.Position));
+            }
 
             //agua
             piso = cargarMesh(MediaDir + "Meshes\\Piso\\Agua-TgcScene.xml");
@@ -476,7 +514,7 @@ namespace TGC.Group.Model.Environment
             meshes.Add(camionCisterna);
             meshes.Add(tractor);
             meshes.Add(helicopter3);
-
+            meshes.Add(baranda);
             //meshes.Add(piso);
             //meshes.Add(barril.Mesh);
             //meshes.Add(faraon);
@@ -493,6 +531,7 @@ namespace TGC.Group.Model.Environment
             meshes.AddRange(cajitas);
             meshes.AddRange(barriles);
             meshes.AddRange(isla.Meshes);
+            meshes.AddRange(barandas);
         }
 
         public void disposeWorld()
@@ -518,6 +557,7 @@ namespace TGC.Group.Model.Environment
             avionMilitar.dispose();
             tractor.dispose();
 
+            baranda.dispose();
             barril.dispose();
             ametralladora.dispose();
             tanqueFuturista.dispose();

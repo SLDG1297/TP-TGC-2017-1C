@@ -77,7 +77,7 @@ namespace TGC.Group.Model.Entities
 			return collider != null;
 		}
 
-        public void mover(Vector3 posicionJugador, float elapsedTime, float posicionY)
+        public void mover(Vector3 posicionJugador, float elapsedTime)
         {
             resetBooleans();
 
@@ -93,7 +93,7 @@ namespace TGC.Group.Model.Entities
             esqueleto.AutoTransformEnable = false;
 
             //calculo el angulo de rotacion -ESTE ES EL QUE ESTA BIEN! NO CAMBIAR!!
-            rotation = Utils.anguloEntre(Utils.proyectadoY(direccion) , Utils.proyectadoY(desplazamiento));
+            rotation = Utils.anguloEntre(Utils.proyectadoY(direccion), Utils.proyectadoY(desplazamiento));
             //roto
             esqueleto.rotateY(rotation);
             var realmovement = CollisionManager.Instance.adjustPosition(this, desplazamiento);
@@ -115,15 +115,16 @@ namespace TGC.Group.Model.Entities
             if (debeDisparar())
             {
 
-                var angulodisparo = Utils.anguloEntre(Utils.proyectadoY(Position - lastPos), Utils.proyectadoY(posicionJugador - Position));
+                var angulodisparo = Utils.anguloEntre(Utils.proyectadoY(direccion_disparo), Utils.proyectadoY(desplazamiento));
 
                 if (arma.Balas <= 0) arma.recarga();
                 //arma.dispara(elapsedTime, Position, rotation);
-                arma.dispara(elapsedTime, Position, FastMath.ToRad( angulodisparo));                
+                arma.dispara(elapsedTime, Position, angulodisparo);
             }
 
             updateRay();
         }
+        
 
         public void updateRay()
         {            

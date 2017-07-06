@@ -112,9 +112,6 @@ namespace TGC.Group.Model
         private Surface g_pDSShadow; // Depth-stencil buffer for rendering to shadow map
 
         private Texture g_pShadowMap; // Texture to which the shadow map is rendered
-
-        private float time = 0;
-
         /// <summary>
         ///     Constructor del juego.
         /// </summary>
@@ -318,34 +315,19 @@ namespace TGC.Group.Model
 			{
                 InitGame();
 			}
-
 			else
 			{
+
                 if (!FPSCamera)
 				{
                     // Update jugador
-                    if (!jugador.Muerto)
+                    //if (!jugador.Muerto)
+                    if (!UIManager.GameOver)
                     {
                         jugador.mover(Input, ElapsedTime, terreno);
 
-                        //esto estaba antes
-                        // updownRot -= Input.YposRelative * 0.05f;
-                        //camaraInterna.OffsetHeight += Input.YposRelative;
-
                         camaraInterna.rotateY(Input.XposRelative * 0.05f);
-
-                           
-                        //camaraInterna.TargetDisplacement *= camaraInterna.RotationY * ElapsedTime;
-                        // Hacer que la camara siga al personaje en su nueva posicion
                         camaraInterna.Target = jugador.Position;
-
-                        //var forward = camaraInterna.OffsetForward - Input.WheelPos * 10;
-                        //if (forward > 10)
-                        //{
-                           //esto estaba antes
-                           // camaraInterna.OffsetForward -= Input.WheelPos * 10;
-                        //}
-
                         UIManager.Update(jugador, ElapsedTime);
                     }
                     else
@@ -360,8 +342,6 @@ namespace TGC.Group.Model
 				}
 				else
 				{
-                    time += ElapsedTime;
-
 					skyBox.Center = Camara.Position;
 
                     if (Input.keyPressed(Microsoft.DirectX.DirectInput.Key.F2))
@@ -380,7 +360,7 @@ namespace TGC.Group.Model
                 // Update enemigos.
                 foreach (var enemy in enemigos)
 				{
-                    enemy.mover(jugador.Position,ElapsedTime, terreno.posicionEnTerreno(enemy.Position.X, enemy.Position.Z));
+                    enemy.mover(jugador.Position,ElapsedTime);
                     if (enemy.Muerto) enemigosASacar.Add(enemy);
                 }
 
@@ -452,7 +432,9 @@ namespace TGC.Group.Model
 				grayscale(device, (float)(100 - jugador.Health) / 100);
 
                 if (jugador.Health <= 10) drawAlarm(device, ElapsedTime);
-                if (jugador.Muerto) drawGaussianBlur(device);
+
+                //if (jugador.Muerto) drawGaussianBlur(device);
+                if(UIManager.GameOver) drawGaussianBlur(device);
             }
 
             device.BeginScene();
@@ -837,13 +819,9 @@ namespace TGC.Group.Model
 			sombraTexto.changeFont(new System.Drawing.Font(font.Families[0], 24, FontStyle.Bold));
 		}
 
-		private void updateText() {
-            //texto.Text = "HEALTH: " + jugador.Health;
-            //texto.Text += "\tBALAS: " + jugador.Arma.Balas;
-            //texto.Text += "\tRECARGAS: " + jugador.Arma.Recargas;
-            //texto.Text = "\nPosition\n" + jugador.Position;
-            texto.Text = "Presiona F2 para inciar\n";
-            texto.Text += "Tiempo" + (int)time;
+		private void updateText()
+        {
+            texto.Text = "Presiona F2 para inciar";
             sombraTexto.Text = texto.Text;
 		}
         
