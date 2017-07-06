@@ -27,8 +27,11 @@ namespace TGC.Group.Model.UI
         private TgcText2D textoHealth = new TgcText2D();
         private TgcText2D textoRecargas = new TgcText2D();
         private TgcText2D textoPerdiste;
-
+    
         private TgcText2D sombraTexto = new TgcText2D();
+
+
+        private TgcText2D textoTiempoRestante = new TgcText2D();
         private bool healthBarEnabled = true;
         private bool finDelJuego = false;
         private string MediaDir;
@@ -56,6 +59,7 @@ namespace TGC.Group.Model.UI
             textoHealth.render();
             sombraTexto.render();
             textoRecargas.render();
+            textoTiempoRestante.render();
 
             //Iniciar dibujado de todos los Sprites de la escena
             drawer2D.BeginDrawSprite();
@@ -89,6 +93,7 @@ namespace TGC.Group.Model.UI
             sombraTexto.Dispose();
             textoHealth.Dispose();
             textoRecargas.Dispose();
+            textoTiempoRestante.Dispose();
 
             if(textoPerdiste != null)
             {
@@ -161,21 +166,6 @@ namespace TGC.Group.Model.UI
             reloadsIcon.Position = new Vector2((device.Width / 2) + 400 ,
                                                 device.Height - posicionAlineamiento);
 
-            //Crear Sprite - Iconito de mira
-            //Por ahora no lo puedo ubicar en el centro exactamente
-            /*
-            crosshair = initSprite(MediaDir + "\\Texturas\\Sprites\\crosshair.png");
-            var crosshairSize = crosshair.Bitmap.Size;
-
-            crosshair.Color = System.Drawing.Color.OrangeRed;
-
-
-            crosshair.Scaling = new Vector2(0.05f, 0.05f);
-            crosshair.Position = new Vector2(device.Width / 2,
-                                             device.Height / 2);
-            */
-            //crosshair.Position = new Vector2(device.Width / 2, device.Height / 2);
-
         }
         
         private void initText(string MediaDir)
@@ -235,6 +225,17 @@ namespace TGC.Group.Model.UI
             var otherfont = new System.Drawing.Text.PrivateFontCollection();
             otherfont.AddFontFile(MediaDir + "Fonts\\pdark.ttf");
             textoPerdiste.changeFont(new System.Drawing.Font(font.Families[0], 24, FontStyle.Bold));
+
+
+            textoTiempoRestante = new TgcText2D();
+            //texto de cuantas balas le quedan al jugador
+            textoTiempoRestante.Color = Color.Red;
+            //var des = ammoIcon.Position + new Vector2(60, 10);
+            textoTiempoRestante.Position = new Point(D3DDevice.Instance.Width /2 - 100,2);
+            textoTiempoRestante.Size = new Size(250, 200);
+            textoTiempoRestante.Align = TgcText2D.TextAlign.LEFT;
+            otherfont.AddFontFile(MediaDir + "Fonts\\pdark.ttf");
+            textoTiempoRestante.changeFont(new System.Drawing.Font(font.Families[0], 24, FontStyle.Bold));
         }
         
         private void updateHealthBar(Player player)
@@ -265,9 +266,12 @@ namespace TGC.Group.Model.UI
         
         private void updateText(Player player)
         {
+
             textoHealth.Text = "" + player.Health;
             textoAmmo.Text = "" + player.Arma.Balas;
             textoRecargas.Text = "" + player.Arma.Recargas;
+            textoTiempoRestante.Text = "TIEMPO: " + 1 +":" + 30;
+
 
             if (player.Health == 0) finDelJuego = true;
         }

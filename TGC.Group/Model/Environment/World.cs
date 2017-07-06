@@ -704,10 +704,6 @@ namespace TGC.Group.Model.Environment
         public void initRenderEnvMap(TgcFrustum Frustum, float ElapsedTime, TgcCamera camera, TgcSkyBox skybox)
         {
             initRenderLagos(skybox, Frustum);
-            //if (RenderUtils.estaDentroDelFrustum(tanqueFuturista, Frustum))
-            //{
-            //        renderEnvMap(tanqueFuturista, ElapsedTime, camera, skybox);
-            //}   
         }
         
         public void renderEnvMap(TgcMesh mesh, float ElapsedTime, TgcCamera camera, TgcSkyBox skybox)
@@ -1020,7 +1016,14 @@ namespace TGC.Group.Model.Environment
                 mesh.Technique = "RenderSceneShadows";
             }
 
+            foreach (var mesh in rocas)
+            {
+                mesh.Effect = shadowMap;
+                mesh.Technique = "RenderSceneShadows";
+            }
+
             RenderUtils.renderFromFrustum(palmeras, frustum);
+            RenderUtils.renderFromFrustum(rocas, frustum);
         }
 
         TgcMesh cargarMesh(string unaDireccion)

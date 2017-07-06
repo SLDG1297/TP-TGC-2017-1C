@@ -113,6 +113,8 @@ namespace TGC.Group.Model
 
         private Texture g_pShadowMap; // Texture to which the shadow map is rendered
 
+        private float time = 0;
+
         /// <summary>
         ///     Constructor del juego.
         /// </summary>
@@ -172,7 +174,7 @@ namespace TGC.Group.Model
 
                 //esto estaba antes
                 //camaraInterna = new ThirdPersonCamera(jugador, new Vector3(0, 50, -0), 60, 180, Input);
-                camaraInterna = new ThirdPersonCamera(jugador, new Vector3(0, 100, -0), 22, 200, Input);
+                camaraInterna = new ThirdPersonCamera(jugador, new Vector3(0, 70, -0), 10, 140, Input);
                 Camara = camaraInterna;
             }
             else {
@@ -358,11 +360,13 @@ namespace TGC.Group.Model
 				}
 				else
 				{
+                    time += ElapsedTime;
+
 					skyBox.Center = Camara.Position;
 
                     if (Input.keyPressed(Microsoft.DirectX.DirectInput.Key.F2))
                     {
-                        camaraInterna = new ThirdPersonCamera(jugador, new Vector3(0, 100, -0), 22, 200, Input);
+                        camaraInterna = new ThirdPersonCamera(jugador, new Vector3(0, 70, -0), 10, 140, Input);
 
                         //camaraInterna = new ThirdPersonCamera(jugador, new Vector3(-40, 50, -50), 60, 180, Input);
                         Camara = camaraInterna;
@@ -838,7 +842,8 @@ namespace TGC.Group.Model
             //texto.Text += "\tBALAS: " + jugador.Arma.Balas;
             //texto.Text += "\tRECARGAS: " + jugador.Arma.Recargas;
             //texto.Text = "\nPosition\n" + jugador.Position;
-            texto.Text = "Presiona F2 para inciar";
+            texto.Text = "Presiona F2 para inciar\n";
+            texto.Text += "Tiempo" + (int)time;
             sombraTexto.Text = texto.Text;
 		}
         

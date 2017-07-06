@@ -115,11 +115,11 @@ namespace TGC.Group.Model.Entities
             if (debeDisparar())
             {
 
-                var angulodisparo = Utils.anguloEntre(Utils.proyectadoY(direccion_disparo), Utils.proyectadoY(desplazamiento));
+                var angulodisparo = Utils.anguloEntre(Utils.proyectadoY(Position - lastPos), Utils.proyectadoY(posicionJugador - Position));
 
                 if (arma.Balas <= 0) arma.recarga();
                 //arma.dispara(elapsedTime, Position, rotation);
-                arma.dispara(elapsedTime, Position, angulodisparo);
+                arma.dispara(elapsedTime, Position, FastMath.ToRad( angulodisparo));                
             }
 
             updateRay();

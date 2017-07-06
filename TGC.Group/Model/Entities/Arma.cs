@@ -97,7 +97,7 @@ namespace TGC.Group.Model.Entities
             }
 
         }
-
+        
         public void recarga()
         {
             if (recargas > 0 && balas < 30)
@@ -154,7 +154,7 @@ namespace TGC.Group.Model.Entities
             bala.Position = pos + new Vector3(0, 30, 0);
             bala.Scale = new Vector3(0.005f, 0.005f, 0.005f);
             bala.rotateX(-FastMath.PI_HALF);
-            bala.rotateY(-FastMath.ToRad(angulo));
+            //bala.rotateY(-FastMath.ToRad(angulo));
 
             this.danio = danio;
 
@@ -162,7 +162,7 @@ namespace TGC.Group.Model.Entities
             direccion.TransformCoordinate(Matrix.RotationY(angulo));
             bala.createBoundingBox();
         }
-
+        
         public void update(float ElapsedTime)
         {
             //multiplico por 0.9f porque iria demasiado rapido, entonces no se detectarian colisiones
