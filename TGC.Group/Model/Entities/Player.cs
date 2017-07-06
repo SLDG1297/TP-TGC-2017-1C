@@ -160,11 +160,14 @@ namespace TGC.Group.Model.Entities
                 }
 
                 //Cubrirse
-                var objeto = CollisionManager.Instance.AABBMasCercano(this);
-                if (Input.keyPressed(Key.C) && TgcCollisionUtils.testAABBCylinder(objeto, BoundingCylinder) && unTerreno.estaEnElPiso(Position))
+
+                if (Input.keyPressed(Key.C) && unTerreno.estaEnElPiso(Position))
                 {
-                    covering = true;
-                    setVelocidad(0f, 0f);
+                    if (this.puedeCubrirse(unTerreno))
+                    {
+                        covering = true;
+                        setVelocidad(0f, 0f);
+                    }
                 }
             }
             else
@@ -218,7 +221,25 @@ namespace TGC.Group.Model.Entities
             esqueleto.rotateY(angle);
         }
 
-		//GETTERS Y SETTERS
+        public bool puedeCubrirse(Terreno unTerreno)
+        {
+            Vector3 posJugador = this.Position;
+
+            Vector3 posAABB = CollisionManager.Instance.AABBMasCercano(this).Position;
+            Vector3 posCilindro = CollisionManager.Instance.cilindroMasCercano(this).Center;
+
+            double distanciaJugadorAABB = this.distanciaPuntos(posJugador, posAABB, unTerreno);
+            double distanciaJugadorCilindro = this.distanciaPuntos(posJugador, posCilindro, unTerreno);
+
+            return distanciaJugadorAABB < 80 || distanciaJugadorCilindro < 125;
+        }
+
+        public double distanciaPuntos(Vector3 a, Vector3 b, Terreno unTerreno)
+        {
+            return Math.Sqrt((Math.Pow((a.X - b.X), 2.0f) + Math.Pow((unTerreno.posicionEnTerreno(a.X, a.Z) - unTerreno.posicionEnTerreno(b.X, b.Z)), 2.0f) + Math.Pow((a.Z - b.Z), 2.0f)));
+        }
+
+        //GETTERS Y SETTERS
         public Arma Arma
         {
             get { return arma; }
