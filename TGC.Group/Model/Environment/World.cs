@@ -48,6 +48,8 @@ namespace TGC.Group.Model.Environment
         private TgcMesh ametralladora2;
         private TgcMesh canoa;
         private TgcMesh helicopter;
+
+        private TgcMesh camionTroncos;
         private TgcMesh camionCisterna;
         private TgcMesh tractor;
         private TgcMesh cajaFuturistica;
@@ -233,7 +235,7 @@ namespace TGC.Group.Model.Environment
             cajaFuturistica.createBoundingBox();
             cajaFuturistica.updateBoundingBox();
             var cantCajitas = cajitas.Count;
-            Utils.aleatorioXZExceptoRadioInicial(cajaFuturistica, cajitas, 75);
+            Utils.aleatorioXZExceptoRadioInicial(cajaFuturistica, cajitas, 125);
             terreno.corregirAltura(cajitas);
 
             for (int i = cantCajitas; i < cajitas.Count; i++)
@@ -419,12 +421,10 @@ namespace TGC.Group.Model.Environment
             helicopter2.Transform = Matrix.RotationY(helicopter2.Rotation.Y)
                                     * Matrix.Scaling(helicopter2.Scale)
                                     * Matrix.Translation(helicopter2.Position);
-
-            helicopter2.createBoundingBox();
-            helicopter.BoundingBox.transform(Matrix.RotationY(helicopter2.Rotation.Y)
-                                    * Matrix.Scaling(helicopter2.Scale)
-                                    * Matrix.Translation(helicopter2.Position));
             helicopter2.updateBoundingBox();
+            helicopter2.createBoundingBox();
+            helicopter2.BoundingBox.transform(Matrix.Scaling(3f,3,0.9f)
+                                              * Matrix.Translation(helicopter2.Position));           
 
 
             helicopter3 = cargarMesh(MediaDir + "Meshes\\Vehiculos\\HelicopteroMilitar3\\HelicopteroMilitar3-TgcScene.xml");
@@ -453,6 +453,16 @@ namespace TGC.Group.Model.Environment
             camionCisterna.Position = new Vector3(227, 0, 10719);
             camionCisterna.Scale = new Vector3(2f, 2f, 2f);
             camionCisterna.Transform = Matrix.Scaling(camionCisterna.Scale) * Matrix.Translation(camionCisterna.Position) * camionCisterna.Transform;
+            camionCisterna.updateBoundingBox();
+
+            //camion de troncoes
+            camionTroncos = cargarMesh(MediaDir + "Meshes\\Vehiculos\\CamionTroncos\\CamionDeTroncos-TgcScene.xml");
+            //camionTroncos.AutoTransformEnable = false;
+            camionTroncos.Position = new Vector3(-15102, 0, -7600);
+            terreno.corregirAltura(camionTroncos);
+            camionTroncos.Scale = new Vector3(2f, 2f, 2f);
+            camionTroncos.rotateY(-FastMath.PI);
+            //camionCisterna.Transform = Matrix.Scaling(camionCisterna.Scale) * Matrix.Translation(camionCisterna.Position) * camionCisterna.Transform;
             camionCisterna.updateBoundingBox();
 
 
@@ -522,6 +532,7 @@ namespace TGC.Group.Model.Environment
             meshes.Add(avionMilitar);
             meshes.Add(tanqueFuturista);
             meshes.Add(avionCaza);
+            meshes.Add(camionTroncos);
             
             meshes.AddRange(pastitos);
             meshes.AddRange(rocas);
@@ -556,6 +567,7 @@ namespace TGC.Group.Model.Environment
             helicopter3.dispose();
             avionMilitar.dispose();
             tractor.dispose();
+            camionTroncos.dispose();
 
             baranda.dispose();
             barril.dispose();
@@ -641,6 +653,7 @@ namespace TGC.Group.Model.Environment
             collisionManager.agregarAABB(camionCisterna.BoundingBox);
             collisionManager.agregarAABB(tractor.BoundingBox);            
             collisionManager.agregarAABB(avionCaza.BoundingBox);
+            collisionManager.agregarAABB(camionTroncos.BoundingBox);
 
             collisionManager.agregarAABB(tanqueFuturista.BoundingBox);
             foreach (var mesh in tanqueFuturista.MeshInstances)
@@ -679,6 +692,15 @@ namespace TGC.Group.Model.Environment
                 //caja.createBoundingBox();
                 caja.updateBoundingBox();
                 collisionManager.agregarAABB(caja.BoundingBox);
+            }
+
+
+            foreach (var baranda in barandas)
+            {
+                //baranda.Transform = Matrix.RotationY(baranda.Rotation.Y) * Matrix.Scaling(baranda.Scale) * Matrix.Translation(baranda.Position);
+                //caja.createBoundingBox();
+                //baranda.updateBoundingBox();
+                collisionManager.agregarAABB(baranda.BoundingBox);
             }
         }
 

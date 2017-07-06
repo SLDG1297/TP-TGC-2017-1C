@@ -46,25 +46,21 @@ namespace TGC.Group.Model
             mp3Player.closeFile();
             mp3Player.FileName = filePath;
 
-            //mp3Player.play(true);
+            mp3Player.play(true);
 
             DirectSound.ListenerTracking = personaje.Esqueleto;
         }
 
         public void playMusic(string MediaDir, TgcDirectSound directsound)
         {
-            if (!mute)
-            {
-                this.DirectSound = directsound;
+             this.DirectSound = directsound;
+             var filePath = MediaDir + "Sound\\music\\Military.mp3";
 
-                var filePath = MediaDir + "Sound\\music\\Military.mp3";
+             mp3Player.closeFile();
+             mp3Player.FileName = filePath;
 
-                mp3Player.closeFile();
-                mp3Player.FileName = filePath;
-
-                mp3Player.play(true);
-                mediaDir = MediaDir;
-            }
+             mp3Player.play(true);
+              mediaDir = MediaDir;           
         }
 
         public void dispose()
@@ -118,7 +114,7 @@ namespace TGC.Group.Model
                 ambientSound = new Tgc3dSound("Sound\\ambient\\Birds1.wav",new Vector3(800, 0, 1000), DirectSound.DsDevice);
                 ambientSound.MinDistance = 400f;
 
-                //ambientSound.play();
+                ambientSound.play();
                 time = 0;
             }
         }

@@ -37,7 +37,7 @@ namespace TGC.Group.Model.UI
         private string MediaDir;
 
         private float remainingMinutes = 10;
-        private float remainingSeconds = 59;
+        private float remainingSeconds = 0;
 
         public void Init(string MediaDir)
         {
@@ -239,7 +239,7 @@ namespace TGC.Group.Model.UI
             textoPerdiste.Position = new Point(D3DDevice.Instance.Width / 2 - 400, D3DDevice.Instance.Height / 2 -150);
             textoPerdiste.Size = new Size(3 * 400, 150);
             textoPerdiste.Align = TgcText2D.TextAlign.LEFT;
-            textoPerdiste.Text = "             PERDISTE        \n " + "Presiona ENTER para volver a intentarlo";
+            textoPerdiste.Text = "             PERDISTE        \n ";
 
             var otherfont = new System.Drawing.Text.PrivateFontCollection();
             otherfont.AddFontFile(MediaDir + "Fonts\\pdark.ttf");
